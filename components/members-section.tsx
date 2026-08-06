@@ -1,30 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, GraduationCap, ShieldCheck, Star, UserCheck } from 'lucide-react'
-import {
-  advisors,
-  moderators,
-  generalMembers,
-  type Member,
-} from '@/data/members'
-import { ExecutiveOrgChart } from '@/components/executive-org-chart'
+import { useState, useEffect } from 'react'
+import { Users, GraduationCap, Star, UserCheck, History, Loader2, UserCircle } from 'lucide-react'
+import type { Member } from '@/data/members'
 import { AdvisorCard } from '@/components/advisor-card'
 import { MemberCard } from '@/components/member-card'
 import { MemberModal } from '@/components/member-modal'
 import { org } from '@/lib/site-data'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
-// ─── Tab config ─────────────────────────────────────────────────────────────
+type Tab = 'advisors' | 'executive' | 'general' | 'alumni'
 
-type Tab = 'advisors' | 'moderators' | 'executive' | 'general'
-
-const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
-  { id: 'executive',  label: 'Executive Panel',  icon: Star,          count: 18 },
-  { id: 'general',    label: 'General Members',  icon: UserCheck,     count: generalMembers.length },
-  { id: 'advisors',   label: 'Advisors',         icon: GraduationCap, count: advisors.length },
-  { id: 'moderators', label: 'Moderators',        icon: ShieldCheck,   count: moderators.length },
-]
+const EXECUTIVE_RANKS: Record<string, number> = {
+  'President': 1,
+  'Vice President': 2,
+  'General Secretary': 3,
+  'Treasurer': 4,
+  'Executive Member': 5,
+}
 
 // ─── Section header ──────────────────────────────────────────────────────────
 
@@ -50,28 +44,48 @@ function SectionHeader({
   )
 }
 
-// ─── Divider ─────────────────────────────────────────────────────────────────
-
-function Divider({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-4 py-2">
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#F26522]/60">
-        {label}
-      </span>
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
-    </div>
-  )
-}
-
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export function MembersSection() {
   const [activeTab, setActiveTab] = useState<Tab>('executive')
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchMembers() {
+      try {
+        const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
+        if (error) throw error
+        if (data) {
+          setMembers(data as Member[])
+        }
+      } catch (err: any) {
+        console.error('Error fetching members:', err.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchMembers()
+  }, [])
+
+  // Categorize and sort members
+  const advisors = members.filter(m => m.role === 'Advisor')
+  const executives = members
+    .filter(m => Object.keys(EXECUTIVE_RANKS).includes(m.role))
+    .sort((a, b) => EXECUTIVE_RANKS[a.role] - EXECUTIVE_RANKS[b.role])
+  const generalMembers = members.filter(m => m.role === 'General Member')
+  const alumni = members.filter(m => m.role === 'Alumni')
+
+  const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
+    { id: 'executive',  label: 'Executive Panel',  icon: Star,          count: executives.length },
+    { id: 'general',    label: 'General Members',  icon: UserCheck,     count: generalMembers.length },
+    { id: 'advisors',   label: 'Advisors',         icon: GraduationCap, count: advisors.length },
+    { id: 'alumni',     label: 'Alumni',           icon: History,       count: alumni.length },
+  ]
 
   return (
-    <section className="bg-background">
+    <section className="bg-background min-h-screen">
       {/* ── Page hero ── */}
       <div className="relative overflow-hidden border-b border-border bg-navy-deep">
         <div
@@ -88,8 +102,8 @@ export function MembersSection() {
               Meet the <span className="text-gold">Members</span>
             </h1>
             <p className="mt-3 text-base leading-relaxed text-white/70 text-pretty sm:text-lg">
-              From Faculty Advisors and Club Moderators to the Executive Panel and General
-              Members — explore every tier of the {org.shortName} community at{' '}
+              From Faculty Advisors and Executive Panel to General
+              Members and Alumni — explore every tier of the {org.shortName} community at{' '}
               {org.university}.
             </p>
           </div>
@@ -141,110 +155,103 @@ export function MembersSection() {
           })}
         </div>
 
-        {/* ── Tab panels ── */}
-
-        {/* ADVISORS */}
-        <div
-          id="panel-advisors"
-          role="tabpanel"
-          aria-labelledby="tab-advisors"
-          hidden={activeTab !== 'advisors'}
-        >
-          {activeTab === 'advisors' && (
-            <>
-              <SectionHeader
-                icon={GraduationCap}
-                title="Faculty Advisors"
-                subtitle="Distinguished faculty members who provide academic guidance and strategic oversight to UIUJEF."
-              />
-              <div className="grid gap-5 lg:grid-cols-2">
-                {advisors.map((member) => (
-                  <AdvisorCard
-                    key={member.id}
-                    member={member}
-                    onClick={() => setSelectedMember(member)}
+        {/* ── Content ── */}
+        {isLoading ? (
+          <div className="py-24 text-center">
+            <Loader2 className="size-8 animate-spin mx-auto text-[#F26522] mb-4" />
+            <p className="text-lg font-semibold text-navy">Loading members...</p>
+          </div>
+        ) : (
+          <div className="min-h-[40vh]">
+            {/* ADVISORS */}
+            <div id="panel-advisors" role="tabpanel" aria-labelledby="tab-advisors" hidden={activeTab !== 'advisors'}>
+              {activeTab === 'advisors' && (
+                <>
+                  <SectionHeader
+                    icon={GraduationCap}
+                    title="Faculty Advisors"
+                    subtitle="Distinguished faculty members who provide academic guidance and strategic oversight to UIUJEF."
                   />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                  {advisors.length > 0 ? (
+                    <div className="grid gap-5 lg:grid-cols-2">
+                      {advisors.map((member) => (
+                        <AdvisorCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No advisors found." />
+                  )}
+                </>
+              )}
+            </div>
 
-        {/* MODERATORS */}
-        <div
-          id="panel-moderators"
-          role="tabpanel"
-          aria-labelledby="tab-moderators"
-          hidden={activeTab !== 'moderators'}
-        >
-          {activeTab === 'moderators' && (
-            <>
-              <SectionHeader
-                icon={ShieldCheck}
-                title="Club Moderators"
-                subtitle="Student leaders responsible for overseeing day-to-day operations and bridging the gap between members and administration."
-              />
-              <div className="grid gap-5 lg:grid-cols-2">
-                {moderators.map((member) => (
-                  <AdvisorCard
-                    key={member.id}
-                    member={member}
-                    onClick={() => setSelectedMember(member)}
+            {/* EXECUTIVE PANEL */}
+            <div id="panel-executive" role="tabpanel" aria-labelledby="tab-executive" hidden={activeTab !== 'executive'}>
+              {activeTab === 'executive' && (
+                <>
+                  <SectionHeader
+                    icon={Star}
+                    title="Executive Panel"
+                    subtitle="The elected student leaders driving UIUJEF's mission — structured from the President down through every department."
                   />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                  {executives.length > 0 ? (
+                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {executives.map((member) => (
+                        <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No executive members found." />
+                  )}
+                </>
+              )}
+            </div>
 
-        {/* EXECUTIVE PANEL */}
-        <div
-          id="panel-executive"
-          role="tabpanel"
-          aria-labelledby="tab-executive"
-          hidden={activeTab !== 'executive'}
-        >
-          {activeTab === 'executive' && (
-            <>
-              <SectionHeader
-                icon={Star}
-                title="Executive Panel"
-                subtitle="The elected student leaders driving UIUJEF's mission — structured from the President down through every department."
-              />
-              <Divider label="Organizational Hierarchy" />
-              <div className="mt-8">
-                <ExecutiveOrgChart onMemberClick={setSelectedMember} />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* GENERAL MEMBERS */}
-        <div
-          id="panel-general"
-          role="tabpanel"
-          aria-labelledby="tab-general"
-          hidden={activeTab !== 'general'}
-        >
-          {activeTab === 'general' && (
-            <>
-              <SectionHeader
-                icon={UserCheck}
-                title="General Members"
-                subtitle="The heartbeat of UIUJEF — passionate students contributing to events, communications, and every initiative that moves the club forward."
-              />
-              <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {generalMembers.map((member) => (
-                  <MemberCard
-                    key={member.id}
-                    member={member}
-                    onClick={() => setSelectedMember(member)}
+            {/* GENERAL MEMBERS */}
+            <div id="panel-general" role="tabpanel" aria-labelledby="tab-general" hidden={activeTab !== 'general'}>
+              {activeTab === 'general' && (
+                <>
+                  <SectionHeader
+                    icon={UserCheck}
+                    title="General Members"
+                    subtitle="The heartbeat of UIUJEF — passionate students contributing to events, communications, and every initiative that moves the club forward."
                   />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                  {generalMembers.length > 0 ? (
+                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {generalMembers.map((member) => (
+                        <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No general members found." />
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* ALUMNI */}
+            <div id="panel-alumni" role="tabpanel" aria-labelledby="tab-alumni" hidden={activeTab !== 'alumni'}>
+              {activeTab === 'alumni' && (
+                <>
+                  <SectionHeader
+                    icon={History}
+                    title="Alumni"
+                    subtitle="Our graduated members who continue to inspire and support the legacy of UIUJEF."
+                  />
+                  {alumni.length > 0 ? (
+                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {alumni.map((member) => (
+                        <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No alumni found." />
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Global modal (shared across all tabs) ── */}
         <MemberModal
@@ -273,5 +280,17 @@ export function MembersSection() {
         </div>
       </div>
     </section>
+  )
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="bg-white rounded-2xl border border-border p-12 text-center shadow-sm w-full">
+      <div className="mx-auto size-16 bg-secondary rounded-full flex items-center justify-center mb-4">
+        <UserCircle className="size-8 text-muted-foreground" />
+      </div>
+      <h3 className="text-lg font-bold text-navy mb-2">Nothing Here Yet</h3>
+      <p className="text-muted-foreground max-w-sm mx-auto">{message}</p>
+    </div>
   )
 }

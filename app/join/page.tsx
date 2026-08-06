@@ -20,6 +20,7 @@ const RECRUITMENT_DEADLINE = '2026-09-01T23:59:59'
 type PendingMemberPayload = {
   full_name: string
   student_id: string
+  student_address: string
   email: string
   phone: string
   date_of_birth: string
@@ -102,6 +103,7 @@ export default function JoinPage() {
   const [form, setForm] = useState<PendingMemberPayload>({
     full_name: '',
     student_id: '',
+    student_address: '',
     email: '',
     phone: '',
     date_of_birth: '',
@@ -128,6 +130,7 @@ export default function JoinPage() {
     const newErrors: Record<string, string> = {}
     if (!form.full_name.trim()) newErrors.full_name = 'Required'
     if (!form.student_id.trim()) newErrors.student_id = 'Required'
+    if (!form.student_address.trim()) newErrors.student_address = 'Required'
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Valid Email Required'
     if (!form.phone.trim() || !/^(?:\+88|88)?(01[3-9]\d{8})$/.test(form.phone)) newErrors.phone = 'Valid BD Phone Required'
     if (!form.date_of_birth) newErrors.date_of_birth = 'Required'
@@ -235,7 +238,8 @@ export default function JoinPage() {
               name: form.full_name,
               email: form.email,
               type: 'Member',
-              status: 'Pending'
+              status: 'Pending',
+              address: form.student_address
             }
           ])
           
@@ -382,6 +386,12 @@ export default function JoinPage() {
                 </Field>
                 <Field id="student_id" label="Student ID" icon={Hash} error={errors.student_id}>
                   <input id="student_id" name="student_id" type="text" value={form.student_id} onChange={handleChange} className={inputClass} placeholder="01123XXXX" />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5">
+                <Field id="student_address" label="Student Address" icon={Building2} error={errors.student_address}>
+                  <input id="student_address" name="student_address" type="text" value={form.student_address} onChange={handleChange} className={inputClass} placeholder="e.g., Block B, Bashundhara R/A" />
                 </Field>
               </div>
 

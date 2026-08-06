@@ -58,6 +58,8 @@ export const viewport: Viewport = {
   themeColor: '#0d1730',
 }
 
+import { Toaster } from 'sonner'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,6 +70,7 @@ export default function RootLayout({
       <body className="flex min-h-svh flex-col font-sans antialiased">
         <div className="flex flex-1 flex-col">{children}</div>
         <CreditFooter />
+        <Toaster richColors position="top-right" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

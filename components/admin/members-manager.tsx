@@ -3,17 +3,19 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, UserCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 type Member = {
   id: string
-  full_name: string
+  name: string
   email: string
-  phone_number: string
+  phone: string
   blood_group: string
   role: string
   image_url: string
-  bio: string
+  quote: string
   student_id: string
+  student_address: string
 }
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
@@ -27,23 +29,24 @@ export function MembersManager() {
   const [isSaving, setIsSaving] = useState(false)
 
   // Form State
-  const [fullName, setFullName] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phone, setPhone] = useState('')
   const [bloodGroup, setBloodGroup] = useState('O+')
   const [role, setRole] = useState('General Member')
   const [imageUrl, setImageUrl] = useState('')
-  const [bio, setBio] = useState('')
+  const [quote, setQuote] = useState('')
   const [studentId, setStudentId] = useState('')
+  const [studentAddress, setStudentAddress] = useState('')
 
   const fetchMembers = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from('members').select('*').order('full_name', { ascending: true })
+      const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
       if (error) throw error
       if (data) setMembers(data as Member[])
     } catch (err: any) {
-      alert('Database Error (Fetch Members): ' + err.message)
+      toast.error('Database Error (Fetch Members): ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -56,24 +59,26 @@ export function MembersManager() {
   const openModal = (member?: Member) => {
     if (member) {
       setEditingMember(member)
-      setFullName(member.full_name)
+      setName(member.name || '')
       setEmail(member.email || '')
-      setPhoneNumber(member.phone_number || '')
+      setPhone(member.phone || '')
       setBloodGroup(member.blood_group || 'O+')
       setRole(member.role || 'General Member')
       setImageUrl(member.image_url || '')
-      setBio(member.bio || '')
+      setQuote(member.quote || '')
       setStudentId(member.student_id || '')
+      setStudentAddress(member.student_address || '')
     } else {
       setEditingMember(null)
-      setFullName('')
+      setName('')
       setEmail('')
-      setPhoneNumber('')
+      setPhone('')
       setBloodGroup('O+')
       setRole('General Member')
       setImageUrl('')
-      setBio('')
+      setQuote('')
       setStudentId('')
+      setStudentAddress('')
     }
     setIsModalOpen(true)
   }
@@ -83,34 +88,35 @@ export function MembersManager() {
     setIsSaving(true)
 
     const payload = {
-      full_name: fullName,
+      name,
       email,
-      phone_number: phoneNumber,
+      phone,
       blood_group: bloodGroup,
       role,
       image_url: imageUrl,
-      bio,
+      quote,
       student_id: studentId,
+      student_address: studentAddress,
     }
 
     try {
       if (editingMember) {
         const { error } = await supabase.from('members').update(payload).eq('id', editingMember.id)
         if (error) throw error
-        alert('Member updated successfully!')
+        toast.success('Member updated successfully!')
         setMembers(members.map(m => m.id === editingMember.id ? { ...m, ...payload } : m))
         setIsModalOpen(false)
       } else {
         const { data, error } = await supabase.from('members').insert([payload]).select().single()
         if (error) throw error
         if (data) {
-          alert('Member added successfully!')
-          setMembers([data as Member, ...members].sort((a, b) => a.full_name.localeCompare(b.full_name)))
+          toast.success('Member added successfully!')
+          setMembers([data as Member, ...members].sort((a, b) => a.name.localeCompare(b.name)))
           setIsModalOpen(false)
         }
       }
     } catch (err: any) {
-      alert('Database Error (Save Member): ' + err.message)
+      toast.error('Database Error (Save Member): ' + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -122,10 +128,10 @@ export function MembersManager() {
     try {
       const { error } = await supabase.from('members').delete().eq('id', id)
       if (error) throw error
-      alert('Member deleted successfully.')
+      toast.success('Member deleted successfully.')
       setMembers(members.filter(m => m.id !== id))
     } catch (err: any) {
-      alert('Database Error (Delete Member): ' + err.message)
+      toast.error('Database Error (Delete Member): ' + err.message)
     }
   }
 
@@ -175,13 +181,13 @@ export function MembersManager() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {member.image_url ? (
-                          <img src={member.image_url} alt={member.full_name} className="size-10 rounded-full object-cover border border-border" />
+                          <img src={member.image_url} alt={member.name} className="size-10 rounded-full object-cover border border-border" />
                         ) : (
                           <div className="size-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold">
-                            {member.full_name.charAt(0)}
+                            {member.name.charAt(0)}
                           </div>
                         )}
-                        <span className="font-medium text-navy">{member.full_name}</span>
+                        <span className="font-medium text-navy">{member.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-mono text-sm text-navy font-semibold">
@@ -194,7 +200,7 @@ export function MembersManager() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-navy">{member.email || 'N/A'}</div>
-                      <div className="text-muted-foreground text-xs">{member.phone_number || 'No phone'}</div>
+                      <div className="text-muted-foreground text-xs">{member.phone || 'No phone'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 font-bold text-xs">
@@ -233,7 +239,7 @@ export function MembersManager() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-navy">Full Name</label>
-                  <input required type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
+                  <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-navy">Student ID</label>
@@ -241,20 +247,27 @@ export function MembersManager() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="space-y-2 sm:col-span-1">
+                  <label className="text-xs font-bold uppercase text-navy">Phone Number</label>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
                   <label className="text-xs font-bold uppercase text-navy">Email Address</label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Phone Number</label>
-                  <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
-                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-navy">Blood Group</label>
                   <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none bg-white">
                     {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-navy">Student Address</label>
+                  <input type="text" value={studentAddress} onChange={e => setStudentAddress(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
                 </div>
               </div>
 
@@ -273,7 +286,7 @@ export function MembersManager() {
 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-navy">Personal Quote / Bio</label>
-                <textarea rows={3} value={bio} onChange={e => setBio(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                <textarea rows={3} value={quote} onChange={e => setQuote(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
               </div>
 
               <div className="pt-6 flex justify-end gap-3 border-t border-border">
