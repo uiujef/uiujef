@@ -20,7 +20,14 @@ export default function AdminLogin() {
     // Simulate network delay for better UX
     await new Promise(resolve => setTimeout(resolve, 800))
 
-    if (username === 'admin' && password === 'password123') {
+    const validUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME
+    const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+
+    if (
+      validUsername && validPassword &&
+      username === validUsername &&
+      password === validPassword
+    ) {
       // Set simple cookie
       document.cookie = "admin_auth=true; path=/; max-age=86400" // 1 day expiry
       router.push('/blackberry/dashboard')

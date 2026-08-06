@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, Calendar } from 'lucide-react'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
 type Event = {
@@ -40,7 +41,7 @@ export function EventsManager() {
       if (error) throw error
       if (data) setEvents(data as Event[])
     } catch (err: any) {
-      alert('Database Error (Fetch Events): ' + err.message)
+      toast.error('Database Error (Fetch Events): ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -94,20 +95,20 @@ export function EventsManager() {
       if (editingEvent) {
         const { error } = await supabase.from('events').update(payload).eq('id', editingEvent.id)
         if (error) throw error
-        alert('Event updated successfully!')
+        toast.success('Event updated successfully!')
         setEvents(events.map(ev => ev.id === editingEvent.id ? { ...ev, ...payload } : ev))
         setIsModalOpen(false)
       } else {
         const { data, error } = await supabase.from('events').insert([payload]).select().single()
         if (error) throw error
         if (data) {
-          alert('Event created successfully!')
+          toast.success('Event created successfully!')
           setEvents([data as Event, ...events])
           setIsModalOpen(false)
         }
       }
     } catch (err: any) {
-      alert('Database Error (Save Event): ' + err.message)
+      toast.error('Database Error (Save Event): ' + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -119,10 +120,10 @@ export function EventsManager() {
     try {
       const { error } = await supabase.from('events').delete().eq('id', id)
       if (error) throw error
-      alert('Event deleted successfully.')
+      toast.success('Event deleted successfully.')
       setEvents(events.filter(ev => ev.id !== id))
     } catch (err: any) {
-      alert('Database Error (Delete Event): ' + err.message)
+      toast.error('Database Error (Delete Event): ' + err.message)
     }
   }
 

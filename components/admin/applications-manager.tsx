@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Loader2, Users, Search } from 'lucide-react'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -26,7 +27,7 @@ export function ApplicationsManager() {
       if (error) throw error
       if (data) setApplications(data as Application[])
     } catch (err: any) {
-      alert('Database Error (Fetch Applications): ' + err.message)
+      toast.error('Database Error (Fetch Applications): ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -43,9 +44,9 @@ export function ApplicationsManager() {
     try {
       const { error } = await supabase.from('applications').update({ status: newStatus }).eq('application_id', appId)
       if (error) throw error
-      console.log(`Updated ${appId} to ${newStatus}`)
+      toast.success(`Updated ${appId} to ${newStatus}`)
     } catch (err: any) {
-      alert('Database Error (Update Status): ' + err.message)
+      toast.error('Database Error (Update Status): ' + err.message)
       fetchApplications()
     }
   }

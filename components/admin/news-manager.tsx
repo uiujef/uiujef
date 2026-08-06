@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, FileText } from 'lucide-react'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
 type NewsArticle = {
@@ -34,7 +35,7 @@ export function NewsManager() {
       if (error) throw error
       if (data) setNews(data as NewsArticle[])
     } catch (err: any) {
-      alert('Database Error (Fetch News): ' + err.message)
+      toast.error('Database Error (Fetch News): ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -79,20 +80,20 @@ export function NewsManager() {
       if (editingNews) {
         const { error } = await supabase.from('news').update(payload).eq('id', editingNews.id)
         if (error) throw error
-        alert('Article updated successfully!')
+        toast.success('Article updated successfully!')
         setNews(news.map(n => n.id === editingNews.id ? { ...n, ...payload } : n))
         setIsModalOpen(false)
       } else {
         const { data, error } = await supabase.from('news').insert([payload]).select().single()
         if (error) throw error
         if (data) {
-          alert('Article created successfully!')
+          toast.success('Article created successfully!')
           setNews([data as NewsArticle, ...news])
           setIsModalOpen(false)
         }
       }
     } catch (err: any) {
-      alert('Database Error (Save News): ' + err.message)
+      toast.error('Database Error (Save News): ' + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -104,10 +105,10 @@ export function NewsManager() {
     try {
       const { error } = await supabase.from('news').delete().eq('id', id)
       if (error) throw error
-      alert('Article deleted successfully.')
+      toast.success('Article deleted successfully.')
       setNews(news.filter(n => n.id !== id))
     } catch (err: any) {
-      alert('Database Error (Delete News): ' + err.message)
+      toast.error('Database Error (Delete News): ' + err.message)
     }
   }
 
