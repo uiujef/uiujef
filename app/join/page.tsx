@@ -213,8 +213,8 @@ export default function JoinPage() {
       
       try {
         await emailjs.send(
-          'service_aiu9rll',
-          'template_te8q0n7',
+          'service_uiujef',
+          'templete_uiujef',
           {
             to_name: form.full_name,
             email: form.email,

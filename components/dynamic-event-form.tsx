@@ -225,8 +225,8 @@ export function DynamicEventForm({
     
     try {
       await emailjs.send(
-        'service_aiu9rll',
-        'template_te8q0n7',
+        'service_uiujef',
+        'templete_uiujef',
         {
           to_name: members[0].name,
           email: members[0].email,
