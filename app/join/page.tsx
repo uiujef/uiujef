@@ -316,8 +316,19 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center">
+    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative">
       <div className="max-w-3xl w-full flex flex-col gap-8">
+        
+        {/* Back to Home Button */}
+        <div>
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-sm font-medium text-white/50 hover:text-white transition-colors duration-200"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </div>
         
         {RECRUITMENT_DEADLINE && isRecruitmentOpen && (
           <div className="mx-auto flex flex-col items-center gap-2 mb-2">
