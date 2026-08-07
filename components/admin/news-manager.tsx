@@ -20,6 +20,8 @@ export function NewsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingNews, setEditingNews] = useState<NewsArticle | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   // Form State
   const [title, setTitle] = useState('')
@@ -28,21 +30,24 @@ export function NewsManager() {
   const [coverImage, setCoverImage] = useState('')
   const [published, setPublished] = useState(false)
 
-  const fetchNews = async () => {
+  const loadNews = async () => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.from('news').select('*').order('published_at', { ascending: false })
       if (error) throw error
       if (data) setNews(data as NewsArticle[])
     } catch (err: any) {
-      toast.error('Database Error (Fetch News): ' + err.message)
+      const errorMsg = err.message === 'Failed to fetch' 
+        ? 'Network error: Supabase could not be reached. Check your connection or ad-blocker.'
+        : err.message
+      toast.error('Database Error (Load News): ' + errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchNews()
+    loadNews()
   }, [])
 
   const openModal = (article?: NewsArticle) => {
@@ -61,6 +66,7 @@ export function NewsManager() {
       setCoverImage('')
       setPublished(false)
     }
+    setImageFile(null)
     setIsModalOpen(true)
   }
 
@@ -68,15 +74,35 @@ export function NewsManager() {
     e.preventDefault()
     setIsSaving(true)
 
-    const payload = {
-      title,
-      published_at: publishedAt,
-      content,
-      cover_image: coverImage,
-      published,
-    }
+    let finalImageUrl = coverImage
 
     try {
+      if (imageFile) {
+        setIsUploading(true)
+        const fileExt = imageFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('jef-images')
+          .upload(fileName, imageFile)
+
+        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('jef-images')
+          .getPublicUrl(fileName)
+
+        finalImageUrl = publicUrl
+      }
+
+      const payload = {
+        title,
+        published_at: publishedAt,
+        content,
+        cover_image: finalImageUrl,
+        published,
+      }
+
       if (editingNews) {
         const { error } = await supabase.from('news').update(payload).eq('id', editingNews.id)
         if (error) throw error
@@ -96,6 +122,7 @@ export function NewsManager() {
       toast.error('Database Error (Save News): ' + err.message)
     } finally {
       setIsSaving(false)
+      setIsUploading(false)
     }
   }
 
@@ -207,8 +234,12 @@ export function NewsManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Cover Image URL</label>
-                <input type="url" value={coverImage} onChange={e => setCoverImage(e.target.value)} placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                <label className="text-xs font-bold uppercase text-navy">Cover Image Upload</label>
+                <input type="file" accept="image/*" onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) setImageFile(file)
+                }} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20" />
+                {coverImage && !imageFile && <p className="text-xs text-muted-foreground mt-1">Current: <a href={coverImage} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">View Image</a></p>}
               </div>
 
               <div className="space-y-2">
@@ -227,9 +258,9 @@ export function NewsManager() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
-                  {isSaving && <Loader2 className="size-4 animate-spin" />}
-                  Save Article
+                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
+                  {(isSaving || isUploading) && <Loader2 className="size-4 animate-spin" />}
+                  {isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Article'}
                 </button>
               </div>
             </form>

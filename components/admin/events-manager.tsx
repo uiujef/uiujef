@@ -23,6 +23,8 @@ export function EventsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   // Form State
   const [title, setTitle] = useState('')
@@ -34,21 +36,24 @@ export function EventsManager() {
   const [requiresRegistration, setRequiresRegistration] = useState(false)
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
 
-  const fetchEvents = async () => {
+  const loadEvents = async () => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.from('events').select('*').order('date', { ascending: false })
       if (error) throw error
       if (data) setEvents(data as Event[])
     } catch (err: any) {
-      toast.error('Database Error (Fetch Events): ' + err.message)
+      const errorMsg = err.message === 'Failed to fetch' 
+        ? 'Network error: Supabase could not be reached. Check your connection or ad-blocker.'
+        : err.message
+      toast.error('Database Error (Load Events): ' + errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchEvents()
+    loadEvents()
   }, [])
 
   const openModal = (event?: Event) => {
@@ -73,6 +78,7 @@ export function EventsManager() {
       setRequiresRegistration(false)
       setIsRegistrationOpen(false)
     }
+    setImageFile(null)
     setIsModalOpen(true)
   }
 
@@ -80,18 +86,38 @@ export function EventsManager() {
     e.preventDefault()
     setIsSaving(true)
 
-    const payload = {
-      title,
-      date,
-      description,
-      category,
-      image,
-      requires_payment: requiresPayment,
-      requires_registration: requiresRegistration,
-      is_registration_open: isRegistrationOpen,
-    }
+    let finalImageUrl = image
 
     try {
+      if (imageFile) {
+        setIsUploading(true)
+        const fileExt = imageFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('jef-images')
+          .upload(fileName, imageFile)
+
+        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('jef-images')
+          .getPublicUrl(fileName)
+
+        finalImageUrl = publicUrl
+      }
+
+      const payload = {
+        title,
+        date,
+        description,
+        category,
+        image: finalImageUrl,
+        requires_payment: requiresPayment,
+        requires_registration: requiresRegistration,
+        is_registration_open: isRegistrationOpen,
+      }
+
       if (editingEvent) {
         const { error } = await supabase.from('events').update(payload).eq('id', editingEvent.id)
         if (error) throw error
@@ -111,6 +137,7 @@ export function EventsManager() {
       toast.error('Database Error (Save Event): ' + err.message)
     } finally {
       setIsSaving(false)
+      setIsUploading(false)
     }
   }
 
@@ -228,8 +255,12 @@ export function EventsManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Image URL</label>
-                <input type="url" value={image} onChange={e => setImage(e.target.value)} placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                <label className="text-xs font-bold uppercase text-navy">Image Upload</label>
+                <input type="file" accept="image/*" onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) setImageFile(file)
+                }} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20" />
+                {image && !imageFile && <p className="text-xs text-muted-foreground mt-1">Current: <a href={image} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">View Image</a></p>}
               </div>
 
               <div className="space-y-2">
@@ -273,9 +304,9 @@ export function EventsManager() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
-                  {isSaving && <Loader2 className="size-4 animate-spin" />}
-                  Save Event
+                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
+                  {(isSaving || isUploading) && <Loader2 className="size-4 animate-spin" />}
+                  {isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Event'}
                 </button>
               </div>
             </form>

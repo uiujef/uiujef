@@ -20,21 +20,24 @@ export function ApplicationsManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const fetchApplications = async () => {
+  const loadApplications = async () => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false })
       if (error) throw error
       if (data) setApplications(data as Application[])
     } catch (err: any) {
-      toast.error('Database Error (Fetch Applications): ' + err.message)
+      const errorMsg = err.message === 'Failed to fetch' 
+        ? 'Network error: Supabase could not be reached. Please check your internet or ad-blocker.'
+        : err.message
+      toast.error('Database Error (Load Applications): ' + errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchApplications()
+    loadApplications()
   }, [])
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
@@ -47,7 +50,7 @@ export function ApplicationsManager() {
       toast.success(`Updated ${appId} to ${newStatus}`)
     } catch (err: any) {
       toast.error('Database Error (Update Status): ' + err.message)
-      fetchApplications()
+      loadApplications()
     }
   }
 

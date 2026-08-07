@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Loader2, ArrowRight, ChevronLeft } from 'lucide-react'
 
+// 💡 FIX: Environment Variable-গুলোকে কম্পোনেন্টের বাইরে আনা হলো, যাতে Next.js সবসময় এগুলো খুঁজে পায়।
+const VALID_USERNAME = process.env.NEXT_PUBLIC_ADMIN_USERNAME
+const VALID_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+
 export default function AdminLogin() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -20,13 +24,14 @@ export default function AdminLogin() {
     // Simulate network delay for better UX
     await new Promise(resolve => setTimeout(resolve, 800))
 
-    const validUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME
-    const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+    // 💡 FIX: ব্রাউজারের কনসোলে চেক করার জন্য একটি লগ বসানো হলো
+    console.log("আপনি দিয়েছেন:", username, password)
+    console.log("সিস্টেম পেয়েছে:", VALID_USERNAME, VALID_PASSWORD)
 
     if (
-      validUsername && validPassword &&
-      username === validUsername &&
-      password === validPassword
+      VALID_USERNAME && VALID_PASSWORD &&
+      username === VALID_USERNAME &&
+      password === VALID_PASSWORD
     ) {
       // Set simple cookie
       document.cookie = "admin_auth=true; path=/; max-age=86400" // 1 day expiry

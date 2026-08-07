@@ -27,6 +27,8 @@ export function MembersManager() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   // Form State
   const [name, setName] = useState('')
@@ -39,21 +41,24 @@ export function MembersManager() {
   const [studentId, setStudentId] = useState('')
   const [studentAddress, setStudentAddress] = useState('')
 
-  const fetchMembers = async () => {
+  const loadMembers = async () => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
       if (error) throw error
       if (data) setMembers(data as Member[])
     } catch (err: any) {
-      toast.error('Database Error (Fetch Members): ' + err.message)
+      const errorMsg = err.message === 'Failed to fetch' 
+        ? 'Network error: Supabase could not be reached. Check your connection or ad-blocker.'
+        : err.message
+      toast.error('Database Error (Load Members): ' + errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchMembers()
+    loadMembers()
   }, [])
 
   const openModal = (member?: Member) => {
@@ -80,6 +85,7 @@ export function MembersManager() {
       setStudentId('')
       setStudentAddress('')
     }
+    setImageFile(null)
     setIsModalOpen(true)
   }
 
@@ -87,19 +93,39 @@ export function MembersManager() {
     e.preventDefault()
     setIsSaving(true)
 
-    const payload = {
-      name,
-      email,
-      phone,
-      blood_group: bloodGroup,
-      role,
-      image_url: imageUrl,
-      quote,
-      student_id: studentId,
-      student_address: studentAddress,
-    }
+    let finalImageUrl = imageUrl
 
     try {
+      if (imageFile) {
+        setIsUploading(true)
+        const fileExt = imageFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('jef-images')
+          .upload(fileName, imageFile)
+
+        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('jef-images')
+          .getPublicUrl(fileName)
+
+        finalImageUrl = publicUrl
+      }
+
+      const payload = {
+        name,
+        email,
+        phone,
+        blood_group: bloodGroup,
+        role,
+        image_url: finalImageUrl,
+        quote,
+        student_id: studentId,
+        student_address: studentAddress,
+      }
+
       if (editingMember) {
         const { error } = await supabase.from('members').update(payload).eq('id', editingMember.id)
         if (error) throw error
@@ -119,6 +145,7 @@ export function MembersManager() {
       toast.error('Database Error (Save Member): ' + err.message)
     } finally {
       setIsSaving(false)
+      setIsUploading(false)
     }
   }
 
@@ -279,8 +306,12 @@ export function MembersManager() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Image URL</label>
-                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                  <label className="text-xs font-bold uppercase text-navy">Image Upload</label>
+                  <input type="file" accept="image/*" onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (file) setImageFile(file)
+                  }} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20" />
+                  {imageUrl && !imageFile && <p className="text-xs text-muted-foreground mt-1">Current: <a href={imageUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">View Image</a></p>}
                 </div>
               </div>
 
@@ -293,9 +324,9 @@ export function MembersManager() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
-                  {isSaving && <Loader2 className="size-4 animate-spin" />}
-                  Save Member
+                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
+                  {(isSaving || isUploading) && <Loader2 className="size-4 animate-spin" />}
+                  {isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Member'}
                 </button>
               </div>
             </form>
