@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useId } from 'react'
 import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet } from 'lucide-react'
+import { toast } from 'sonner'
 import emailjs from '@emailjs/browser'
 import { supabase } from '@/lib/supabase'
 import type { EventRegistrationConfig } from '@/types'
@@ -302,9 +303,11 @@ export function DynamicEventForm({
         )
         console.log(`[EmailJS] Sent confirmation email to ${members[0].email}. Application ID: ${newId}`)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[Event Registration Error]:', err)
       setIsSubmitting(false)
+      const errorMessage = err.message || (typeof err === 'string' ? err : 'An unknown error occurred during registration.')
+      toast.error(errorMessage)
       // Return early to prevent success screen on error
       return
     }
@@ -356,7 +359,8 @@ export function DynamicEventForm({
           
           <button
             onClick={() => {
-              window.location.href = '/'
+              // Only close the modal, no redirect
+              onSuccess?.({} as any)
             }}
             className="w-full sm:w-auto rounded-full bg-[#F26522] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
           >
@@ -477,7 +481,7 @@ export function DynamicEventForm({
         <button
           disabled={isSubmitting}
           type="submit"
-          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26522] py-4 text-base font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all duration-200 hover:bg-[#FF7A3D] disabled:cursor-not-allowed disabled:opacity-60"
+          className="group relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26522] py-4 text-base font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all duration-200 hover:bg-[#FF7A3D] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? (
             <>

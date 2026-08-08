@@ -8,18 +8,24 @@ import { Menu, X } from 'lucide-react'
 import { navLinks, org } from '@/lib/site-data'
 import { cn } from '@/lib/utils'
 
-const linkClass = (isHome: boolean) =>
+const linkClass = (isHome: boolean, isActive: boolean) =>
   cn(
-    'text-sm font-semibold transition-colors duration-200',
-    isHome ? 'text-white/70 hover:text-white' : 'text-muted-foreground hover:text-navy',
+    'text-sm transition-colors duration-200',
+    isActive 
+      ? 'text-[#F26522] font-bold border-b-2 border-[#F26522] pb-1' 
+      : isHome 
+        ? 'font-semibold text-white/70 hover:text-white' 
+        : 'font-semibold text-muted-foreground hover:text-navy',
   )
 
-const mobileLinkClass = (isHome: boolean) =>
+const mobileLinkClass = (isHome: boolean, isActive: boolean) =>
   cn(
-    'block rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
-    isHome
-      ? 'text-white/80 hover:bg-white/10 hover:text-white'
-      : 'text-foreground hover:bg-secondary hover:text-navy',
+    'block rounded-lg px-3 py-3 text-sm transition-colors',
+    isActive
+      ? 'text-[#F26522] font-bold bg-[#F26522]/10 border-l-4 border-[#F26522]'
+      : isHome
+        ? 'font-semibold text-white/80 hover:bg-white/10 hover:text-white'
+        : 'font-semibold text-foreground hover:bg-secondary hover:text-navy',
   )
 
 export function SiteNav() {
@@ -27,15 +33,13 @@ export function SiteNav() {
   const pathname = usePathname()
   const isHome = pathname === '/'
 
-  const renderNavLinks = (className: string, onNavigate?: () => void) => (
+  const renderNavLinks = (getLinkClass: (isActive: boolean) => string, onNavigate?: () => void) => (
     <>
-      {!isHome && (
-        <Link href="/" className={className} onClick={onNavigate}>
-          Home
-        </Link>
-      )}
+      <Link href="/" className={getLinkClass(pathname === '/')} onClick={onNavigate}>
+        Home
+      </Link>
       {navLinks.map((link) => (
-        <Link key={link.id} href={link.href} className={className} onClick={onNavigate}>
+        <Link key={link.id} href={link.href} className={getLinkClass(pathname === link.href || pathname.startsWith(`${link.href}/`))} onClick={onNavigate}>
           {link.label}
         </Link>
       ))}
@@ -67,7 +71,7 @@ export function SiteNav() {
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          {renderNavLinks(linkClass(isHome))}
+          {renderNavLinks((isActive) => linkClass(isHome, isActive))}
           <Link
             href={org.ctaHref}
             className="inline-flex h-9 items-center rounded-full bg-gold px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-gold-soft"
@@ -115,28 +119,7 @@ export function SiteNav() {
             </button>
           </div>
           <ul className="flex flex-col">
-            {!isHome && (
-              <li>
-                <Link
-                  href="/"
-                  onClick={() => setOpen(false)}
-                  className={mobileLinkClass(isHome)}
-                >
-                  Home
-                </Link>
-              </li>
-            )}
-            {navLinks.map((link) => (
-              <li key={link.id}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className={mobileLinkClass(isHome)}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {renderNavLinks((isActive) => mobileLinkClass(isHome, isActive), () => setOpen(false))}
           </ul>
           <Link
             href={org.ctaHref}
