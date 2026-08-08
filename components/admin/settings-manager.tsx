@@ -150,17 +150,20 @@ export function SettingsManager() {
         payment_methods: paymentMethods,
       }
 
+      console.log('Saving Settings Payload:', payload)
+
       if (settingsId) {
         const { error } = await supabase.from('site_settings').update(payload).eq('id', settingsId)
-        if (error) throw error
+        if (error) throw new Error(error.message)
       } else {
         const { data, error } = await supabase.from('site_settings').insert([payload]).select().single()
-        if (error) throw error
+        if (error) throw new Error(error.message)
         if (data) setSettingsId(data.id)
       }
       
       toast.success('Site settings saved successfully!')
     } catch (err: any) {
+      console.error('Save Settings Error:', err)
       toast.error('Database Error (Save Settings): ' + err.message)
     } finally {
       setIsSaving(false)

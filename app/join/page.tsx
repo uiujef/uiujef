@@ -278,14 +278,18 @@ export default function JoinPage() {
           }
         ])
 
-        if (insertError) throw insertError
+        if (insertError) {
+          throw new Error('Database Error: ' + insertError.message)
+        }
+        
         console.log('[Supabase] Successfully inserted application record.')
-      } catch (err) {
-        console.error('[EmailJS] Error sending email:', err)
+        setIsSubmitted(true)
+      } catch (err: any) {
+        console.error('Registration Error:', err)
+        alert(err.message || 'Failed to submit application. Please check your connection or contact support.')
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
-      setIsSubmitted(true)
     }
   }, [validateStep3, form.email, form.full_name])
 
