@@ -93,9 +93,9 @@ export function ApplicationsManager() {
   }
 
   const filteredApps = applications.filter(app => 
-    app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    app.application_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    app.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

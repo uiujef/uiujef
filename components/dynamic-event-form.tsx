@@ -264,24 +264,7 @@ export function DynamicEventForm({
       submitted_at: new Date().toISOString(),
     }
 
-    // TODO: await supabase.from('event_registrations').insert([payload])
-    console.log('[UIUJEF] event_registrations insert:', payload)
-    
     try {
-      await emailjs.send(
-        'service_uiujef',
-        'templete_uiujef',
-        {
-          to_name: members[0].name,
-          email: members[0].email,
-          application_id: newId,
-        },
-        {
-          publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-        }
-      )
-      console.log(`[EmailJS] Sent confirmation email to ${members[0].email}. Application ID: ${newId}`)
-
       // Supabase Insertion
       const finalMembers = config.isTeamBased ? members : [members[0]]
       
@@ -299,12 +282,30 @@ export function DynamicEventForm({
         ])
         
       if (dbError) {
-        console.error('[Supabase] Error inserting application:', dbError)
+        throw dbError
       } else {
         console.log('[Supabase] Successfully inserted application record.')
+        
+        // Send email only after successful insert
+        await emailjs.send(
+          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+          {
+            to_name: members[0].name,
+            email: members[0].email,
+            application_id: newId,
+          },
+          {
+            publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+          }
+        )
+        console.log(`[EmailJS] Sent confirmation email to ${members[0].email}. Application ID: ${newId}`)
       }
     } catch (err) {
-      console.error('[EmailJS] Error sending email:', err)
+      console.error('[Event Registration Error]:', err)
+      setIsSubmitting(false)
+      // Return early to prevent success screen on error
+      return
     }
 
     await new Promise((r) => setTimeout(r, 1500))
