@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useReducer, useCallback, ChangeEvent } from 'react'
+import React, { useState, useEffect, useReducer, useCallback, ChangeEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import emailjs from '@emailjs/browser'
@@ -13,9 +13,7 @@ import {
 import { cn } from '@/lib/utils'
 import { CountdownTimer } from '@/components/countdown-timer'
 
-const INITIAL_RECRUITMENT_OPEN = true
 const MEMBERSHIP_FEE = 500
-const RECRUITMENT_DEADLINE = '2026-09-01T23:59:59'
 
 type PendingMemberPayload = {
   full_name: string
@@ -94,7 +92,22 @@ const selectClass = cn(inputClass, "bg-[#1B2A4A]/60 appearance-none")
 const textareaClass = cn(inputClass, "resize-none")
 
 export default function JoinPage() {
-  const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(INITIAL_RECRUITMENT_OPEN)
+  const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false)
+  const [recruitmentDeadline, setRecruitmentDeadline] = useState<string | null>(null)
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  
+  useEffect(() => {
+    async function fetchSettings() {
+      const { data } = await supabase.from('site_settings').select('is_recruitment_open, recruitment_end').limit(1).maybeSingle()
+      if (data) {
+        setIsRecruitmentOpen(data.is_recruitment_open || false)
+        setRecruitmentDeadline(data.recruitment_end)
+      }
+      setIsLoadingSettings(false)
+    }
+    fetchSettings()
+  }, [])
+
   const [step, dispatchStep] = useReducer(stepReducer, 1)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -257,6 +270,14 @@ export default function JoinPage() {
     }
   }, [validateStep3, form.email, form.full_name])
 
+  if (isLoadingSettings) {
+    return (
+      <div className="min-h-screen bg-navy-deep flex items-center justify-center">
+        <Loader2 className="size-10 animate-spin text-[#F26522]" />
+      </div>
+    )
+  }
+
   if (!isRecruitmentOpen) {
     return (
       <div className="min-h-screen bg-navy-deep flex items-center justify-center p-4">
@@ -330,10 +351,10 @@ export default function JoinPage() {
           </Link>
         </div>
         
-        {RECRUITMENT_DEADLINE && isRecruitmentOpen && (
+        {recruitmentDeadline && isRecruitmentOpen && (
           <div className="mx-auto flex flex-col items-center gap-2 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-[#F26522]">Recruitment closes in</span>
-            <CountdownTimer targetDate={RECRUITMENT_DEADLINE} onExpire={() => setIsRecruitmentOpen(false)} />
+            <CountdownTimer targetDate={recruitmentDeadline} onExpire={() => setIsRecruitmentOpen(false)} />
           </div>
         )}
 

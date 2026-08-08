@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/brand-icons'
 import { contact, org, socials } from '@/lib/site-data'
 
@@ -8,7 +9,24 @@ const socialIcons = {
   instagram: InstagramIcon,
 }
 
-export function ContactSection() {
+export async function ContactSection() {
+  let phoneNumber = contact.phone
+
+  try {
+    const { data: settings } = await supabase.from('site_settings').select('official_contact_number').limit(1).maybeSingle()
+    
+    if (settings?.official_contact_number) {
+      phoneNumber = settings.official_contact_number
+    } else {
+      const { data: president } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle()
+      if (president?.phone) {
+        phoneNumber = president.phone
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching dynamic contact number:', error)
+  }
+
   return (
     <section id="contact" className="bg-background">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
@@ -27,7 +45,7 @@ export function ContactSection() {
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <a
-            href={`tel:${contact.phone.replace(/\s/g, '')}`}
+            href={`tel:${phoneNumber.replace(/\s/g, '')}`}
             className="group rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/30 hover:shadow-lg hover:shadow-navy/5"
           >
             <span className="inline-flex size-11 items-center justify-center rounded-xl bg-navy text-gold">
@@ -35,7 +53,7 @@ export function ContactSection() {
             </span>
             <h2 className="mt-4 text-base font-semibold text-navy">Phone</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground">
-              {contact.phone}
+              {phoneNumber}
             </p>
           </a>
 

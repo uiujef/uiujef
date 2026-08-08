@@ -25,6 +25,7 @@ const socialIcons = {
 export function SiteFooter() {
   const pathname = usePathname()
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
+  const [phoneNumber, setPhoneNumber] = useState(contact.phone)
 
   useEffect(() => {
     async function fetchSponsors() {
@@ -36,7 +37,25 @@ export function SiteFooter() {
         console.error('Error fetching sponsors:', err)
       }
     }
+
+    async function fetchContactInfo() {
+      try {
+        const { data: settings } = await supabase.from('site_settings').select('official_contact_number').limit(1).maybeSingle()
+        if (settings?.official_contact_number) {
+          setPhoneNumber(settings.official_contact_number)
+        } else {
+          const { data: president } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle()
+          if (president?.phone) {
+            setPhoneNumber(president.phone)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching contact info:', err)
+      }
+    }
+
     fetchSponsors()
+    fetchContactInfo()
   }, [])
 
   const showSponsors = pathname !== '/' && sponsors.length > 0
@@ -82,11 +101,11 @@ export function SiteFooter() {
             <ul className="mt-6 space-y-3 text-sm">
               <li>
                 <a
-                  href={`tel:${contact.phone.replace(/\s/g, '')}`}
+                  href={`tel:${phoneNumber.replace(/\s/g, '')}`}
                   className="flex items-start gap-3 text-white/70 transition-colors hover:text-[#F26522]"
                 >
                   <Phone className="mt-0.5 size-4 shrink-0 text-[#F26522]" aria-hidden="true" />
-                  {contact.phone}
+                  {phoneNumber}
                 </a>
               </li>
               <li>

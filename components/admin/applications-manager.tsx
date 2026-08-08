@@ -87,6 +87,15 @@ export function ApplicationsManager() {
         toast.success(`Member registered with serial ${formattedSerial}`)
       }
 
+      if (app.status === 'Approved' && newStatus !== 'Approved' && app.type === 'Member') {
+        const { error: deleteError } = await supabase.from('members').delete().eq('email', app.email)
+        if (deleteError) {
+          console.error("Failed to delete auto-created member:", deleteError)
+        } else {
+          toast.success(`Removed member profile for ${app.email}`)
+        }
+      }
+
       const { error } = await supabase.from('applications').update({ status: newStatus }).eq('application_id', appId)
       if (error) throw error
       toast.success(`Updated application ${appId} to ${newStatus}`)
@@ -243,7 +252,7 @@ export function ApplicationsManager() {
                               </button>
                             </>
                           )}
-                          {app.status === 'Rejected' && (
+                          {(app.status === 'Rejected' || app.status === 'Approved') && (
                             <button 
                               onClick={() => handleStatusChange(app.application_id, 'Pending')}
                               className="p-1.5 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 rounded-lg shadow-sm transition-colors" 

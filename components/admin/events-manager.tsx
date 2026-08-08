@@ -371,8 +371,8 @@ export function EventsManager() {
                     <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline *</label>
-                    <input required type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline {requiresRegistration && '*'}</label>
+                    <input required={requiresRegistration} type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
                 </div>
               </div>
