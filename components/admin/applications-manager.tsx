@@ -94,6 +94,7 @@ export function ApplicationsManager() {
           instagram_url: memberData.instagram_url || '',
           linkedin_url: memberData.linkedin_url || '',
           photo_url: memberData.photo_url || '',
+          image_url: memberData.photo_url || '',
         }
 
         const { error: insertError } = await supabase.from('members').insert([memberPayload])
