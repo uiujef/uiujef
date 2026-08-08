@@ -233,73 +233,52 @@ export default function JoinPage() {
   const [applicationId, setApplicationId] = useState<string>('')
 
   const handleSubmit = useCallback(async () => {
-    if (validateStep3()) {
-      setIsLoading(true)
-      
-      // Generate unique application ID
-      const { count } = await supabase
-        .from('applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('type', 'Membership')
-        
-      const newId = `JEF-MEM-N${(count || 0) + 1}`
-      setApplicationId(newId)
+    if (!validateStep3()) return;
+    
+    setIsLoading(true);
+    try {
+      // 1. Generate ID
+      const { count } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('type', 'Membership');
+      const newId = `JEF-MEM-N${(count || 0) + 1}`;
+      setApplicationId(newId);
 
-      // Mock API / DB submission delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      // 2. Clean the payload (remove Blob URLs from JSONB to prevent DB parsing errors)
+      const { photo_url, ...safeForm } = form;
+
+      // 3. STRICT Supabase Insert FIRST
+      const { error: dbError } = await supabase.from('applications').insert([{
+        application_id: newId,
+        name: safeForm.full_name,
+        email: safeForm.email,
+        type: 'Membership',
+        status: 'Pending',
+        transaction_id: safeForm.transaction_id,
+        team_members: [{ ...safeForm, application_id: newId, submitted_at: new Date().toISOString() }]
+      }]);
+
+      if (dbError) throw dbError;
+
+      // 4. Non-blocking EmailJS
       try {
-        const insertPayload = {
-          application_id: newId,
-          name: form.full_name,
-          email: form.email,
-          type: 'Membership',
-          status: 'Pending',
-          transaction_id: form.transaction_id,
-          team_members: [{ ...form, application_id: newId, submitted_at: new Date().toISOString() }]
-        }
-
-        // 1. Execute Database Insert FIRST
-        const { error: insertError } = await supabase.from('applications').insert([insertPayload])
-
-        if (insertError) {
-          console.error('[Supabase Error]:', insertError)
-          toast.error(insertError.message || insertError.details || insertError.hint || 'Database insertion failed.')
-          setIsLoading(false)
-          return // Stop execution if DB fails
-        }
-        
-        console.log('[Supabase] Successfully inserted application record.')
-
-        // 2. Send Email (Decoupled - does not block submission success)
-        try {
-          await emailjs.send(
-            'service_uiujef',
-            'templete_uiujef',
-            {
-              to_name: form.full_name,
-              to_email: form.email,
-              application_id: newId,
-            },
-            {
-              publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-            }
-          )
-          console.log(`[EmailJS] Sent confirmation email to ${form.email}.`)
-        } catch (emailErr) {
-          console.error('[EmailJS] Error sending email:', emailErr)
-          // We don't block the user if the email fails, since the DB insert succeeded
-        }
-
-        setIsSubmitted(true)
-      } catch (err: any) {
-        console.error('Submission Error:', err)
-        toast.error(err?.message || 'An unknown error occurred during submission.')
-      } finally {
-        setIsLoading(false)
+        await emailjs.send(
+          'service_uiujef',
+          'templete_uiujef', // Make sure template ID is correct
+          { to_name: safeForm.full_name, to_email: safeForm.email, application_id: newId },
+          { publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY }
+        );
+      } catch (emailErr) {
+        console.warn("EmailJS failed, but DB insert succeeded:", emailErr);
       }
+
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error("FULL SUBMIT ERROR:", error);
+      // Expose the EXACT error to the UI
+      toast.error(error.message || error.details || "Failed to submit. Please check browser console.");
+    } finally {
+      setIsLoading(false);
     }
-  }, [validateStep3, form.email, form.full_name])
+  }, [validateStep3, form]);
 
   if (isLoadingSettings) {
     return (
