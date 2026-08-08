@@ -249,45 +249,52 @@ export default function JoinPage() {
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       try {
-        await emailjs.send(
-          'service_uiujef',
-          'templete_uiujef',
-          {
-            to_name: form.full_name,
-            to_email: form.email,
-            application_id: newId,
-          },
-          {
-            publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-          }
-        )
-        console.log(`[EmailJS] Sent confirmation email to ${form.email}. Application ID: ${newId}`)
-        
-        const { error: insertError } = await supabase.from('applications').insert([
-          {
-            application_id: newId,
-            name: form.full_name,
-            email: form.email,
-            type: 'Membership',
-            status: 'Pending',
-            team_members: [{
-              ...form,
-              application_id: newId,
-              submitted_at: new Date().toISOString()
-            }],
-            transaction_id: form.transaction_id,
-          }
-        ])
+        const insertPayload = {
+          application_id: newId,
+          name: form.full_name,
+          email: form.email,
+          type: 'Membership',
+          status: 'Pending',
+          transaction_id: form.transaction_id,
+          team_members: [{ ...form, application_id: newId, submitted_at: new Date().toISOString() }]
+        }
+
+        // 1. Execute Database Insert FIRST
+        const { error: insertError } = await supabase.from('applications').insert([insertPayload])
 
         if (insertError) {
-          throw new Error('Database Error: ' + insertError.message)
+          console.error('[Supabase Error]:', insertError)
+          toast.error(insertError.message || insertError.details || insertError.hint || 'Database insertion failed.')
+          setIsLoading(false)
+          return // Stop execution if DB fails
         }
         
         console.log('[Supabase] Successfully inserted application record.')
+
+        // 2. Send Email (Decoupled - does not block submission success)
+        try {
+          await emailjs.send(
+            'service_uiujef',
+            'templete_uiujef',
+            {
+              to_name: form.full_name,
+              to_email: form.email,
+              application_id: newId,
+            },
+            {
+              publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+            }
+          )
+          console.log(`[EmailJS] Sent confirmation email to ${form.email}.`)
+        } catch (emailErr) {
+          console.error('[EmailJS] Error sending email:', emailErr)
+          // We don't block the user if the email fails, since the DB insert succeeded
+        }
+
         setIsSubmitted(true)
       } catch (err: any) {
         console.error('Submission Error:', err)
-        toast.error(err.message || 'An unknown error occurred')
+        toast.error(err?.message || 'An unknown error occurred during submission.')
       } finally {
         setIsLoading(false)
       }
