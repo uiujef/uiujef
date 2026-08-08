@@ -79,19 +79,32 @@ export async function HeroSection() {
                         Upcoming Event: {featuredEvent.title}
                       </h3>
                     </div>
-                    {featuredEvent.date && (
+                    {featuredEvent.registration_deadline ? (
+                      <div className="mt-2 sm:mt-3">
+                        <CountdownTimer targetDate={featuredEvent.registration_deadline} />
+                      </div>
+                    ) : featuredEvent.date && (
                       <div className="mt-2 sm:mt-3">
                         <CountdownTimer targetDate={featuredEvent.date} />
                       </div>
                     )}
                   </div>
-                  <Link 
-                    href={featuredEvent.is_registration_open ? `/events?register=${featuredEvent.id}` : `/events`}
-                    className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F26522] px-4 py-2 text-xs font-bold text-white shadow-sm shadow-[#F26522]/30 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/50"
-                  >
-                    {featuredEvent.is_registration_open ? 'Register Now' : 'View Event'}
-                    <ArrowRight className="size-3.5 transition-transform duration-150 hover:translate-x-0.5" />
-                  </Link>
+                  {featuredEvent.registration_deadline && new Date(featuredEvent.registration_deadline) < new Date() ? (
+                    <button 
+                      disabled
+                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white/50 cursor-not-allowed"
+                    >
+                      Registration Closed
+                    </button>
+                  ) : (
+                    <Link 
+                      href={featuredEvent.is_registration_open ? `/events?register=${featuredEvent.id}` : `/events`}
+                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F26522] px-4 py-2 text-xs font-bold text-white shadow-sm shadow-[#F26522]/30 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/50"
+                    >
+                      {featuredEvent.is_registration_open ? 'Register Now' : 'View Event'}
+                      <ArrowRight className="size-3.5 transition-transform duration-150 hover:translate-x-0.5" />
+                    </Link>
+                  )}
                 </div>
               </div>
             )}

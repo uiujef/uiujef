@@ -22,6 +22,7 @@ type Event = {
   pinned_at: string | null
   participation_type: string
   event_level: string
+  registration_deadline: string | null
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -50,6 +51,7 @@ export function EventsManager() {
   const [isPinned, setIsPinned] = useState(false)
   const [participationType, setParticipationType] = useState('Individual')
   const [eventLevel, setEventLevel] = useState('On Campus')
+  const [registrationDeadline, setRegistrationDeadline] = useState('')
 
   const loadEvents = async () => {
     setIsLoading(true)
@@ -102,6 +104,18 @@ export function EventsManager() {
       setIsPinned(event.is_pinned || false)
       setParticipationType(event.participation_type || 'Individual')
       setEventLevel(event.event_level || 'On Campus')
+
+      let formattedDeadline = ''
+      try {
+        if (event.registration_deadline) {
+          const d = new Date(event.registration_deadline)
+          formattedDeadline = d.toISOString().slice(0, 16)
+        }
+      } catch (e) {
+        console.error('Error parsing deadline', e)
+        formattedDeadline = event.registration_deadline || ''
+      }
+      setRegistrationDeadline(formattedDeadline)
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -118,6 +132,7 @@ export function EventsManager() {
       setIsPinned(false)
       setParticipationType('Individual')
       setEventLevel('On Campus')
+      setRegistrationDeadline('')
     }
     setImageFile(null)
     setIsModalOpen(true)
@@ -163,7 +178,8 @@ export function EventsManager() {
         is_pinned: isPinned,
         pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
         participation_type: participationType,
-        event_level: eventLevel
+        event_level: eventLevel,
+        registration_deadline: requiresRegistration && registrationDeadline ? new Date(registrationDeadline).toISOString() : null
       }
 
       if (isFeatured) {
@@ -321,9 +337,9 @@ export function EventsManager() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-navy-deep/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-6 sm:px-8 sm:py-6 border-b border-border flex items-center justify-between bg-white z-10 shrink-0">
+          <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+          <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="p-6 sm:px-8 sm:py-6 border-b border-border flex items-center justify-between bg-transparent z-10 shrink-0">
               <h3 className="text-2xl font-bold text-navy tracking-tight">{editingEvent ? 'Edit Event Details' : 'Create New Event'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors">✕</button>
             </div>
@@ -435,6 +451,13 @@ export function EventsManager() {
                           <p className="text-xs text-muted-foreground">Allow people to register now.</p>
                         </div>
                       </label>
+
+                      {isRegistrationOpen && (
+                        <div className="pl-14 space-y-2">
+                          <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline</label>
+                          <input type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                        </div>
+                      )}
 
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <div className="relative flex items-center">

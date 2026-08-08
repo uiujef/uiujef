@@ -278,6 +278,7 @@ export function DynamicEventForm({
             type: 'Event',
             status: 'Pending',
             team_members: finalMembers,
+            transaction_id: config.requiresPayment ? transactionId : null,
           }
         ])
         
@@ -339,18 +340,26 @@ export function DynamicEventForm({
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setIsSuccess(false)
-            setMembers([{ ...EMPTY_MEMBER }])
-            setTeamName('')
-            setPaymentMethod('')
-            setTransactionId('')
-          }}
-          className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/60 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]"
-        >
-          Register another team
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(applicationId)
+              alert('Application ID copied to clipboard!')
+            }}
+            className="w-full sm:w-auto rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            Copy ID
+          </button>
+          
+          <button
+            onClick={() => {
+              window.location.href = '/'
+            }}
+            className="w-full sm:w-auto rounded-full bg-[#F26522] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
+          >
+            Close & Return to Home
+          </button>
+        </div>
       </div>
     )
   }

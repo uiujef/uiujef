@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Users, Search } from 'lucide-react'
+import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,7 @@ type Application = {
   status: string
   created_at?: string
   team_members?: any[]
+  transaction_id?: string
 }
 
 export function ApplicationsManager() {
@@ -92,6 +93,19 @@ export function ApplicationsManager() {
     }
   }
 
+  const handleDelete = async (appId: string) => {
+    if (!confirm('Are you sure you want to delete this application permanently?')) return
+
+    try {
+      const { error } = await supabase.from('applications').delete().eq('application_id', appId)
+      if (error) throw error
+      toast.success(`Deleted application ${appId}`)
+      setApplications(apps => apps.filter(a => a.application_id !== appId))
+    } catch (err: any) {
+      toast.error('Database Error (Delete): ' + err.message)
+    }
+  }
+
   const filteredApps = applications.filter(app => 
     (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
     (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -145,6 +159,7 @@ export function ApplicationsManager() {
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">University</th>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Contact Person</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">TrxID</th>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px] text-right">Action</th>
                 </tr>
@@ -180,6 +195,15 @@ export function ApplicationsManager() {
                         {contactPhone !== '-' && <div className="text-muted-foreground text-[10px]">{contactPhone}</div>}
                       </td>
                       <td className="px-4 py-3">
+                        {app.transaction_id ? (
+                          <span className="font-mono text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded border border-gray-200">
+                            {app.transaction_id}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
                           app.status === 'Approved' ? "bg-green-500/10 text-green-700 border-green-500/20" :
                           app.status === 'Rejected' ? "bg-red-500/10 text-red-700 border-red-500/20" :
@@ -189,15 +213,33 @@ export function ApplicationsManager() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <select 
-                          value={app.status} 
-                          onChange={(e) => handleStatusChange(app.application_id, e.target.value)}
-                          className="text-xs font-semibold bg-white border border-border rounded-lg px-2 py-1.5 outline-none focus:border-[#F26522] cursor-pointer shadow-sm"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approve</option>
-                          <option value="Rejected">Reject</option>
-                        </select>
+                        <div className="flex items-center justify-end gap-2">
+                          {app.status === 'Pending' && (
+                            <>
+                              <button 
+                                onClick={() => handleStatusChange(app.application_id, 'Approved')}
+                                className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg shadow-sm transition-colors" 
+                                title="Approve"
+                              >
+                                <CheckCircle className="size-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleStatusChange(app.application_id, 'Rejected')}
+                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg shadow-sm transition-colors" 
+                                title="Reject"
+                              >
+                                <XCircle className="size-4" />
+                              </button>
+                            </>
+                          )}
+                          <button 
+                            onClick={() => handleDelete(app.application_id)}
+                            className="p-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-lg shadow-sm transition-colors ml-2" 
+                            title="Delete Permanently"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
