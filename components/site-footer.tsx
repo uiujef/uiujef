@@ -27,6 +27,7 @@ export function SiteFooter() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
   const [phoneNumber, setPhoneNumber] = useState(contact.phone)
   const [showDeveloperModal, setShowDeveloperModal] = useState(false)
+  const [devPhoto, setDevPhoto] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchSponsors() {
@@ -55,8 +56,27 @@ export function SiteFooter() {
       }
     }
 
+    async function fetchDevPhoto() {
+      try {
+        const { data, error } = await supabase
+          .from('members')
+          .select('image_url, photo_url')
+          .eq('name', 'Shaikh Jubair')
+          .or('email.eq.sjubair0112420017@bscse.uiu.ac.bd,email.eq.shaikh.jubair.2025@gmail.com,phone.eq.01863834824,phone.eq.+8809658058885')
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          setDevPhoto(data.image_url || data.photo_url || null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch developer photo:", err);
+      }
+    }
+
     fetchSponsors()
     fetchContactInfo()
+    fetchDevPhoto()
   }, [])
 
   const showSponsors = pathname !== '/' && sponsors.length > 0
@@ -194,7 +214,7 @@ export function SiteFooter() {
             <div className="p-8 flex flex-col items-center text-center">
               <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-[#F26522] to-orange-400 p-1 mb-6 shadow-lg">
                 <div className="w-full h-full rounded-full overflow-hidden bg-white">
-                  <img src="/developer-photo.jpg" alt="Shaikh Jubair" className="w-full h-full object-cover" />
+                  <img src={devPhoto || "/developer-photo.jpg"} alt="Shaikh Jubair" className="w-full h-full object-cover" />
                 </div>
               </div>
               <h3 className="text-2xl font-bold text-navy mb-1">Shaikh Jubair</h3>
