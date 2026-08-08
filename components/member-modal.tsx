@@ -37,6 +37,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
 
   const isAdvisor = member.role === 'Advisor'
   const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
+  const isDeveloper = member.name === 'Shaikh Jubair'
 
   return (
     <div
@@ -175,9 +176,15 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                   <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
                     Address
                   </p>
-                  <p className="text-xs font-bold text-navy break-words whitespace-normal leading-relaxed">
-                    {member.student_address || 'N/A'}
-                  </p>
+                  {isDeveloper ? (
+                    <p className="text-xs font-bold text-navy break-words whitespace-normal leading-relaxed">
+                      {member.student_address || 'N/A'}
+                    </p>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500 mt-1">
+                      Hidden for Privacy
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -223,12 +230,18 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                   <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
                     Phone
                   </p>
-                  <a
-                    href={`tel:${member.phone}`}
-                    className="text-xs font-bold text-navy transition-colors hover:text-[#F26522]"
-                  >
-                    {member.phone || 'N/A'}
-                  </a>
+                  {isDeveloper ? (
+                    <a
+                      href={`tel:${member.phone}`}
+                      className="text-xs font-bold text-navy transition-colors hover:text-[#F26522]"
+                    >
+                      {member.phone || 'N/A'}
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500 mt-1">
+                      Hidden for Privacy
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
