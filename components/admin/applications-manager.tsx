@@ -75,12 +75,20 @@ export function ApplicationsManager() {
         
         const formattedSerial = newSerial.toString().padStart(4, '0')
         
+        const memberData = app.team_members?.[0] || {}
+        
         const memberPayload = {
-          name: app.name,
-          email: app.email,
+          name: app.name || memberData.full_name || '',
+          email: app.email || memberData.email || '',
           role: 'General Member',
           member_serial: newSerial,
           formatted_serial: formattedSerial,
+          student_id: memberData.student_id || '',
+          phone: memberData.phone || '',
+          blood_group: memberData.blood_group || '',
+          facebook_url: memberData.facebook_url || '',
+          instagram_url: memberData.instagram_url || '',
+          linkedin_url: memberData.linkedin_url || '',
         }
 
         const { error: insertError } = await supabase.from('members').insert([memberPayload])

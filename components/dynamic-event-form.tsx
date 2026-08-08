@@ -268,7 +268,20 @@ export function DynamicEventForm({
     e.preventDefault()
     setIsSubmitting(true)
 
-    const newId = 'JEF-EV-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+    // Fetch count of all event applications
+    const { count, error: countError } = await supabase
+      .from('applications')
+      .select('*', { count: 'exact', head: true })
+      .like('type', 'Event:%')
+      
+    if (countError) {
+      console.error('[Event Registration Error]: Failed to fetch count', countError)
+      toast.error('Failed to generate application ID. Please try again.')
+      setIsSubmitting(false)
+      return
+    }
+    
+    const newId = `JEF-EVENT-N${(count || 0) + 1}`
     setApplicationId(newId)
 
     const payload: EventRegistrationPayload = {
@@ -355,10 +368,15 @@ export function DynamicEventForm({
           <div className="font-mono text-xl font-bold tracking-wider text-white">
             {applicationId}
           </div>
-          <div className="mt-4 flex items-start gap-2 text-left rounded-lg bg-red-500/10 p-3 border border-red-500/20">
-            <span className="text-xl">⚠️</span>
-            <p className="text-[11px] font-semibold text-red-200">
-              Please copy and save your Application ID safely for future tracking. Do not close this window without saving it!
+          <div className="mt-4 flex flex-col items-start gap-2 text-left rounded-lg bg-red-500/10 p-4 border border-red-500/20">
+            <div className="flex items-start gap-2">
+              <span className="text-xl">⚠️</span>
+              <p className="text-[12px] font-semibold text-red-200">
+                Please copy and save your Application ID safely for future tracking. Do not close this window without saving it!
+              </p>
+            </div>
+            <p className="text-[12px] font-medium text-white/80 mt-1 pl-7">
+              Please check your email inbox to find your Application ID. If you don't see it, be sure to check your Spam or Junk folder.
             </p>
           </div>
         </div>

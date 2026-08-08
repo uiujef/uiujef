@@ -36,6 +36,9 @@ type PendingMemberPayload = {
   heard_about: string
   payment_method: string
   transaction_id: string
+  facebook_url?: string
+  instagram_url?: string
+  linkedin_url?: string
   photo_url: string | null
   other_role?: string
   status: 'pending'
@@ -138,6 +141,9 @@ export default function JoinPage() {
     heard_about: '',
     payment_method: '',
     transaction_id: '',
+    facebook_url: '',
+    instagram_url: '',
+    linkedin_url: '',
     photo_url: null,
     other_role: '',
     status: 'pending',
@@ -166,11 +172,9 @@ export default function JoinPage() {
   const validateStep2 = useCallback(() => {
     const newErrors: Record<string, string> = {}
     if (form.bio.length < 30) newErrors.bio = 'Min 30 chars'
-    if (form.why_join.length < 50) newErrors.why_join = 'Min 50 chars'
-    if (form.expect_from_jef.length < 30) newErrors.expect_from_jef = 'Min 30 chars'
+    if (form.why_join.length < 10) newErrors.why_join = 'Min 10 chars'
     if (!form.interested_roles) newErrors.interested_roles = 'Required'
     if (form.interested_roles === 'Other (Specify)' && (!form.other_role || form.other_role.length < 5)) newErrors.other_role = 'Min 5 chars'
-    if (form.know_about_jef.length < 30) newErrors.know_about_jef = 'Min 30 chars'
     if (!form.heard_about) newErrors.heard_about = 'Required'
 
     setErrors(newErrors)
@@ -230,7 +234,12 @@ export default function JoinPage() {
       setIsLoading(true)
       
       // Generate unique application ID
-      const newId = 'JEF-MB-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      const { count } = await supabase
+        .from('applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'Membership')
+        
+      const newId = `JEF-MEM-N${(count || 0) + 1}`
       setApplicationId(newId)
 
       // Mock API / DB submission delay
@@ -251,27 +260,24 @@ export default function JoinPage() {
         )
         console.log(`[EmailJS] Sent confirmation email to ${form.email}. Application ID: ${newId}`)
         
-        // Supabase Insertion
-        const { error: dbError } = await supabase
-          .from('applications')
-          .insert([
-            {
+        const { error: insertError } = await supabase.from('applications').insert([
+          {
+            application_id: newId,
+            name: form.full_name,
+            email: form.email,
+            type: 'Membership',
+            status: 'Pending',
+            team_members: [{
+              ...form,
               application_id: newId,
-              name: form.full_name,
-              email: form.email,
-              type: 'Member',
-              status: 'Pending',
-              address: form.student_address,
-              bio: form.bio,
-              interested_role: form.interested_roles === 'Other (Specify)' ? form.other_role : form.interested_roles
-            }
-          ])
-          
-        if (dbError) {
-          console.error('[Supabase] Error inserting application:', dbError)
-        } else {
-          console.log('[Supabase] Successfully inserted application record.')
-        }
+              submitted_at: new Date().toISOString()
+            }],
+            transaction_id: form.transaction_id,
+          }
+        ])
+
+        if (insertError) throw insertError
+        console.log('[Supabase] Successfully inserted application record.')
       } catch (err) {
         console.error('[EmailJS] Error sending email:', err)
       }
@@ -366,8 +372,19 @@ export default function JoinPage() {
             <div className="font-mono text-3xl font-bold tracking-wider text-white">
               {applicationId}
             </div>
-            <p className="mt-3 text-sm text-white/50">
-              Save this ID to track your application status. A confirmation email has been sent to {form.email}.
+            <div className="mt-4 flex flex-col items-start gap-2 text-left rounded-lg bg-red-500/10 p-4 border border-red-500/20">
+              <div className="flex items-start gap-2">
+                <span className="text-xl">⚠️</span>
+                <p className="text-[12px] font-semibold text-red-200">
+                  Please copy and save your Application ID safely for future tracking. Do not close this window without saving it!
+                </p>
+              </div>
+              <p className="text-[12px] font-medium text-white/80 mt-1 pl-7">
+                Please check your email inbox to find your Application ID. If you don't see it, be sure to check your Spam or Junk folder.
+              </p>
+            </div>
+            <p className="mt-4 text-sm text-white/50">
+              A confirmation email has been sent to {form.email}.
             </p>
           </div>
 
@@ -535,14 +552,27 @@ export default function JoinPage() {
                   <div className="text-right text-xs text-white/30">{form.bio.length}/30 min chars</div>
                 </Field>
 
+                <SectionTitle label="Social Profiles (Recommended)" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <Field id="facebook_url" label="Facebook URL" icon={FacebookIcon}>
+                    <input id="facebook_url" name="facebook_url" type="url" value={form.facebook_url} onChange={handleChange} className={inputClass} placeholder="https://facebook.com/..." />
+                  </Field>
+                  <Field id="linkedin_url" label="LinkedIn URL" icon={LinkedinIcon}>
+                    <input id="linkedin_url" name="linkedin_url" type="url" value={form.linkedin_url} onChange={handleChange} className={inputClass} placeholder="https://linkedin.com/in/..." />
+                  </Field>
+                  <Field id="instagram_url" label="Instagram URL" icon={InstagramIcon}>
+                    <input id="instagram_url" name="instagram_url" type="url" value={form.instagram_url} onChange={handleChange} className={inputClass} placeholder="https://instagram.com/..." />
+                  </Field>
+                </div>
+                <SectionTitle label="Aspirations" />
+
                 <Field id="why_join" label="Why do you want to join JEF?" icon={MessageSquare} error={errors.why_join}>
                   <textarea id="why_join" name="why_join" rows={3} value={form.why_join} onChange={handleChange} className={textareaClass} placeholder="I want to join because..." />
-                  <div className="text-right text-xs text-white/30">{form.why_join.length}/50 min chars</div>
+                  <div className="text-right text-xs text-white/30">{form.why_join.length}/10 min chars</div>
                 </Field>
 
                 <Field id="expect_from_jef" label="What do you expect from JEF?" icon={Star} error={errors.expect_from_jef}>
                   <textarea id="expect_from_jef" name="expect_from_jef" rows={3} value={form.expect_from_jef} onChange={handleChange} className={textareaClass} placeholder="I expect to learn..." />
-                  <div className="text-right text-xs text-white/30">{form.expect_from_jef.length}/30 min chars</div>
                 </Field>
 
                 <Field id="extracurricular" label="Extracurricular Activities (Optional)" icon={BookOpen}>
@@ -569,7 +599,6 @@ export default function JoinPage() {
 
                 <Field id="know_about_jef" label="What do you know about JEF?" icon={Search} error={errors.know_about_jef}>
                   <textarea id="know_about_jef" name="know_about_jef" rows={2} value={form.know_about_jef} onChange={handleChange} className={textareaClass} placeholder="JEF is a forum that..." />
-                  <div className="text-right text-xs text-white/30">{form.know_about_jef.length}/30 min chars</div>
                 </Field>
 
                 <Field id="heard_about" label="Where did you hear about us?" icon={Building2} error={errors.heard_about}>
