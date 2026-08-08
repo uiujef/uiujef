@@ -224,7 +224,7 @@ export function DynamicEventForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [applicationId, setApplicationId] = useState('')
-  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string}[]>([])
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
 
   useEffect(() => {
     if (config.requiresPayment) {
@@ -488,7 +488,9 @@ export function DynamicEventForm({
                 <div className="grid gap-2 sm:grid-cols-2">
                   {paymentMethods.map((pm, idx) => (
                     <div key={idx} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 border border-white/5">
-                      <span className="text-sm font-semibold text-white/80">{pm.method}</span>
+                      <span className="text-sm font-semibold text-white/80">
+                        {pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method}
+                      </span>
                       <span className="font-mono text-sm font-bold text-[#F26522]">{pm.account_number}</span>
                     </div>
                   ))}
@@ -507,8 +509,19 @@ export function DynamicEventForm({
                   className={cn(inputCls, 'bg-[#1B2A4A]/60')}
                 >
                   <option value="" disabled>Select Method</option>
-                  <option value="bkash">bKash</option>
-                  <option value="nagad">Nagad</option>
+                  {paymentMethods.length > 0 ? (
+                    paymentMethods.map((pm, idx) => {
+                      const label = pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method;
+                      return (
+                        <option key={idx} value={label}>{label}</option>
+                      )
+                    })
+                  ) : (
+                    <>
+                      <option value="bkash">bKash</option>
+                      <option value="nagad">Nagad</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>

@@ -90,17 +90,14 @@ export function EventsManager() {
       try {
         if (event.date) {
           const d = new Date(event.date)
-          // YYYY-MM-DDThh:mm
           formattedDate = d.toISOString().slice(0, 16)
         }
       } catch (e) {
         console.error('Error parsing date', e)
-        formattedDate = event.date // fallback
       }
-
       setDate(formattedDate)
       setDescription(event.description || '')
-      setCategory(event.category)
+      setCategory(event.category || 'Seminar')
       setImage(event.image || '')
       setRequiresPayment(event.requires_payment || false)
       setRequiresRegistration(event.requires_registration || false)
@@ -242,13 +239,14 @@ export function EventsManager() {
     }
   }
 
-  const exportEventApps = async (eventTitle: string, approvedOnly: boolean) => {
+  const exportEventApps = async (event: Event, approvedOnly: boolean) => {
     try {
-      const toastId = toast.loading(`Exporting ${approvedOnly ? 'approved ' : ''}applications for ${eventTitle}...`)
+      const toastId = toast.loading(`Exporting ${approvedOnly ? 'approved ' : ''}applications for ${event.title}...`)
       const { data, error } = await supabase
         .from('applications')
         .select('*')
-        .eq('type', `Event: ${eventTitle}`)
+        .eq('event_id', event.id)
+        .eq('type', 'Event')
 
       if (error) throw error
 
@@ -299,7 +297,7 @@ export function EventsManager() {
         { header: 'TrxID', key: (r: any) => r.transaction_id || '' },
       ]
 
-      exportToCsv(`UIUJEF_${eventTitle}_Apps_${approvedOnly ? 'Approved' : 'All'}`, appsToExport, columns)
+      exportToCsv(`${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_Applications_${approvedOnly ? 'Approved' : 'All'}`, appsToExport, columns)
       toast.dismiss(toastId)
       toast.success('Export successful!')
     } catch (err: any) {
@@ -414,10 +412,10 @@ export function EventsManager() {
                     </div>
                     {event.requires_registration && (
                       <div className="flex items-center gap-2 border-t border-border/50 pt-3 mt-1">
-                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event.title, false); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-secondary text-navy rounded-lg hover:bg-secondary/80 transition-colors">
+                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event, false); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-secondary text-navy rounded-lg hover:bg-secondary/80 transition-colors">
                           Export All
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event.title, true); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#F26522]/10 text-[#F26522] rounded-lg hover:bg-[#F26522]/20 transition-colors">
+                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event, true); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#F26522]/10 text-[#F26522] rounded-lg hover:bg-[#F26522]/20 transition-colors">
                           Export Approved
                         </button>
                       </div>

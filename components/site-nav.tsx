@@ -35,9 +35,11 @@ export function SiteNav() {
 
   const renderNavLinks = (getLinkClass: (isActive: boolean) => string, onNavigate?: () => void) => (
     <>
-      <Link href="/" className={getLinkClass(pathname === '/')} onClick={onNavigate}>
-        Home
-      </Link>
+      {!isHome && (
+        <Link href="/" className={getLinkClass(pathname === '/')} onClick={onNavigate}>
+          Home
+        </Link>
+      )}
       {navLinks.map((link) => (
         <Link key={link.id} href={link.href} className={getLinkClass(pathname === link.href || pathname.startsWith(`${link.href}/`))} onClick={onNavigate}>
           {link.label}

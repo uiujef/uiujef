@@ -14,7 +14,7 @@ import { socials } from '@/lib/site-data'
 import { cn } from '@/lib/utils'
 import { CountdownTimer } from '@/components/countdown-timer'
 
-const MEMBERSHIP_FEE = 500
+// Removed hardcoded MEMBERSHIP_FEE
 
 type PendingMemberPayload = {
   full_name: string
@@ -100,16 +100,18 @@ const textareaClass = cn(inputClass, "resize-none")
 export default function JoinPage() {
   const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false)
   const [recruitmentDeadline, setRecruitmentDeadline] = useState<string | null>(null)
-  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string}[]>([])
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
+  const [membershipFee, setMembershipFee] = useState<number>(500)
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   
   useEffect(() => {
     async function fetchSettings() {
-      const { data } = await supabase.from('site_settings').select('is_recruitment_open, recruitment_end, payment_methods').limit(1).maybeSingle()
+      const { data } = await supabase.from('site_settings').select('is_recruitment_open, recruitment_end, payment_methods, membership_fee').limit(1).maybeSingle()
       if (data) {
         setIsRecruitmentOpen(data.is_recruitment_open || false)
         setRecruitmentDeadline(data.recruitment_end)
         if (data.payment_methods) setPaymentMethods(data.payment_methods)
+        if (data.membership_fee !== undefined) setMembershipFee(data.membership_fee)
       }
       setIsLoadingSettings(false)
     }
@@ -628,13 +630,15 @@ export default function JoinPage() {
                   <Wallet className="w-24 h-24" />
                 </div>
                 <p className="text-white/70 text-sm uppercase tracking-wider font-semibold mb-2">Membership Fee</p>
-                <div className="text-5xl font-bold text-white mb-6">৳{MEMBERSHIP_FEE}</div>
+                <div className="text-5xl font-bold text-white mb-6">৳{membershipFee}</div>
                 {paymentMethods.length > 0 ? (
                   <div className="flex flex-col gap-3 w-full bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm max-w-sm mx-auto text-left">
                     <p className="text-white/90 font-medium text-center text-sm mb-2 border-b border-white/10 pb-2">Please send fee to any number below:</p>
                     {paymentMethods.map((pm, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/5">
-                        <span className="text-sm font-semibold text-white/80">{pm.method}</span>
+                        <span className="text-sm font-semibold text-white/80">
+                          {pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method}
+                        </span>
                         <span className="font-mono text-sm font-bold text-[#F26522] tracking-wider">{pm.account_number}</span>
                       </div>
                     ))}
@@ -652,8 +656,21 @@ export default function JoinPage() {
                 <Field id="payment_method" label="Payment Method" icon={Wallet} error={errors.payment_method}>
                   <select id="payment_method" name="payment_method" value={form.payment_method} onChange={handleChange} className={selectClass}>
                     <option value="" disabled>Select Option</option>
-                    <option value="bKash">bKash</option>
-                    <option value="Nagad">Nagad</option>
+                    {paymentMethods.length > 0 ? (
+                      paymentMethods.map((pm, idx) => {
+                        const label = pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method;
+                        return (
+                          <option key={idx} value={label}>
+                            {label}
+                          </option>
+                        );
+                      })
+                    ) : (
+                      <>
+                        <option value="bKash">bKash</option>
+                        <option value="Nagad">Nagad</option>
+                      </>
+                    )}
                   </select>
                 </Field>
                 <Field id="transaction_id" label="Transaction ID" icon={Hash} error={errors.transaction_id}>

@@ -16,7 +16,8 @@ export function SettingsManager() {
   const [recruitmentStart, setRecruitmentStart] = useState('')
   const [recruitmentEnd, setRecruitmentEnd] = useState('')
   const [officialContact, setOfficialContact] = useState('')
-  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string}[]>([])
+  const [membershipFee, setMembershipFee] = useState<number>(500)
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
 
   // Background Media State
   const [bgHome, setBgHome] = useState('')
@@ -73,6 +74,7 @@ export function SettingsManager() {
         setBgJourney3(data.bg_journey_3 || '')
         setBgJourney4(data.bg_journey_4 || '')
         setBgJourney5(data.bg_journey_5 || '')
+        if (data.membership_fee !== undefined) setMembershipFee(data.membership_fee)
         if (data.payment_methods) setPaymentMethods(data.payment_methods)
       }
     } catch (err: any) {
@@ -144,6 +146,7 @@ export function SettingsManager() {
         bg_journey_3: newBgJourney3,
         bg_journey_4: newBgJourney4,
         bg_journey_5: newBgJourney5,
+        membership_fee: membershipFee,
         payment_methods: paymentMethods,
       }
 
@@ -240,6 +243,10 @@ export function SettingsManager() {
                 <label className="text-xs font-bold uppercase text-muted-foreground">End Date & Time</label>
                 <input type="datetime-local" value={recruitmentEnd} onChange={e => setRecruitmentEnd(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-secondary" />
               </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-muted-foreground">Membership Fee (BDT)</label>
+                <input type="number" min="0" value={membershipFee} onChange={e => setMembershipFee(Number(e.target.value))} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-secondary" />
+              </div>
             </div>
           </div>
         </div>
@@ -314,17 +321,30 @@ export function SettingsManager() {
                       <option value="Bank">Bank</option>
                     </select>
                   </div>
-                  <div className="w-full sm:flex-1">
+                  <div className="w-full sm:flex-1 flex flex-col sm:flex-row gap-4">
+                    {pm.method === 'Bank' && (
+                      <input
+                        type="text"
+                        placeholder="Bank Name (e.g. City Bank)"
+                        value={pm.bank_name || ''}
+                        onChange={(e) => {
+                          const newMethods = [...paymentMethods];
+                          newMethods[idx].bank_name = e.target.value;
+                          setPaymentMethods(newMethods);
+                        }}
+                        className="w-full sm:w-1/2 px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                      />
+                    )}
                     <input
                       type="text"
-                      placeholder="e.g. 017XXXXXXXX (Personal)"
+                      placeholder="Account Number (e.g. 017... or 1234...)"
                       value={pm.account_number}
                       onChange={(e) => {
                         const newMethods = [...paymentMethods];
                         newMethods[idx].account_number = e.target.value;
                         setPaymentMethods(newMethods);
                       }}
-                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                      className={`w-full ${pm.method === 'Bank' ? 'sm:w-1/2' : 'flex-1'} px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none`}
                     />
                   </div>
                   <button
