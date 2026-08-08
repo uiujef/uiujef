@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Image from 'next/image'
 import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2, Briefcase } from 'lucide-react'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
-import type { Member } from '@/data/members'
+import type { Member } from '@/types'
 
 interface MemberModalProps {
   member: Member | null

@@ -1,11 +1,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight, CalendarDays, ArrowRight } from 'lucide-react'
-import { getLatestEvents } from '@/data/events'
+import { supabase } from '@/lib/supabase'
 
-const latestEvents = getLatestEvents(3)
-
-export function EventsSection() {
+export async function EventsSection() {
+  const { data: latestEvents } = await supabase.from('events').select('*').order('date', { ascending: false }).limit(3)
   return (
     <section id="events" className="bg-background">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
@@ -31,7 +30,7 @@ export function EventsSection() {
 
         {/* Event cards grid — 3 columns on lg */}
         <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {latestEvents.map((event) => (
+          {(latestEvents || []).map((event) => (
             <article
               key={event.id}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-navy/10"
@@ -50,7 +49,7 @@ export function EventsSection() {
                   {event.category}
                 </span>
                 {/* Registration open badge */}
-                {event.isRegistrationOpen && (
+                {event.is_registration_open && (
                   <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-[#F26522] px-2.5 py-0.5 text-[10px] font-bold text-white shadow">
                     <span className="size-1.5 rounded-full bg-white" />
                     Open
@@ -61,7 +60,7 @@ export function EventsSection() {
               <div className="flex flex-1 flex-col p-5">
                 <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <CalendarDays className="size-3.5" aria-hidden="true" />
-                  {event.dateLabel}
+                  {event.dateLabel || new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(event.date))}
                 </p>
                 <h3 className="mt-2 font-serif text-lg font-bold leading-snug text-navy text-pretty">
                   {event.title}

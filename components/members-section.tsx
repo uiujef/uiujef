@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Users, GraduationCap, Star, UserCheck, History, Loader2, UserCircle } from 'lucide-react'
-import type { Member } from '@/data/members'
+import type { Member } from '@/types'
 import { AdvisorCard } from '@/components/advisor-card'
 import { MemberCard } from '@/components/member-card'
 import { MemberModal } from '@/components/member-modal'

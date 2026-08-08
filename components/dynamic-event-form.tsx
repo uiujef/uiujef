@@ -4,7 +4,7 @@ import { useState, useCallback, useId } from 'react'
 import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '@/lib/supabase'
-import type { EventRegistrationConfig } from '@/data/events'
+import type { EventRegistrationConfig } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ function MemberBlock({
             id={`${uid}-father`}
             value={member.father_name}
             onChange={(e) => onChange(index, 'father_name', e.target.value)}
-            placeholder="e.g., John Doe"
+            placeholder="e.g., Shaikh Jubair"
             className={inputCls}
           />
         </div>
@@ -136,7 +136,7 @@ function MemberBlock({
             id={`${uid}-email`}
             value={member.email}
             onChange={(e) => onChange(index, 'email', e.target.value)}
-            placeholder="e.g., shaikhjubair@gmail.com"
+            placeholder="e.g., shaikh.jubair.2025@gmail.com"
             className={inputCls}
           />
         </div>
@@ -238,7 +238,7 @@ export function DynamicEventForm({
 
   const addMember = useCallback(() => {
     setMembers((prev) =>
-      prev.length < config.maxTeamMembers ? [...prev, { ...EMPTY_MEMBER }] : prev,
+      prev.length < (config.maxTeamMembers || 0) ? [...prev, { ...EMPTY_MEMBER }] : prev,
     )
   }, [config.maxTeamMembers])
 
@@ -410,13 +410,13 @@ export function DynamicEventForm({
               config={config}
               onChange={handleMemberChange}
               onRemove={removeMember}
-              canRemove={config.isTeamBased && members.length > 1}
+              canRemove={!!config.isTeamBased && members.length > 1}
             />
           ))}
         </div>
 
         {/* Add member button */}
-        {config.isTeamBased && members.length < config.maxTeamMembers && (
+        {config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
           <button
             type="button"
             onClick={addMember}

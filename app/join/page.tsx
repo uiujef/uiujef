@@ -1,15 +1,16 @@
 'use client'
-
+import { supabase } from '@/lib/supabase'
 import React, { useState, useEffect, useReducer, useCallback, ChangeEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import emailjs from '@emailjs/browser'
-import { supabase } from '@/lib/supabase'
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Clock, Loader2, Wallet, User, BookOpen,
   Mail, Phone, Droplet, Building2, Hash, Calendar, Camera, MessageSquare, Search,
-  X, Star, ListChecks, Sparkles
+  X, Star, ListChecks
 } from 'lucide-react'
+import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/brand-icons'
+import { socials } from '@/lib/site-data'
 import { cn } from '@/lib/utils'
 import { CountdownTimer } from '@/components/countdown-timer'
 
@@ -279,22 +280,54 @@ export default function JoinPage() {
   }
 
   if (!isRecruitmentOpen) {
+    const socialIcons = {
+      facebook: FacebookIcon,
+      instagram: InstagramIcon,
+      linkedin: LinkedinIcon,
+    }
+
     return (
       <div className="min-h-screen bg-navy-deep flex items-center justify-center p-4">
-        <div className="rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl p-8 md:p-12 max-w-lg w-full text-center space-y-6">
-          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-10 h-10 text-[#F26522]" />
+        <div className="rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl p-8 md:p-12 max-w-lg w-full text-center space-y-8">
+          
+          <div className="space-y-4">
+            <h2 className="text-3xl font-serif font-bold text-white tracking-tight">Currently Closed</h2>
+            <p className="text-white/70 text-base leading-relaxed text-balance">
+              Thank you for your interest in joining the UIU Junior Economists' Forum! Our membership recruitment phase is currently closed for the semester.
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-white">Recruitment Closed</h2>
-          <p className="text-white/60 text-lg leading-relaxed">
-            Thank you for your interest in joining JEF! We are currently not accepting new applications.
-          </p>
-          <div className="pt-4">
-            <p className="text-sm text-white/40 mb-4">Stay tuned for future updates.</p>
-            <button className="bg-[#F26522] text-white px-8 py-3 rounded-xl font-medium hover:bg-[#F26522]/90 transition">
-              Follow our Social Media
-            </button>
+
+          <div className="pt-2">
+            <p className="text-sm font-medium text-white/50 mb-5 uppercase tracking-widest">Connect with us</p>
+            <div className="flex items-center justify-center gap-4">
+              {socials.map((social) => {
+                const Icon = socialIcons[social.icon as keyof typeof socialIcons]
+                return (
+                  <a
+                    key={social.id}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex size-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition-all hover:bg-[#F26522] hover:text-white hover:border-[#F26522] hover:scale-110"
+                  >
+                    <Icon className="size-5" />
+                    <span className="sr-only">{social.label}</span>
+                  </a>
+                )
+              })}
+            </div>
           </div>
+
+          <div className="pt-6 border-t border-white/10">
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-200"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Home
+            </Link>
+          </div>
+
         </div>
       </div>
     )
@@ -429,7 +462,7 @@ export default function JoinPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <Field id="email" label="UIU Email Address" icon={Mail} error={errors.email}>
-                  <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="e.g., shaikhjubair@gmail.com" />
+                  <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="e.g., shaikh.jubair.2025@gmail.com" />
                 </Field>
                 <Field id="phone" label="Phone Number" icon={Phone} error={errors.phone}>
                   <input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} placeholder="01XXXXXXXXX" />

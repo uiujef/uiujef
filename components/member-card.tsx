@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
-import type { Member } from '@/data/members'
+import type { Member } from '@/types'
 import { cn } from '@/lib/utils'
 
 type MemberCardProps = {

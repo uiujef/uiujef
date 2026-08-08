@@ -26,38 +26,44 @@ export function ConfirmModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" 
+        className="absolute inset-0 bg-navy-deep/60 backdrop-blur-md transition-opacity duration-300" 
         onClick={onCancel}
       />
-      <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-        <div className="p-6 text-center">
-          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${isDestructive ? 'bg-red-100' : 'bg-[#F26522]/10'}`}>
-            <AlertTriangle className={`h-8 w-8 ${isDestructive ? 'text-red-600' : 'text-[#F26522]'}`} />
+      
+      {/* Modal Container */}
+      <div 
+        className="relative flex w-full max-w-sm flex-col overflow-hidden rounded-[2rem] border border-white/20 bg-white shadow-2xl shadow-navy-deep/20 animate-in fade-in zoom-in-95 duration-200"
+      >
+        <div className="relative p-8 text-center bg-gradient-to-b from-gray-50/50 to-white">
+          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm mb-6 ${isDestructive ? 'bg-red-50 text-red-500 shadow-red-500/10' : 'bg-[#F26522]/10 text-[#F26522] shadow-[#F26522]/10'}`}>
+            <AlertTriangle strokeWidth={2.5} className="h-7 w-7" />
           </div>
-          <h3 className="text-xl font-bold text-navy mb-2">{title}</h3>
-          <p className="text-sm text-muted-foreground">{message}</p>
+          
+          <h3 className="mb-3 font-serif text-2xl font-bold tracking-tight text-navy">{title}</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">{message}</p>
         </div>
         
-        <div className="p-6 bg-gray-50 flex gap-3">
-          <button
-            onClick={onCancel}
-            className="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            {cancelText}
-          </button>
+        <div className="flex flex-col gap-3 p-6 pt-2">
           <button
             onClick={() => {
               onConfirm()
             }}
-            className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${
+            className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 ${
               isDestructive 
-                ? 'bg-red-600 hover:bg-red-500' 
-                : 'bg-[#F26522] hover:bg-[#F26522]/90'
+                ? 'bg-red-600 shadow-red-600/20 hover:bg-red-500 hover:shadow-red-500/30' 
+                : 'bg-[#F26522] shadow-[#F26522]/20 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/30'
             }`}
           >
             {confirmText}
+          </button>
+          <button
+            onClick={onCancel}
+            className="w-full rounded-2xl bg-gray-100 px-5 py-3.5 text-sm font-medium text-navy transition-colors duration-200 hover:bg-gray-200"
+          >
+            {cancelText}
           </button>
         </div>
       </div>
