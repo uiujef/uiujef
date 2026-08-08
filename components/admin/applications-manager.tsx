@@ -468,13 +468,47 @@ export function ApplicationsManager() {
             <div className="p-8 space-y-8">
               {selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
                 <div key={index} className="space-y-6 pb-8 border-b border-border last:border-0 print-break-inside-avoid">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg">
+                  <div className="flex items-start gap-4 mb-8">
+                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
                       {index + 1}
                     </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-navy">{member.full_name || member.name}</h4>
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{selectedApp.type}</span>
+                    <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                      <div>
+                        <h4 className="text-xl font-bold text-navy">{member.full_name || member.name}</h4>
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{selectedApp.type}</span>
+                      </div>
+                      
+                      {member.photo_url && (
+                        <div className="flex items-center gap-4 bg-secondary/30 p-2 rounded-xl border border-border">
+                          <img 
+                            src={member.photo_url} 
+                            alt={`${member.full_name || member.name}'s photo`} 
+                            className="w-16 h-16 object-cover rounded-lg border border-border" 
+                          />
+                          <button
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(member.photo_url);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `Applicant_${member.full_name || member.name}_Photo`.replace(/\s+/g, '_');
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                              } catch (e) {
+                                window.open(member.photo_url, '_blank');
+                              }
+                            }}
+                            className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center gap-1 shadow-sm no-print"
+                          >
+                            <Printer className="size-3" />
+                            Download Photo
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

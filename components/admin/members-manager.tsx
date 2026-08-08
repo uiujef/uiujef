@@ -97,6 +97,9 @@ export function MembersManager() {
       setInstagramUrl(member.instagram_url || '')
       setLinkedinUrl(member.linkedin_url || '')
       setImageUrl(member.image_url || '')
+      setImageUrl(member.image_url || '')
+      setExternalImageUrl(member.image_url || '')
+      setImageInputType(member.image_url ? 'url' : 'upload')
       setQuote(member.quote || '')
       setStudentId(member.student_id || '')
       setStudentAddress(member.student_address || '')
@@ -114,13 +117,13 @@ export function MembersManager() {
       setInstagramUrl('')
       setLinkedinUrl('')
       setImageUrl('')
+      setExternalImageUrl('')
+      setImageInputType('upload')
       setQuote('')
       setStudentId('')
       setStudentAddress('')
     }
     setImageFile(null)
-    setExternalImageUrl('')
-    setImageInputType('upload')
     setIsModalOpen(true)
   }
 

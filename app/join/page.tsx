@@ -221,13 +221,26 @@ export default function JoinPage() {
     }
   }, [])
 
+  const [photoInputType, setPhotoInputType] = useState<'upload' | 'url'>('upload')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+
   const handlePhotoUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error("File size must be less than 3MB")
+        e.target.value = ''
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error("File must be an image")
+        e.target.value = ''
+        return
+      }
+      setPhotoFile(file)
       const objectUrl = URL.createObjectURL(file)
       setPhotoPreview(objectUrl)
-      // In a real scenario, you would upload and get the URL here
-      setForm(prev => ({ ...prev, photo_url: objectUrl }))
+      setForm(prev => ({ ...prev, photo_url: '' }))
     }
   }, [])
   const [applicationId, setApplicationId] = useState<string>('')
@@ -242,10 +255,27 @@ export default function JoinPage() {
       const newId = `JEF-MEM-N${(count || 0) + 1}`;
       setApplicationId(newId);
 
-      // 2. Clean the payload (remove Blob URLs from JSONB to prevent DB parsing errors)
-      const { photo_url, ...safeForm } = form;
+      // 2. Handle Photo Upload
+      let finalPhotoUrl = form.photo_url;
+      if (photoInputType === 'upload' && photoFile) {
+        const ext = photoFile.name.split('.').pop()
+        const filename = `${newId}_${Date.now()}.${ext}`
+        const { data: uploadData, error: uploadError } = await supabase.storage.from('member_photos').upload(filename, photoFile)
+        
+        if (uploadError) {
+          toast.error("Failed to upload photo: " + uploadError.message)
+          setIsLoading(false)
+          return
+        }
+        
+        const { data: { publicUrl } } = supabase.storage.from('member_photos').getPublicUrl(uploadData.path)
+        finalPhotoUrl = publicUrl
+      }
 
-      // 3. STRICT Supabase Insert FIRST
+      // 3. Clean the payload (use finalPhotoUrl and remove Blob URLs from JSONB)
+      const { photo_url, ...safeForm } = { ...form, photo_url: finalPhotoUrl };
+
+      // 4. STRICT Supabase Insert FIRST
       const { error: dbError } = await supabase.from('applications').insert([{
         application_id: newId,
         name: safeForm.full_name,
@@ -258,11 +288,11 @@ export default function JoinPage() {
 
       if (dbError) throw dbError;
 
-      // 4. Non-blocking EmailJS
+      // 5. Non-blocking EmailJS
       try {
         await emailjs.send(
-          'service_uiujef',
-          'templete_uiujef', // Make sure template ID is correct
+          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
           { to_name: safeForm.full_name, to_email: safeForm.email, application_id: newId },
           { publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY }
         );
@@ -452,16 +482,58 @@ export default function JoinPage() {
                 <p className="text-white/50 text-sm mt-1">Let's start with the basics.</p>
               </div>
 
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative w-28 h-28 rounded-full border-2 border-dashed border-white/20 bg-white/5 flex items-center justify-center overflow-hidden hover:bg-white/10 transition-colors cursor-pointer group">
-                  {photoPreview ? (
-                    <Image src={photoPreview} alt="Preview" fill className="object-cover" unoptimized />
-                  ) : (
-                    <Camera className="w-8 h-8 text-white/30 group-hover:text-white/50 transition-colors" />
-                  )}
-                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+              <div className="flex flex-col items-center mb-8 bg-white/5 border border-white/10 p-6 rounded-3xl">
+                <div className="flex items-center gap-2 bg-white/5 p-1 rounded-full mb-6 border border-white/10">
+                  <button
+                    onClick={() => setPhotoInputType('upload')}
+                    className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", photoInputType === 'upload' ? "bg-[#F26522] text-white" : "text-white/50 hover:text-white")}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    onClick={() => setPhotoInputType('url')}
+                    className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", photoInputType === 'url' ? "bg-[#F26522] text-white" : "text-white/50 hover:text-white")}
+                  >
+                    Paste URL
+                  </button>
                 </div>
-                <p className="text-xs text-white/40 mt-3">Upload Profile Photo</p>
+                
+                {photoInputType === 'upload' ? (
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-28 h-28 rounded-full border-2 border-dashed border-white/20 bg-white/5 flex items-center justify-center overflow-hidden hover:bg-white/10 transition-colors cursor-pointer group">
+                      {photoPreview && photoFile ? (
+                        <Image src={photoPreview} alt="Preview" fill className="object-cover" unoptimized />
+                      ) : (
+                        <Camera className="w-8 h-8 text-white/30 group-hover:text-white/50 transition-colors" />
+                      )}
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </div>
+                    <p className="text-xs text-white/40 mt-3 font-medium uppercase tracking-wider">Upload Profile Photo (Max 3MB)</p>
+                  </div>
+                ) : (
+                  <div className="w-full max-w-sm">
+                    <Field id="photo_url" label="Image URL" icon={Camera} error={''}>
+                      <input 
+                        id="photo_url" 
+                        name="photo_url" 
+                        type="url" 
+                        value={form.photo_url || ''} 
+                        onChange={(e) => {
+                          handleChange(e);
+                          setPhotoPreview(e.target.value);
+                          setPhotoFile(null);
+                        }} 
+                        className={inputClass} 
+                        placeholder="e.g., https://imgur.com/..." 
+                      />
+                    </Field>
+                    {photoPreview && !photoFile && (
+                      <div className="mt-4 mx-auto relative w-24 h-24 rounded-full border-2 border-[#F26522]/30 overflow-hidden shadow-lg shadow-black/20">
+                        <Image src={photoPreview} alt="Preview" fill className="object-cover" unoptimized onError={() => setPhotoPreview('')} />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <SectionTitle label="Identity" />
