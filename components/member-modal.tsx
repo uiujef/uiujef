@@ -175,7 +175,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                   <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
                     Address
                   </p>
-                  <p className="text-xs font-bold text-navy">
+                  <p className="text-xs font-bold text-navy break-words whitespace-normal leading-relaxed">
                     {member.student_address || 'N/A'}
                   </p>
                 </div>
@@ -207,7 +207,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                   </p>
                   <a
                     href={`mailto:${member.email}`}
-                    className="block truncate text-xs font-bold text-navy transition-colors hover:text-[#F26522]"
+                    className="block break-all whitespace-normal text-xs font-bold text-navy transition-colors hover:text-[#F26522] leading-relaxed"
                   >
                     {member.email || 'N/A'}
                   </a>

@@ -22,13 +22,14 @@ export default function ApplicationsTrackingPage() {
     setIsLoading(true)
     setResult(null)
 
-    const cleanId = appId.trim().toUpperCase()
+    const cleanId = appId.trim().replace(/—|–/g, '-')
     
     const { data, error } = await supabase
       .from('applications')
       .select('*')
-      .eq('application_id', cleanId)
-      .single()
+      .ilike('application_id', `%${cleanId}%`)
+      .limit(1)
+      .maybeSingle()
 
     if (data && !error) {
       setResult({
