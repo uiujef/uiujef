@@ -4,6 +4,7 @@ import React, { useState, useEffect, useReducer, useCallback, ChangeEvent } from
 import Image from 'next/image'
 import Link from 'next/link'
 import emailjs from '@emailjs/browser'
+import { toast } from 'sonner'
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Clock, Loader2, Wallet, User, BookOpen,
   Mail, Phone, Droplet, Building2, Hash, Calendar, Camera, MessageSquare, Search,
@@ -285,8 +286,8 @@ export default function JoinPage() {
         console.log('[Supabase] Successfully inserted application record.')
         setIsSubmitted(true)
       } catch (err: any) {
-        console.error('Registration Error:', err)
-        alert(err.message || 'Failed to submit application. Please check your connection or contact support.')
+        console.error('Submission Error:', err)
+        toast.error(err.message || 'An unknown error occurred')
       } finally {
         setIsLoading(false)
       }
