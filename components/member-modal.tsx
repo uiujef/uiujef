@@ -153,40 +153,38 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
             {/* Data points grid */}
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-navy/8 pt-5">
               {/* Student ID */}
-              <div className="flex items-start gap-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
-                  <Hash className="size-4" />
+              {isDeveloper && (
+                <div className="flex items-start gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
+                    <Hash className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                      {isAdvisor ? 'Employee ID' : 'Student ID'}
+                    </p>
+                    <p className="text-xs font-bold text-[#F26522]">
+                      {member.student_id || 'N/A'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                    {isAdvisor ? 'Employee ID' : 'Student ID'}
-                  </p>
-                  <p className="text-xs font-bold text-[#F26522]">
-                    {member.student_id || 'N/A'}
-                  </p>
-                </div>
-              </div>
+              )}
 
               {/* Student Address */}
-              <div className="flex items-start gap-3 col-span-full">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <Building2 className="size-4" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                    Address
-                  </p>
-                  {isDeveloper ? (
+              {isDeveloper && (
+                <div className="flex items-start gap-3 col-span-full">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <Building2 className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                      Address
+                    </p>
                     <p className="text-xs font-bold text-navy break-words whitespace-normal leading-relaxed">
                       {member.student_address || 'N/A'}
                     </p>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500 mt-1">
-                      Hidden for Privacy
-                    </span>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Blood Group */}
               <div className="flex items-start gap-3">
@@ -222,28 +220,24 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               </div>
 
               {/* Phone */}
-              <div className="flex items-start gap-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                  <Phone className="size-4" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                    Phone
-                  </p>
-                  {isDeveloper ? (
+              {isDeveloper && (
+                <div className="flex items-start gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
+                    <Phone className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                      Phone
+                    </p>
                     <a
                       href={`tel:${member.phone}`}
                       className="text-xs font-bold text-navy transition-colors hover:text-[#F26522]"
                     >
                       {member.phone || 'N/A'}
                     </a>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500 mt-1">
-                      Hidden for Privacy
-                    </span>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
