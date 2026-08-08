@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2 } from 'lucide-react'
+import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,7 @@ export function ApplicationsManager() {
   const [activeTab, setActiveTab] = useState<'Member' | 'Event'>('Member')
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [appToDelete, setAppToDelete] = useState<string | null>(null)
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
 
   const loadApplications = async () => {
     setIsLoading(true)
@@ -363,6 +364,13 @@ export function ApplicationsManager() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => setSelectedApp(app)}
+                            className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg shadow-sm transition-colors" 
+                            title="View Details"
+                          >
+                            <Eye className="size-4" />
+                          </button>
                           {app.status === 'Pending' && (
                             <>
                               <button 
@@ -424,6 +432,107 @@ export function ApplicationsManager() {
           setAppToDelete(null)
         }}
       />
+
+      {/* Application Details Modal */}
+      {selectedApp && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              #printable-modal, #printable-modal * { visibility: visible; color: black !important; }
+              #printable-modal { position: absolute; left: 0; top: 0; width: 100%; min-height: 100%; border: none; box-shadow: none; background: white; margin: 0; padding: 20px; }
+              .no-print { display: none !important; }
+              .print-break-inside-avoid { break-inside: avoid; }
+            }
+          `}</style>
+          <div className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm no-print" onClick={() => setSelectedApp(null)} />
+          <div id="printable-modal" className="relative bg-white border border-border rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md p-6 border-b border-border flex items-center justify-between z-10">
+              <div>
+                <h3 className="text-2xl font-bold text-navy">Application Details</h3>
+                <p className="text-sm font-mono text-muted-foreground mt-1">{selectedApp.application_id}</p>
+              </div>
+              <div className="flex items-center gap-3 no-print">
+                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-secondary text-navy font-bold rounded-xl hover:bg-secondary/80 transition-colors">
+                  <Printer className="size-4" />
+                  Download PDF
+                </button>
+                <button onClick={() => setSelectedApp(null)} className="p-2 bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors">
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8 space-y-8">
+              {selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
+                <div key={index} className="space-y-6 pb-8 border-b border-border last:border-0 print-break-inside-avoid">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-navy">{member.full_name || member.name}</h4>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{selectedApp.type}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Identity & Contact */}
+                    <div>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Identity & Contact</h5>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Email</dt><dd className="font-medium text-navy break-all">{member.email || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Phone</dt><dd className="font-medium text-navy">{member.phone || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-navy">{member.student_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">University / Department</dt><dd className="font-medium text-navy">{member.university || member.department || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Blood Group</dt><dd className="font-medium text-navy">{member.blood_group || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Date of Birth</dt><dd className="font-medium text-navy">{member.date_of_birth || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Address</dt><dd className="font-medium text-navy break-words">{member.address || member.student_address || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Parents</dt><dd className="font-medium text-navy">Father: {member.father_name || '-'} <br/> Mother: {member.mother_name || '-'}</dd></div>
+                      </dl>
+                    </div>
+
+                    {/* Socials & Roles */}
+                    <div>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Socials & Roles</h5>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-navy">{member.interested_roles || member.interested_role || '-'}</dd></div>
+                        {member.other_role && <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-navy">{member.other_role}</dd></div>}
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-navy">{selectedApp.transaction_id ? `${member.payment_method || 'Paid'} (TrxID: ${selectedApp.transaction_id})` : '-'}</dd></div>
+                        
+                        <div className="pt-3 flex flex-col gap-2">
+                          <dt className="text-muted-foreground text-xs uppercase font-bold">Social Links</dt>
+                          <dd className="space-y-1">
+                            {member.facebook_url && <a href={member.facebook_url} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline break-all">FB: {member.facebook_url}</a>}
+                            {member.instagram_url && <a href={member.instagram_url} target="_blank" rel="noreferrer" className="block text-pink-600 hover:underline break-all">IG: {member.instagram_url}</a>}
+                            {member.linkedin_url && <a href={member.linkedin_url} target="_blank" rel="noreferrer" className="block text-blue-800 hover:underline break-all">IN: {member.linkedin_url}</a>}
+                            {(!member.facebook_url && !member.instagram_url && !member.linkedin_url) && <span className="text-muted-foreground">No links provided</span>}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Story & Bio (Full Width) */}
+                  <div className="mt-8">
+                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Biography & Experience</h5>
+                    <dl className="space-y-6 text-sm">
+                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-navy whitespace-pre-wrap">{member.bio || '-'}</dd></div>
+                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-navy whitespace-pre-wrap">{member.why_join || '-'}</dd></div>
+                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Expectations from JEF</dt><dd className="text-navy whitespace-pre-wrap">{member.expect_from_jef || '-'}</dd></div>
+                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Extracurricular Activities</dt><dd className="text-navy whitespace-pre-wrap">{member.extracurricular || '-'}</dd></div>
+                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">What do you know about JEF?</dt><dd className="text-navy whitespace-pre-wrap">{member.know_about_jef || '-'}</dd></div>
+                      <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Heard about us from</dt><dd className="font-medium text-navy">{member.heard_about || '-'}</dd></div>
+                    </dl>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

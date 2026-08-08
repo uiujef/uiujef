@@ -28,7 +28,7 @@ export default function ApplicationsTrackingPage() {
     const { data, error } = await supabase
       .from('applications')
       .select('*')
-      .ilike('application_id', cleanId) // Removed % for exact but case-insensitive match
+      .ilike('application_id', `%${cleanId}%`) // Re-added % for bulletproof fuzzy matching
       .limit(1)
       .maybeSingle()
 
@@ -46,7 +46,7 @@ export default function ApplicationsTrackingPage() {
     const { data: memberData, error: memberError } = await supabase
       .from('members')
       .select('*')
-      .ilike('application_id', cleanId) // Assumes application_id is mapped in members table
+      .ilike('application_id', `%${cleanId}%`)
       .limit(1)
       .maybeSingle()
       
