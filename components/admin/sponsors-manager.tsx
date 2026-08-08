@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Loader2, Save, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { toast } from 'sonner'
 
 type Sponsor = {
@@ -20,6 +21,9 @@ export function SponsorsManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [sponsorToDelete, setSponsorToDelete] = useState<string | null>(null)
 
   // Form state
   const [editId, setEditId] = useState<string | null>(null)
@@ -110,16 +114,24 @@ export function SponsorsManager() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this sponsor?')) return
+  const confirmDelete = (id: string) => {
+    setSponsorToDelete(id)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!sponsorToDelete) return
 
     try {
-      const { error } = await supabase.from('sponsors').delete().eq('id', id)
+      const { error } = await supabase.from('sponsors').delete().eq('id', sponsorToDelete)
       if (error) throw error
       toast.success('Sponsor deleted successfully!')
       loadSponsors()
     } catch (err: any) {
       toast.error('Failed to delete sponsor: ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setSponsorToDelete(null)
     }
   }
 
@@ -166,7 +178,7 @@ export function SponsorsManager() {
                 <button onClick={() => openEdit(sponsor)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex-1 flex justify-center">
                   <Pencil className="size-4" />
                 </button>
-                <button onClick={() => handleDelete(sponsor.id)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex-1 flex justify-center">
+                <button onClick={() => confirmDelete(sponsor.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -240,6 +252,17 @@ export function SponsorsManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Sponsor"
+        message="Are you sure you want to delete this sponsor? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setSponsorToDelete(null)
+        }}
+      />
     </div>
   )
 }

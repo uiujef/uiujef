@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, Loader2, Image as ImageIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type GalleryImage = {
   id: string
@@ -19,6 +20,9 @@ export function GalleryManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null)
   
   const [title, setTitle] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -85,22 +89,30 @@ export function GalleryManager() {
     }
   }
 
-  const handleDelete = async (image: GalleryImage) => {
-    if (!confirm('Are you sure you want to delete this image from the gallery?')) return
+  const confirmDelete = (image: GalleryImage) => {
+    setImageToDelete(image)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!imageToDelete) return
 
     try {
-      const filePath = image.image_url.split('/jef-images/')[1]
+      const filePath = imageToDelete.image_url.split('/jef-images/')[1]
       if (filePath) {
         await supabase.storage.from('jef-images').remove([filePath])
       }
 
-      const { error } = await supabase.from('gallery').delete().eq('id', image.id)
+      const { error } = await supabase.from('gallery').delete().eq('id', imageToDelete.id)
       if (error) throw error
       
       toast.success('Image deleted successfully.')
-      setImages(images.filter(img => img.id !== image.id))
+      setImages(images.filter(img => img.id !== imageToDelete.id))
     } catch (err: any) {
       toast.error('Database Error (Delete Image): ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setImageToDelete(null)
     }
   }
   const togglePin = async (image: GalleryImage) => {
@@ -165,7 +177,7 @@ export function GalleryManager() {
                   <button onClick={() => togglePin(image)} className={`p-2 rounded-lg backdrop-blur-sm transition-colors ${image.is_pinned ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-white/20 text-white hover:bg-white/40'}`} title={image.is_pinned ? "Unpin" : "Pin to Top"}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
                   </button>
-                  <button onClick={() => handleDelete(image)} className="bg-red-600/90 text-white p-2 rounded-lg hover:bg-red-600 backdrop-blur-sm transition-colors" title="Delete">
+                  <button onClick={() => confirmDelete(image)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                     <Trash2 className="size-4" />
                   </button>
                 </div>
@@ -235,6 +247,17 @@ export function GalleryManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Image"
+        message="Are you sure you want to delete this image from the gallery? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setImageToDelete(null)
+        }}
+      />
     </div>
   )
 }

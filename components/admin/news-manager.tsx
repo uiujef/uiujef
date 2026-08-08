@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type NewsArticle = {
   id: string
@@ -20,6 +21,9 @@ export function NewsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingNews, setEditingNews] = useState<NewsArticle | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [newsToDelete, setNewsToDelete] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
 
@@ -126,16 +130,24 @@ export function NewsManager() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this article?')) return
+  const confirmDelete = (id: string) => {
+    setNewsToDelete(id)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!newsToDelete) return
 
     try {
-      const { error } = await supabase.from('news').delete().eq('id', id)
+      const { error } = await supabase.from('news').delete().eq('id', newsToDelete)
       if (error) throw error
       toast.success('Article deleted successfully.')
-      setNews(news.filter(n => n.id !== id))
+      setNews(news.filter(n => n.id !== newsToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete News): ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setNewsToDelete(null)
     }
   }
 
@@ -198,7 +210,7 @@ export function NewsManager() {
                         <button onClick={() => openModal(article)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                           <Edit2 className="size-4" />
                         </button>
-                        <button onClick={() => handleDelete(article.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                        <button onClick={() => confirmDelete(article.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                           <Trash2 className="size-4" />
                         </button>
                       </div>
@@ -267,6 +279,17 @@ export function NewsManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Article"
+        message="Are you sure you want to delete this article? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setNewsToDelete(null)
+        }}
+      />
     </div>
   )
 }

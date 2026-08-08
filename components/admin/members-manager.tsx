@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, UserCircle, Users, GraduationCap, Shield, Star, Briefcase, Award } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { toast } from 'sonner'
 
 type Member = {
@@ -30,6 +31,9 @@ const ROLES = ['President', 'Vice President', 'General Secretary', 'Treasurer', 
 export function MembersManager() {
   const [members, setMembers] = useState<Member[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -182,16 +186,24 @@ export function MembersManager() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this member? This action cannot be undone.')) return
+  const confirmDelete = (id: string) => {
+    setMemberToDelete(id)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!memberToDelete) return
 
     try {
-      const { error } = await supabase.from('members').delete().eq('id', id)
+      const { error } = await supabase.from('members').delete().eq('id', memberToDelete)
       if (error) throw error
       toast.success('Member deleted successfully.')
-      setMembers(members.filter(m => m.id !== id))
+      setMembers(members.filter(m => m.id !== memberToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete Member): ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setMemberToDelete(null)
     }
   }
 
@@ -226,7 +238,7 @@ export function MembersManager() {
                 <button onClick={() => openModal(member)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                   <Edit2 className="size-4" />
                 </button>
-                <button onClick={() => handleDelete(member.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
+                <button onClick={() => confirmDelete(member.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -452,6 +464,17 @@ export function MembersManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Member"
+        message="Are you sure you want to delete this member? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setMemberToDelete(null)
+        }}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type Event = {
   id: string
@@ -52,6 +53,9 @@ export function EventsManager() {
   const [participationType, setParticipationType] = useState('Individual')
   const [eventLevel, setEventLevel] = useState('On Campus')
   const [registrationDeadline, setRegistrationDeadline] = useState('')
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null)
 
   const loadEvents = async () => {
     setIsLoading(true)
@@ -179,7 +183,7 @@ export function EventsManager() {
         pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
         participation_type: participationType,
         event_level: eventLevel,
-        registration_deadline: requiresRegistration && registrationDeadline ? new Date(registrationDeadline).toISOString() : null
+        registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null
       }
 
       if (isFeatured) {
@@ -210,16 +214,24 @@ export function EventsManager() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) return
+  const confirmDelete = (id: string) => {
+    setEventToDelete(id)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!eventToDelete) return
 
     try {
-      const { error } = await supabase.from('events').delete().eq('id', id)
+      const { error } = await supabase.from('events').delete().eq('id', eventToDelete)
       if (error) throw error
       toast.success('Event deleted successfully.')
-      setEvents(events.filter(ev => ev.id !== id))
+      setEvents(events.filter(ev => ev.id !== eventToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete Event): ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setEventToDelete(null)
     }
   }
 
@@ -261,7 +273,7 @@ export function EventsManager() {
                   <button onClick={() => openModal(event)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                     <Edit2 className="size-4" />
                   </button>
-                  <button onClick={() => handleDelete(event.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
+                  <button onClick={(e) => { e.stopPropagation(); confirmDelete(event.id); }} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                     <Trash2 className="size-4" />
                   </button>
                 </div>
@@ -355,8 +367,12 @@ export function EventsManager() {
                     <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Code Samurai 2024" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground">Date & Time *</label>
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Event Date & Time *</label>
                     <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline *</label>
+                    <input required type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
                 </div>
               </div>
@@ -452,13 +468,6 @@ export function EventsManager() {
                         </div>
                       </label>
 
-                      {isRegistrationOpen && (
-                        <div className="pl-14 space-y-2">
-                          <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline</label>
-                          <input type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
-                        </div>
-                      )}
-
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <div className="relative flex items-center">
                           <input type="checkbox" checked={requiresPayment} onChange={e => setRequiresPayment(e.target.checked)} className="peer sr-only" />
@@ -532,6 +541,17 @@ export function EventsManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setEventToDelete(null)
+        }}
+      />
     </div>
   )
 }

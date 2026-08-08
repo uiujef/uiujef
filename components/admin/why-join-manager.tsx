@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Loader2, Save, X, Image as ImageIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type WhyJoinItem = {
   id: string
@@ -18,6 +19,9 @@ export function WhyJoinManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
   // Form state
   const [editId, setEditId] = useState<string | null>(null)
@@ -108,16 +112,24 @@ export function WhyJoinManager() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return
+  const confirmDelete = (id: string) => {
+    setItemToDelete(id)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return
 
     try {
-      const { error } = await supabase.from('why_join_content').delete().eq('id', id)
+      const { error } = await supabase.from('why_join_content').delete().eq('id', itemToDelete)
       if (error) throw error
       toast.success('Item deleted successfully!')
       loadItems()
     } catch (err: any) {
       toast.error('Failed to delete item: ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setItemToDelete(null)
     }
   }
 
@@ -159,7 +171,7 @@ export function WhyJoinManager() {
                 <button onClick={() => openEdit(item)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                   <Pencil className="size-4" />
                 </button>
-                <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                <button onClick={() => confirmDelete(item.id)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -231,6 +243,17 @@ export function WhyJoinManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Content"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setItemToDelete(null)
+        }}
+      />
     </div>
   )
 }

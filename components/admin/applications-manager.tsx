@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle } from 'lucide-react'
+import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type Application = {
   application_id: string
@@ -21,6 +22,8 @@ export function ApplicationsManager() {
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [appToDelete, setAppToDelete] = useState<string | null>(null)
 
   const loadApplications = async () => {
     setIsLoading(true)
@@ -93,16 +96,24 @@ export function ApplicationsManager() {
     }
   }
 
-  const handleDelete = async (appId: string) => {
-    if (!confirm('Are you sure you want to delete this application permanently?')) return
+  const confirmDelete = (appId: string) => {
+    setAppToDelete(appId)
+    setIsConfirmOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!appToDelete) return
 
     try {
-      const { error } = await supabase.from('applications').delete().eq('application_id', appId)
+      const { error } = await supabase.from('applications').delete().eq('application_id', appToDelete)
       if (error) throw error
-      toast.success(`Deleted application ${appId}`)
-      setApplications(apps => apps.filter(a => a.application_id !== appId))
+      toast.success(`Deleted application ${appToDelete}`)
+      setApplications(apps => apps.filter(a => a.application_id !== appToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete): ' + err.message)
+    } finally {
+      setIsConfirmOpen(false)
+      setAppToDelete(null)
     }
   }
 
@@ -232,8 +243,17 @@ export function ApplicationsManager() {
                               </button>
                             </>
                           )}
+                          {app.status === 'Rejected' && (
+                            <button 
+                              onClick={() => handleStatusChange(app.application_id, 'Pending')}
+                              className="p-1.5 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 rounded-lg shadow-sm transition-colors" 
+                              title="Reset to Pending"
+                            >
+                              <Undo2 className="size-4" />
+                            </button>
+                          )}
                           <button 
-                            onClick={() => handleDelete(app.application_id)}
+                            onClick={() => confirmDelete(app.application_id)}
                             className="p-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-lg shadow-sm transition-colors ml-2" 
                             title="Delete Permanently"
                           >
@@ -255,6 +275,17 @@ export function ApplicationsManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Application"
+        message="Are you sure you want to delete this application permanently? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false)
+          setAppToDelete(null)
+        }}
+      />
     </div>
   )
 }
