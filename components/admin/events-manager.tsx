@@ -20,6 +20,8 @@ type Event = {
   is_featured: boolean
   is_pinned: boolean
   pinned_at: string | null
+  participation_type: string
+  event_level: string
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -46,6 +48,8 @@ export function EventsManager() {
   const [registrationFee, setRegistrationFee] = useState<number>(0)
   const [isFeatured, setIsFeatured] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
+  const [participationType, setParticipationType] = useState('Individual')
+  const [eventLevel, setEventLevel] = useState('On Campus')
 
   const loadEvents = async () => {
     setIsLoading(true)
@@ -96,6 +100,8 @@ export function EventsManager() {
       setRegistrationFee(event.registration_fee || 0)
       setIsFeatured(event.is_featured || false)
       setIsPinned(event.is_pinned || false)
+      setParticipationType(event.participation_type || 'Individual')
+      setEventLevel(event.event_level || 'On Campus')
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -110,6 +116,8 @@ export function EventsManager() {
       setRegistrationFee(0)
       setIsFeatured(false)
       setIsPinned(false)
+      setParticipationType('Individual')
+      setEventLevel('On Campus')
     }
     setImageFile(null)
     setIsModalOpen(true)
@@ -154,6 +162,8 @@ export function EventsManager() {
         is_featured: isFeatured,
         is_pinned: isPinned,
         pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
+        participation_type: participationType,
+        event_level: eventLevel
       }
 
       if (isFeatured) {
@@ -445,12 +455,40 @@ export function EventsManager() {
                           </div>
                         </div>
                       )}
-                      
-                      <div className="pt-2">
+
+                      <div className="pt-2 space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-muted-foreground">Participation Type</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="participation_type" value="Individual" checked={participationType === 'Individual'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                              <span className="text-sm font-medium text-navy">Individual</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="participation_type" value="Team" checked={participationType === 'Team'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                              <span className="text-sm font-medium text-navy">Team</span>
+                            </label>
+                          </div>
+                        </div>
+
                         <div className="space-y-2 max-w-[200px]">
                           <label className="text-xs font-bold uppercase text-muted-foreground">Max Team Members</label>
-                          <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
-                          <p className="text-xs text-muted-foreground">1 means individual participation.</p>
+                          <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-secondary" />
+                          <p className="text-xs text-muted-foreground">Applies if Team.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-muted-foreground">Event Level</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="event_level" value="On Campus" checked={eventLevel === 'On Campus'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                              <span className="text-sm font-medium text-navy">On Campus</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="event_level" value="National" checked={eventLevel === 'National'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                              <span className="text-sm font-medium text-navy">National</span>
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>

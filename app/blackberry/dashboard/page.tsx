@@ -10,10 +10,48 @@ import { GalleryManager } from '@/components/admin/gallery-manager'
 import { SettingsManager } from '@/components/admin/settings-manager'
 import { WhyJoinManager } from '@/components/admin/why-join-manager'
 import { SponsorsManager } from '@/components/admin/sponsors-manager'
+import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
 
 export default function DashboardPage() {
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') || 'overview'
+
+  const [stats, setStats] = useState({
+    events: 0,
+    news: 0,
+    members: 0,
+    applications: 0
+  })
+  const [isLoadingStats, setIsLoadingStats] = useState(false)
+
+  useEffect(() => {
+    if (tab === 'overview') {
+      const fetchStats = async () => {
+        setIsLoadingStats(true)
+        try {
+          const [eventsRes, newsRes, membersRes, appsRes] = await Promise.all([
+            supabase.from('events').select('*', { count: 'exact', head: true }),
+            supabase.from('news').select('*', { count: 'exact', head: true }),
+            supabase.from('members').select('*', { count: 'exact', head: true }),
+            supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Pending')
+          ])
+
+          setStats({
+            events: eventsRes.count || 0,
+            news: newsRes.count || 0,
+            members: membersRes.count || 0,
+            applications: appsRes.count || 0
+          })
+        } catch (error) {
+          console.error("Error fetching dashboard stats", error)
+        } finally {
+          setIsLoadingStats(false)
+        }
+      }
+      fetchStats()
+    }
+  }, [tab])
 
   const renderTabContent = () => {
     switch (tab) {
@@ -49,8 +87,11 @@ export default function DashboardPage() {
                   <Calendar className="size-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Events Tracking</p>
-                  <p className="text-sm text-navy font-semibold mt-1">See Manage Events</p>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Total Events</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.events}</p>
+                    <p className="text-xs text-muted-foreground font-medium">events tracking</p>
+                  </div>
                 </div>
               </div>
 
@@ -59,8 +100,11 @@ export default function DashboardPage() {
                   <FileText className="size-6 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">News Pipeline</p>
-                  <p className="text-sm text-navy font-semibold mt-1">See Manage News</p>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">News Published</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.news}</p>
+                    <p className="text-xs text-muted-foreground font-medium">news pipeline</p>
+                  </div>
                 </div>
               </div>
 
@@ -69,8 +113,11 @@ export default function DashboardPage() {
                   <Users className="size-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Members & Registrations</p>
-                  <p className="text-sm text-navy font-semibold mt-1">See Applications</p>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Community Size</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.members}</p>
+                    <p className="text-xs text-[#F26522] font-bold bg-[#F26522]/10 px-2 py-0.5 rounded-md">{isLoadingStats ? '-' : stats.applications} Pending</p>
+                  </div>
                 </div>
               </div>
             </div>

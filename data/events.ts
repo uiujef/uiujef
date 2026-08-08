@@ -64,6 +64,8 @@ export interface EventRegistrationConfig {
   extraFields?: ExtraField[]
   /** If true, injects the payment block (bKash/Nagad & TrxID) before submit */
   requiresPayment?: boolean
+  /** The level of the event (On Campus or National) */
+  eventLevel?: string
 }
 
 export interface ExtraField {

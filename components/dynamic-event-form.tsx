@@ -26,12 +26,15 @@ export interface EventRegistrationPayload {
 
 interface MemberEntry {
   name: string
+  father_name: string
   student_id: string
   email: string
+  phone: string
+  address: string
   university: string
 }
 
-const EMPTY_MEMBER: MemberEntry = { name: '', student_id: '', email: '', university: '' }
+const EMPTY_MEMBER: MemberEntry = { name: '', father_name: '', student_id: '', email: '', phone: '', address: '', university: '' }
 
 // ─── Style tokens ─────────────────────────────────────────────────────────────
 
@@ -113,6 +116,19 @@ function MemberBlock({
         </div>
 
         <div>
+          <FieldLabel htmlFor={`${uid}-father`} icon={User} label="Father's Name" />
+          <input
+            required
+            type="text"
+            id={`${uid}-father`}
+            value={member.father_name}
+            onChange={(e) => onChange(index, 'father_name', e.target.value)}
+            placeholder="e.g., John Doe"
+            className={inputCls}
+          />
+        </div>
+
+        <div>
           <FieldLabel htmlFor={`${uid}-email`} icon={Mail} label="Email" />
           <input
             required
@@ -121,6 +137,19 @@ function MemberBlock({
             value={member.email}
             onChange={(e) => onChange(index, 'email', e.target.value)}
             placeholder="e.g., shaikhjubair@gmail.com"
+            className={inputCls}
+          />
+        </div>
+
+        <div>
+          <FieldLabel htmlFor={`${uid}-phone`} icon={Hash} label="Phone Number" />
+          <input
+            required
+            type="tel"
+            id={`${uid}-phone`}
+            value={member.phone}
+            onChange={(e) => onChange(index, 'phone', e.target.value)}
+            placeholder="e.g., 017XXXXXXXX"
             className={inputCls}
           />
         </div>
@@ -141,9 +170,22 @@ function MemberBlock({
         )}
 
         <div>
-          <FieldLabel htmlFor={`${uid}-uni`} icon={Building2} label="University" />
+          <FieldLabel htmlFor={`${uid}-address`} icon={Building2} label="Address" />
           <input
             required
+            type="text"
+            id={`${uid}-address`}
+            value={member.address}
+            onChange={(e) => onChange(index, 'address', e.target.value)}
+            placeholder="Detailed Address"
+            className={inputCls}
+          />
+        </div>
+
+        <div>
+          <FieldLabel htmlFor={`${uid}-uni`} icon={Building2} label={`University ${config.eventLevel === 'National' ? '(Required)' : ''}`} />
+          <input
+            required={config.eventLevel === 'National'}
             type="text"
             id={`${uid}-uni`}
             value={member.university}
@@ -241,6 +283,8 @@ export function DynamicEventForm({
       console.log(`[EmailJS] Sent confirmation email to ${members[0].email}. Application ID: ${newId}`)
 
       // Supabase Insertion
+      const finalMembers = config.isTeamBased ? members : [members[0]]
+      
       const { error: dbError } = await supabase
         .from('applications')
         .insert([
@@ -249,7 +293,8 @@ export function DynamicEventForm({
             name: members[0].name,
             email: members[0].email,
             type: 'Event',
-            status: 'Pending'
+            status: 'Pending',
+            team_members: finalMembers,
           }
         ])
         

@@ -13,6 +13,7 @@ type Application = {
   type: string
   status: string
   created_at?: string
+  team_members?: any[]
 }
 
 export function ApplicationsManager() {
@@ -41,16 +42,53 @@ export function ApplicationsManager() {
   }, [])
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
+    const app = applications.find(a => a.application_id === appId)
+    if (!app) return
+
     // Optimistic UI update
-    setApplications(apps => apps.map(app => app.application_id === appId ? { ...app, status: newStatus } : app))
+    setApplications(apps => apps.map(a => a.application_id === appId ? { ...a, status: newStatus } : a))
     
     try {
+      if (newStatus === 'Approved' && app.type === 'Member') {
+        // Fetch highest member_serial
+        const { data: maxSerialData, error: maxSerialError } = await supabase
+          .from('members')
+          .select('member_serial')
+          .order('member_serial', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        
+        if (maxSerialError && maxSerialError.code !== 'PGRST116') {
+          throw maxSerialError
+        }
+
+        let newSerial = 1
+        if (maxSerialData && typeof maxSerialData.member_serial === 'number') {
+          newSerial = maxSerialData.member_serial + 1
+        }
+        
+        const formattedSerial = newSerial.toString().padStart(4, '0')
+        
+        const memberPayload = {
+          name: app.name,
+          email: app.email,
+          role: 'General Member',
+          member_serial: newSerial,
+          formatted_serial: formattedSerial,
+        }
+
+        const { error: insertError } = await supabase.from('members').insert([memberPayload])
+        if (insertError) throw insertError
+        
+        toast.success(`Member registered with serial ${formattedSerial}`)
+      }
+
       const { error } = await supabase.from('applications').update({ status: newStatus }).eq('application_id', appId)
       if (error) throw error
-      toast.success(`Updated ${appId} to ${newStatus}`)
+      toast.success(`Updated application ${appId} to ${newStatus}`)
     } catch (err: any) {
-      toast.error('Database Error (Update Status): ' + err.message)
-      loadApplications()
+      toast.error('Database Error: ' + err.message)
+      loadApplications() // Revert UI
     }
   }
 
@@ -98,53 +136,72 @@ export function ApplicationsManager() {
       ) : (
         <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-secondary/50 text-muted-foreground">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-secondary/80 text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Tracking ID</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Applicant</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Type</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Status</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Action</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Tracking ID</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Type</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Team Name</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">University</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Contact Person</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px] text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredApps.map((app) => (
-                  <tr key={app.application_id} className="hover:bg-secondary/20 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs font-semibold text-navy">{app.application_id}</td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-navy">{app.name}</div>
-                      <div className="text-muted-foreground text-xs">{app.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        app.type === 'Member' ? "bg-blue-500/10 text-blue-700" : "bg-purple-500/10 text-purple-700"
-                      )}>
-                        {app.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        app.status === 'Approved' ? "bg-green-500/10 text-green-700" :
-                        app.status === 'Rejected' ? "bg-red-500/10 text-red-700" :
-                        "bg-[#F26522]/10 text-[#F26522]"
-                      )}>
-                        {app.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <select 
-                        value={app.status} 
-                        onChange={(e) => handleStatusChange(app.application_id, e.target.value)}
-                        className="text-xs font-semibold bg-white border border-border rounded-lg px-2 py-1.5 outline-none focus:border-[#F26522] cursor-pointer"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approve</option>
-                        <option value="Rejected">Reject</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {filteredApps.map((app) => {
+                  const memberCount = app.team_members ? app.team_members.length : 1
+                  const leadMember = app.team_members && app.team_members.length > 0 ? app.team_members[0] : null
+                  const teamName = leadMember && app.team_members && app.team_members.length > 1 ? (app as any).team_name || 'Team' : '-'
+                  const university = leadMember?.university || '-'
+                  const contactPhone = leadMember?.phone || '-'
+
+                  return (
+                    <tr key={app.application_id} className="hover:bg-secondary/30 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs font-semibold text-navy">{app.application_id}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
+                          app.type === 'Member' ? "bg-blue-500/10 text-blue-700 border-blue-500/20" : "bg-purple-500/10 text-purple-700 border-purple-500/20"
+                        )}>
+                          {app.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-navy text-xs">{teamName}</td>
+                      <td className="px-4 py-3 text-xs">
+                        <span className="inline-flex items-center justify-center bg-secondary text-muted-foreground font-bold px-2 py-0.5 rounded-full min-w-[24px]">
+                          {memberCount}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground truncate max-w-[150px]" title={university}>{university}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-bold text-navy text-xs">{app.name}</div>
+                        <div className="text-muted-foreground text-[10px]">{app.email}</div>
+                        {contactPhone !== '-' && <div className="text-muted-foreground text-[10px]">{contactPhone}</div>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
+                          app.status === 'Approved' ? "bg-green-500/10 text-green-700 border-green-500/20" :
+                          app.status === 'Rejected' ? "bg-red-500/10 text-red-700 border-red-500/20" :
+                          "bg-[#F26522]/10 text-[#F26522] border-[#F26522]/20"
+                        )}>
+                          {app.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <select 
+                          value={app.status} 
+                          onChange={(e) => handleStatusChange(app.application_id, e.target.value)}
+                          className="text-xs font-semibold bg-white border border-border rounded-lg px-2 py-1.5 outline-none focus:border-[#F26522] cursor-pointer shadow-sm"
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approve</option>
+                          <option value="Rejected">Reject</option>
+                        </select>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
             

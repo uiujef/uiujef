@@ -158,12 +158,13 @@ export default function EventsArchive() {
             requiresRegistration: d.requires_registration ?? d.requiresRegistration,
             registrationDeadline: d.registration_deadline ?? d.registrationDeadline,
             registration: d.requires_registration ?? d.requiresRegistration ? {
-              isTeamBased: d.is_team_based ?? d.isTeamBased,
+              isTeamBased: d.participation_type === 'Team' || d.is_team_based || d.isTeamBased,
               maxTeamMembers: d.max_team_members ?? d.maxTeamMembers,
-              requireTeamName: d.require_team_name ?? d.requireTeamName,
-              requireTeamIcon: d.require_team_icon ?? d.requireTeamIcon,
-              requireUniversityID: d.require_university_id ?? d.requireUniversityID,
+              requireTeamName: d.require_team_name ?? d.requireTeamName ?? true, // Require by default if team
+              requireTeamIcon: d.require_team_icon ?? d.requireTeamIcon ?? false,
+              requireUniversityID: d.require_university_id ?? d.requireUniversityID ?? true,
               requiresPayment: d.requires_payment ?? d.requiresPayment,
+              eventLevel: d.event_level,
             } : undefined,
             registrationFee: d.registration_fee,
             extendedDetails: d.extendedDetails || d.extended_details,
