@@ -8,18 +8,25 @@ import { CalendarDays, ChevronRight } from 'lucide-react'
 import { type NewsArticle } from '@/data/news'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { MediaBackground } from '@/components/media-background'
 
 export default function NewsPage() {
   const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null)
   const [news, setNews] = useState<NewsArticle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [bgMedia, setBgMedia] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchNews() {
       setIsLoading(true)
       setFetchError(null)
       try {
+        const { data: settingsData } = await supabase.from('site_settings').select('bg_news').limit(1).maybeSingle()
+        if (settingsData && settingsData.bg_news) {
+          setBgMedia(settingsData.bg_news)
+        }
+
         const { data, error } = await supabase
           .from('news')
           .select('*')
@@ -57,12 +64,9 @@ export default function NewsPage() {
       <SiteNav />
 
       {/* ── Hero header ── */}
-      <div className="relative overflow-hidden border-b border-border bg-navy-deep pt-24">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(242,101,34,0.12),transparent_55%)]"
-        />
-        <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="relative overflow-hidden border-b border-border bg-navy-deep min-h-[300px] flex items-center pt-24">
+        <MediaBackground url={bgMedia} overlayClassName="bg-navy-deep/70" />
+        <div className="relative mx-auto max-w-6xl w-full px-5 py-16 sm:px-6 lg:px-8 lg:py-20 z-10">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium tracking-wide text-gold-soft">
               <CalendarDays className="size-3.5" />

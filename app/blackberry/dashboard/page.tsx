@@ -1,11 +1,15 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { LayoutDashboard, Calendar, FileText, Users } from 'lucide-react'
+import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings } from 'lucide-react'
 import { EventsManager } from '@/components/admin/events-manager'
 import { NewsManager } from '@/components/admin/news-manager'
 import { ApplicationsManager } from '@/components/admin/applications-manager'
 import { MembersManager } from '@/components/admin/members-manager'
+import { GalleryManager } from '@/components/admin/gallery-manager'
+import { SettingsManager } from '@/components/admin/settings-manager'
+import { WhyJoinManager } from '@/components/admin/why-join-manager'
+import { SponsorsManager } from '@/components/admin/sponsors-manager'
 
 export default function DashboardPage() {
   const searchParams = useSearchParams()
@@ -19,8 +23,16 @@ export default function DashboardPage() {
         return <NewsManager />
       case 'members':
         return <MembersManager />
+      case 'gallery':
+        return <GalleryManager />
       case 'applications':
         return <ApplicationsManager />
+      case 'settings':
+        return <SettingsManager />
+      case 'why-join':
+        return <WhyJoinManager />
+      case 'sponsors':
+        return <SponsorsManager />
       case 'overview':
       default:
         return (

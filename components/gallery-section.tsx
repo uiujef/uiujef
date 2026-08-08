@@ -1,37 +1,64 @@
-import { Camera, Film, ImageIcon } from 'lucide-react'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Camera, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { org } from '@/lib/site-data'
+import { supabase } from '@/lib/supabase'
+import { MediaBackground } from '@/components/media-background'
 
 type GalleryItem = {
   id: string
-  type: 'photo' | 'video'
   title: string
-  aspect: 'tall' | 'wide' | 'square'
-  gradient: string
-}
-
-const galleryItems: GalleryItem[] = [
-  { id: 'g1', type: 'photo', title: 'National Economics Summit', aspect: 'tall', gradient: 'from-navy-deep to-navy' },
-  { id: 'g2', type: 'photo', title: 'Policy Lab Workshop', aspect: 'wide', gradient: 'from-navy to-navy-soft' },
-  { id: 'g3', type: 'video', title: 'Debate Cup Highlights', aspect: 'square', gradient: 'from-navy-deep to-navy-soft' },
-  { id: 'g4', type: 'photo', title: 'Member Orientation', aspect: 'square', gradient: 'from-navy-soft to-navy' },
-  { id: 'g5', type: 'photo', title: 'Research Presentation', aspect: 'tall', gradient: 'from-navy to-navy-deep' },
-  { id: 'g6', type: 'video', title: 'Annual Gala Recap', aspect: 'wide', gradient: 'from-navy-deep to-navy' },
-  { id: 'g7', type: 'photo', title: 'Panel Discussion', aspect: 'square', gradient: 'from-navy-soft to-navy-deep' },
-  { id: 'g8', type: 'photo', title: 'Team Building Day', aspect: 'tall', gradient: 'from-navy to-navy-soft' },
-  { id: 'g9', type: 'video', title: 'Guest Speaker Session', aspect: 'wide', gradient: 'from-navy-deep to-navy-soft' },
-]
-
-const aspectClass: Record<GalleryItem['aspect'], string> = {
-  tall: 'aspect-[3/4]',
-  wide: 'aspect-[4/3]',
-  square: 'aspect-square',
+  image_url: string
+  is_pinned: boolean
+  pinned_at: string | null
+  created_at: string
 }
 
 export function GallerySection() {
+  const [items, setItems] = useState<GalleryItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [bgMedia, setBgMedia] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true)
+      try {
+        const { data: settingsData } = await supabase.from('site_settings').select('bg_gallery').limit(1).maybeSingle()
+        if (settingsData && settingsData.bg_gallery) {
+          setBgMedia(settingsData.bg_gallery)
+        }
+
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false })
+        if (error) throw error
+        
+        if (data) {
+          const sorted = [...(data as GalleryItem[])].sort((a, b) => {
+            if (a.is_pinned && !b.is_pinned) return -1
+            if (!a.is_pinned && b.is_pinned) return 1
+            if (a.is_pinned && b.is_pinned) {
+              const dateA = a.pinned_at ? new Date(a.pinned_at).getTime() : 0
+              const dateB = b.pinned_at ? new Date(b.pinned_at).getTime() : 0
+              return dateB - dateA
+            }
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          })
+          setItems(sorted)
+        }
+      } catch (err) {
+        console.error('Error fetching gallery:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <section className="bg-background">
-      <div className="border-b border-border bg-navy-deep">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="relative overflow-hidden border-b border-border bg-navy-deep min-h-[300px] flex items-center">
+        <MediaBackground url={bgMedia} overlayClassName="bg-navy-deep/70" />
+        <div className="relative mx-auto max-w-6xl w-full px-5 py-16 sm:px-6 lg:px-8 lg:py-20 z-10">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium tracking-wide text-gold-soft">
               <Camera className="size-3.5" aria-hidden="true" />
@@ -41,40 +68,47 @@ export function GallerySection() {
               {org.shortName} <span className="text-gold">Gallery</span>
             </h1>
             <p className="mt-4 text-base leading-relaxed text-white/70 text-pretty sm:text-lg">
-              Photos and videos from our summits, workshops, and community events — updated as we
-              grow.
+              Photos and moments from our summits, workshops, and community events — updated as we grow.
             </p>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
-          {galleryItems.map((item) => (
-            <article
-              key={item.id}
-              className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:shadow-lg hover:shadow-navy/10"
-            >
-              <div
-                className={`relative flex ${aspectClass[item.aspect]} items-center justify-center bg-gradient-to-br ${item.gradient}`}
+        {isLoading ? (
+          <div className="py-24 text-center">
+            <Loader2 className="size-10 animate-spin mx-auto text-[#F26522] mb-4" />
+            <p className="text-lg font-semibold text-navy">Loading gallery...</p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-24 text-center">
+            <p className="text-lg font-semibold text-navy">No images uploaded yet.</p>
+          </div>
+        ) : (
+          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="group relative mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#F26522]/30 hover:shadow-lg hover:shadow-[#F26522]/10 cursor-pointer"
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(242,101,34,0.15),transparent_50%)]" />
-                {item.type === 'video' ? (
-                  <Film className="relative size-10 text-white/40" aria-hidden="true" />
-                ) : (
-                  <ImageIcon className="relative size-10 text-white/40" aria-hidden="true" />
-                )}
-                <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-navy-deep/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
-                  {item.type}
-                </span>
-              </div>
-              <div className="border-t border-border/60 p-4">
-                <h2 className="text-sm font-semibold text-navy">{item.title}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">Coming soon</p>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="relative">
+                  <img src={item.image_url} alt={item.title} className="w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
+                    <h2 className="text-sm font-semibold text-white">{item.title}</h2>
+                  </div>
+                  {item.is_pinned && (
+                    <div className="absolute top-3 left-3">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow backdrop-blur-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+                        Pinned
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

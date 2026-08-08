@@ -1,11 +1,22 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { heroMedia, org, quickStats } from '@/lib/site-data'
-import { getActiveRegistrationEvent } from '@/data/events'
 import { CountdownTimer } from '@/components/countdown-timer'
+import { supabase } from '@/lib/supabase'
+import { MediaBackground } from '@/components/media-background'
 
-export function HeroSection() {
-  const activeEvent = getActiveRegistrationEvent()
+export async function HeroSection() {
+  const { data: featuredEvent } = await supabase
+    .from('events')
+    .select('*')
+    .eq('is_featured', true)
+    .single()
+
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('bg_home')
+    .limit(1)
+    .maybeSingle()
 
   return (
     <section
@@ -13,29 +24,7 @@ export function HeroSection() {
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-navy-deep"
     >
       {/* Background media */}
-      <div className="absolute inset-0" aria-hidden="true">
-        {heroMedia.videoSrc ? (
-          <video
-            className="h-full w-full object-cover"
-            src={heroMedia.videoSrc}
-            poster={heroMedia.posterSrc}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-          />
-        ) : (
-          <img
-            src={heroMedia.posterSrc || '/placeholder.svg'}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        )}
-        {/* Navy gradient overlay for text contrast */}
-        <div className="absolute inset-0 bg-navy-deep/55" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy-deep via-navy-deep/80 to-navy/40" />
-      </div>
+      <MediaBackground url={settings?.bg_home || heroMedia.videoSrc} />
 
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-28 sm:px-6 lg:px-8 lg:pb-28 lg:pt-32">
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
@@ -76,7 +65,7 @@ export function HeroSection() {
           {/* Right: glassmorphism stats card */}
           <div className="flex flex-col gap-6">
             
-            {activeEvent && activeEvent.isRegistrationOpen && (
+            {featuredEvent && (
               <div className="relative overflow-hidden rounded-2xl border border-[#F26522]/30 bg-[#F26522]/10 p-4 shadow-[0_0_20px_rgba(242,101,34,0.15)] backdrop-blur-xl transition-all duration-300 hover:border-[#F26522]/50 hover:shadow-[0_0_30px_rgba(242,101,34,0.25)]">
                 <div className="absolute -left-4 -top-4 size-20 rounded-full bg-[#F26522]/20 blur-2xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -87,20 +76,20 @@ export function HeroSection() {
                         <span className="relative inline-flex size-2 rounded-full bg-[#F26522]" />
                       </span>
                       <h3 className="text-sm font-bold text-white">
-                        Registration open for {activeEvent.title}
+                        Upcoming Event: {featuredEvent.title}
                       </h3>
                     </div>
-                    {activeEvent.registrationDeadline && (
+                    {featuredEvent.date && (
                       <div className="mt-2 sm:mt-3">
-                        <CountdownTimer targetDate={activeEvent.registrationDeadline} />
+                        <CountdownTimer targetDate={featuredEvent.date} />
                       </div>
                     )}
                   </div>
                   <Link 
-                    href={`/events?register=${activeEvent.id}`}
+                    href={featuredEvent.is_registration_open ? `/events?register=${featuredEvent.id}` : `/events`}
                     className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F26522] px-4 py-2 text-xs font-bold text-white shadow-sm shadow-[#F26522]/30 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/50"
                   >
-                    Register Now
+                    {featuredEvent.is_registration_open ? 'Register Now' : 'View Event'}
                     <ArrowRight className="size-3.5 transition-transform duration-150 hover:translate-x-0.5" />
                   </Link>
                 </div>

@@ -10,6 +10,7 @@ import { DynamicEventForm } from '@/components/dynamic-event-form'
 import { CountdownTimer } from '@/components/countdown-timer'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { MediaBackground } from '@/components/media-background'
 
 // ─── Category filter ──────────────────────────────────────────────────────────
 
@@ -54,6 +55,12 @@ function EventCard({
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-[#F26522] px-3 py-1 text-xs font-bold text-white shadow">
             <span className="size-1.5 animate-ping rounded-full bg-white opacity-75" />
             Registration Open
+          </span>
+        )}
+        {event.isPinned && (
+          <span className="absolute left-3 bottom-3 flex items-center gap-1.5 rounded-full bg-yellow-500/90 px-3 py-1 text-xs font-bold text-white shadow backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+            Pinned
           </span>
         )}
       </div>
@@ -120,6 +127,7 @@ export default function EventsArchive() {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [bgMedia, setBgMedia] = useState<string | null>(null)
   const [registerEvent, setRegisterEvent] = useState<Event | null>(null)
   const [detailsEvent, setDetailsEvent] = useState<Event | null>(null)
   const searchParams = useSearchParams()
@@ -129,6 +137,11 @@ export default function EventsArchive() {
       setIsLoading(true)
       setFetchError(null)
       try {
+        const { data: settingsData } = await supabase.from('site_settings').select('bg_events').limit(1).maybeSingle()
+        if (settingsData && settingsData.bg_events) {
+          setBgMedia(settingsData.bg_events)
+        }
+
         const { data, error } = await supabase.from('events').select('*').order('date', { ascending: false })
         if (error) throw error
         if (data) {
@@ -152,7 +165,10 @@ export default function EventsArchive() {
               requireUniversityID: d.require_university_id ?? d.requireUniversityID,
               requiresPayment: d.requires_payment ?? d.requiresPayment,
             } : undefined,
-            extendedDetails: d.extendedDetails || d.extended_details
+            registrationFee: d.registration_fee,
+            extendedDetails: d.extendedDetails || d.extended_details,
+            isPinned: d.is_pinned,
+            pinnedAt: d.pinned_at,
           }))
           setEvents(mappedEvents)
         }
@@ -181,9 +197,21 @@ export default function EventsArchive() {
       ? events
       : events.filter((e) => e.category === activeCategory)
 
-  const sorted = [...filtered].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  )
+  const sorted = [...filtered].sort((a, b) => {
+    // Sort by pinned first
+    if (a.isPinned && !b.isPinned) return -1
+    if (!a.isPinned && b.isPinned) return 1
+    
+    if (a.isPinned && b.isPinned) {
+      // Sort pinned by most recently pinned (pinnedAt desc)
+      const dateA = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0
+      const dateB = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0
+      return dateB - dateA
+    }
+    
+    // Sort unpinned by date descending
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
 
   const upcoming = sorted.filter((e) => new Date(e.date) >= new Date())
   const past = sorted.filter((e) => new Date(e.date) < new Date())
@@ -191,12 +219,9 @@ export default function EventsArchive() {
   return (
     <section className="bg-background">
       {/* ── Hero header ── */}
-      <div className="relative overflow-hidden border-b border-border bg-navy-deep">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(242,101,34,0.12),transparent_55%)]"
-        />
-        <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="relative overflow-hidden border-b border-border bg-navy-deep min-h-[300px] flex items-center">
+        <MediaBackground url={bgMedia} overlayClassName="bg-navy-deep/70" />
+        <div className="relative mx-auto max-w-6xl w-full px-5 py-16 sm:px-6 lg:px-8 lg:py-20 z-10">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium tracking-wide text-gold-soft">
               <CalendarDays className="size-3.5" />
@@ -356,6 +381,7 @@ export default function EventsArchive() {
                   eventId={registerEvent.id}
                   eventName={registerEvent.title}
                   config={registerEvent.registration}
+                  registrationFee={(registerEvent as any).registrationFee}
                   onSuccess={() => setTimeout(() => setRegisterEvent(null), 3000)}
                 />
               ) : (

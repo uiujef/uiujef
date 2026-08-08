@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Loader2, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
@@ -15,7 +15,14 @@ type Event = {
   requires_payment: boolean
   is_registration_open: boolean
   requires_registration: boolean
+  max_team_size: number
+  registration_fee: number
+  is_featured: boolean
+  is_pinned: boolean
+  pinned_at: string | null
 }
+
+const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
 
 export function EventsManager() {
   const [events, setEvents] = useState<Event[]>([])
@@ -35,6 +42,10 @@ export function EventsManager() {
   const [requiresPayment, setRequiresPayment] = useState(false)
   const [requiresRegistration, setRequiresRegistration] = useState(false)
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
+  const [maxTeamSize, setMaxTeamSize] = useState<number>(1)
+  const [registrationFee, setRegistrationFee] = useState<number>(0)
+  const [isFeatured, setIsFeatured] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
 
   const loadEvents = async () => {
     setIsLoading(true)
@@ -60,13 +71,31 @@ export function EventsManager() {
     if (event) {
       setEditingEvent(event)
       setTitle(event.title)
-      setDate(event.date)
+      
+      // Format date for datetime-local input
+      let formattedDate = ''
+      try {
+        if (event.date) {
+          const d = new Date(event.date)
+          // YYYY-MM-DDThh:mm
+          formattedDate = d.toISOString().slice(0, 16)
+        }
+      } catch (e) {
+        console.error('Error parsing date', e)
+        formattedDate = event.date // fallback
+      }
+
+      setDate(formattedDate)
       setDescription(event.description || '')
       setCategory(event.category)
       setImage(event.image || '')
       setRequiresPayment(event.requires_payment || false)
       setRequiresRegistration(event.requires_registration || false)
       setIsRegistrationOpen(event.is_registration_open || false)
+      setMaxTeamSize(event.max_team_size || 1)
+      setRegistrationFee(event.registration_fee || 0)
+      setIsFeatured(event.is_featured || false)
+      setIsPinned(event.is_pinned || false)
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -77,6 +106,10 @@ export function EventsManager() {
       setRequiresPayment(false)
       setRequiresRegistration(false)
       setIsRegistrationOpen(false)
+      setMaxTeamSize(1)
+      setRegistrationFee(0)
+      setIsFeatured(false)
+      setIsPinned(false)
     }
     setImageFile(null)
     setIsModalOpen(true)
@@ -109,13 +142,23 @@ export function EventsManager() {
 
       const payload = {
         title,
-        date,
+        date: new Date(date).toISOString(), // Ensure proper ISO format for DB
         description,
         category,
         image: finalImageUrl,
         requires_payment: requiresPayment,
         requires_registration: requiresRegistration,
         is_registration_open: isRegistrationOpen,
+        max_team_size: maxTeamSize,
+        registration_fee: registrationFee,
+        is_featured: isFeatured,
+        is_pinned: isPinned,
+        pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
+      }
+
+      if (isFeatured) {
+        // If this event is featured, un-feature all others first
+        await supabase.from('events').update({ is_featured: false }).neq('id', editingEvent?.id || '00000000-0000-0000-0000-000000000000')
       }
 
       if (editingEvent) {
@@ -155,158 +198,273 @@ export function EventsManager() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-navy">Manage Events</h2>
-          <p className="text-muted-foreground mt-1">Create, edit, or delete UIUJEF events.</p>
+          <h2 className="text-3xl font-bold text-navy tracking-tight">Manage Events</h2>
+          <p className="text-muted-foreground mt-1">Plan, create, and oversee UIUJEF events.</p>
         </div>
-        <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#F26522] text-white px-4 py-2 rounded-xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 transition-all">
-          <Plus className="size-4" />
-          Add Event
+        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <Plus className="size-5" />
+          Create New Event
         </button>
       </div>
 
       {isLoading ? (
         <div className="py-24 text-center">
-          <Loader2 className="size-8 animate-spin mx-auto text-[#F26522] mb-4" />
-          <p className="text-lg font-semibold text-navy">Loading events...</p>
+          <Loader2 className="size-10 animate-spin mx-auto text-[#F26522] mb-4" />
+          <p className="text-lg font-semibold text-navy">Loading events timeline...</p>
         </div>
       ) : events.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
-          <div className="mx-auto size-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-            <Calendar className="size-8 text-muted-foreground" />
+        <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm">
+          <div className="mx-auto size-20 bg-secondary rounded-2xl flex items-center justify-center mb-6 transform -rotate-3">
+            <Calendar className="size-10 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-bold text-navy mb-2">No Events Found</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">It looks like there are no events in the system yet. Click "Add Event" to create your first one.</p>
+          <h3 className="text-2xl font-bold text-navy mb-3">No Events Scheduled</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto">It looks like the events calendar is empty. Click the button above to schedule a new event.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-secondary/50 text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Title</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Date</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Category</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Status</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {events.map((event) => (
-                  <tr key={event.id} className="hover:bg-secondary/20 transition-colors">
-                    <td className="px-6 py-4 font-medium text-navy">{event.title}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{new Date(event.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-navy/5 text-navy text-[10px] font-bold uppercase tracking-wider">
-                        {event.category}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => {
+            const eventDate = new Date(event.date)
+            const isPast = eventDate < new Date()
+            
+            return (
+              <div key={event.id} className={`bg-white rounded-2xl border ${isPast ? 'border-border/50 opacity-80' : 'border-border'} shadow-sm overflow-hidden hover:shadow-lg transition-all group relative flex flex-col`}>
+                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button onClick={() => openModal(event)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
+                    <Edit2 className="size-4" />
+                  </button>
+                  <button onClick={() => handleDelete(event.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+                
+                <div className="h-48 relative overflow-hidden bg-secondary">
+                  {event.image ? (
+                    <img src={event.image} alt={event.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50 bg-secondary">
+                      <Calendar className="size-12 mb-2 opacity-50" />
+                      <span className="text-xs font-bold uppercase tracking-wider">No Image</span>
+                    </div>
+                  )}
+                  <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
+                      {event.category}
+                    </span>
+                    {event.is_pinned && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-500/90 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
+                        Pinned
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {event.is_registration_open ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-500/10 text-green-700 text-[10px] font-bold uppercase tracking-wider">
+                    )}
+                    {event.requires_payment && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F26522]/90 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
+                        Paid
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-center gap-2 text-sm text-[#F26522] font-bold mb-3">
+                    <Calendar className="size-4" />
+                    <span>{eventDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-navy">{eventDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  
+                  <h4 className="text-xl font-bold text-navy mb-2 line-clamp-2">{event.title}</h4>
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-6 flex-1">{event.description || 'No description provided.'}</p>
+                  
+                  <div className="pt-4 border-t border-border flex items-center justify-between mt-auto">
+                    {event.requires_registration ? (
+                      event.is_registration_open ? (
+                        <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-500/10 px-3 py-1.5 rounded-full">
+                          <CheckCircle className="size-3.5" />
                           Registration Open
-                        </span>
+                        </div>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
-                          Closed
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => openModal(event)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                          <Edit2 className="size-4" />
-                        </button>
-                        <button onClick={() => handleDelete(event.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                          <Trash2 className="size-4" />
-                        </button>
+                        <div className="flex items-center gap-2 text-muted-foreground font-bold text-xs bg-secondary px-3 py-1.5 rounded-full">
+                          <Users className="size-3.5" />
+                          Registration Closed
+                        </div>
+                      )
+                    ) : (
+                      <div className="flex items-center gap-2 text-blue-600 font-bold text-xs bg-blue-500/10 px-3 py-1.5 rounded-full">
+                        <Users className="size-3.5" />
+                        Open to All
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                    
+                    {isPast && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Past Event</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-white z-10">
-              <h3 className="text-xl font-bold text-navy">{editingEvent ? 'Edit Event' : 'Add New Event'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground">✕</button>
+          <div className="absolute inset-0 bg-navy-deep/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+          <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="p-6 sm:px-8 sm:py-6 border-b border-border flex items-center justify-between bg-white z-10 shrink-0">
+              <h3 className="text-2xl font-bold text-navy tracking-tight">{editingEvent ? 'Edit Event Details' : 'Create New Event'}</h3>
+              <button onClick={() => setIsModalOpen(false)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors">✕</button>
             </div>
             
-            <form onSubmit={handleSave} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Event Title</label>
-                  <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
+            <form onSubmit={handleSave} className="p-6 sm:p-8 overflow-y-auto space-y-8">
+              
+              {/* Basic Info */}
+              <div>
+                <h4 className="text-sm font-bold text-navy uppercase tracking-wider mb-4 border-b border-border pb-2">Event Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Event Title *</label>
+                    <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Code Samurai 2024" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Date & Time *</label>
+                    <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Date</label>
-                  <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
+              </div>
+
+              {/* Classification & Display */}
+              <div>
+                <h4 className="text-sm font-bold text-navy uppercase tracking-wider mb-4 border-b border-border pb-2">Classification & Display</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Event Category *</label>
+                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  
+                  
+                  <div className="flex flex-col gap-4 mt-6">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} className="peer sr-only" />
+                        <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F26522]"></div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-navy group-hover:text-[#F26522] transition-colors">Feature on Home Page</span>
+                        <p className="text-xs text-muted-foreground">Only one event can be featured.</p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input type="checkbox" checked={isPinned} onChange={e => setIsPinned(e.target.checked)} className="peer sr-only" />
+                        <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-navy group-hover:text-yellow-600 transition-colors">Pin to Top</span>
+                        <p className="text-xs text-muted-foreground">Always show this event at the top of the archive.</p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Image Upload</label>
-                <input type="file" accept="image/*" onChange={e => {
-                  const file = e.target.files?.[0]
-                  if (file) setImageFile(file)
-                }} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20" />
-                {image && !imageFile && <p className="text-xs text-muted-foreground mt-1">Current: <a href={image} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">View Image</a></p>}
+              {/* Content */}
+              <div>
+                <h4 className="text-sm font-bold text-navy uppercase tracking-wider mb-4 border-b border-border pb-2">Content</h4>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Description / Details</label>
+                    <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about?" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Cover Image</label>
+                    <input type="file" accept="image/*" onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) setImageFile(file)
+                    }} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" />
+                    {image && !imageFile && (
+                      <div className="mt-3 flex items-center gap-3 bg-secondary/50 p-2 rounded-xl border border-border w-max">
+                        <img src={image} alt="Current" className="w-16 h-10 rounded-lg object-cover" />
+                        <a href={image} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline pr-4">View Current Cover</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none">
-                  <option value="Competition">Competition</option>
-                  <option value="Summit">Summit</option>
-                  <option value="Workshop">Workshop</option>
-                  <option value="Seminar">Seminar</option>
-                  <option value="Social">Social</option>
-                  <option value="Other">Other</option>
-                </select>
+              {/* Settings */}
+              <div>
+                <h4 className="text-sm font-bold text-navy uppercase tracking-wider mb-4 border-b border-border pb-2">Registration Settings</h4>
+                <div className="bg-secondary/50 rounded-2xl p-6 border border-border space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={requiresRegistration} onChange={e => setRequiresRegistration(e.target.checked)} className="peer sr-only" />
+                      <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F26522]"></div>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-navy group-hover:text-[#F26522] transition-colors">Requires Registration</span>
+                      <p className="text-xs text-muted-foreground">Attendees must sign up to join.</p>
+                    </div>
+                  </label>
+                  
+                  {requiresRegistration && (
+                    <div className="pl-14 space-y-4 animate-in fade-in slide-in-from-top-2">
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={isRegistrationOpen} onChange={e => setIsRegistrationOpen(e.target.checked)} className="peer sr-only" />
+                          <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-navy group-hover:text-green-600 transition-colors">Registration Open</span>
+                          <p className="text-xs text-muted-foreground">Allow people to register now.</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={requiresPayment} onChange={e => setRequiresPayment(e.target.checked)} className="peer sr-only" />
+                          <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F26522]"></div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-navy group-hover:text-[#F26522] transition-colors">Requires Payment</span>
+                          <p className="text-xs text-muted-foreground">This is a paid event.</p>
+                        </div>
+                      </label>
+                      
+                      {requiresPayment && (
+                        <div className="pl-14">
+                          <div className="space-y-2 max-w-[200px]">
+                            <label className="text-xs font-bold uppercase text-muted-foreground">Registration Fee (BDT)</label>
+                            <input type="number" min="0" value={registrationFee} onChange={e => setRegistrationFee(Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="pt-2">
+                        <div className="space-y-2 max-w-[200px]">
+                          <label className="text-xs font-bold uppercase text-muted-foreground">Max Team Members</label>
+                          <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                          <p className="text-xs text-muted-foreground">1 means individual participation.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Description</label>
-                <textarea rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
-              </div>
-
-              <div className="flex flex-wrap gap-6 pt-4 border-t border-border">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={requiresRegistration} onChange={e => setRequiresRegistration(e.target.checked)} className="size-4 accent-[#F26522]" />
-                  <span className="text-sm font-semibold text-navy">Requires Registration</span>
-                </label>
-                
-                {requiresRegistration && (
-                  <>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={isRegistrationOpen} onChange={e => setIsRegistrationOpen(e.target.checked)} className="size-4 accent-[#F26522]" />
-                      <span className="text-sm font-semibold text-navy">Registration Open</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={requiresPayment} onChange={e => setRequiresPayment(e.target.checked)} className="size-4 accent-[#F26522]" />
-                      <span className="text-sm font-semibold text-navy">Requires Payment</span>
-                    </label>
-                  </>
-                )}
-              </div>
-
-              <div className="pt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
+              <div className="mt-10 pt-6 flex justify-end gap-3 border-t border-border sticky bottom-0 bg-white">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
-                  {(isSaving || isUploading) && <Loader2 className="size-4 animate-spin" />}
-                  {isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Event'}
+                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
+                  {(isSaving || isUploading) && <Loader2 className="size-5 animate-spin" />}
+                  {isUploading ? 'Uploading Image...' : isSaving ? 'Saving Event...' : 'Save Event'}
                 </button>
               </div>
             </form>

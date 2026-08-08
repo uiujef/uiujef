@@ -45,6 +45,8 @@ export interface Event {
       status: 'approved' | 'pending' | 'rejected'
     }[]
   }
+  isPinned?: boolean
+  pinnedAt?: string | null
 }
 
 // ─── Dynamic Form Config ──────────────────────────────────────────────────────

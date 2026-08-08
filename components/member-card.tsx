@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
 import type { Member } from '@/data/members'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +12,8 @@ type MemberCardProps = {
 }
 
 export function MemberCard({ member, onClick, className }: MemberCardProps) {
+  const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
+
   return (
     <article
       onClick={onClick}
@@ -43,14 +46,40 @@ export function MemberCard({ member, onClick, className }: MemberCardProps) {
       </div>
 
       {/* Name, designation, bio */}
-      <div className="text-center">
-        <h3 className="font-serif text-lg font-bold text-navy transition-colors group-hover:text-[#F26522] sm:text-xl">
+      <div className="text-center w-full">
+        <h3 className="font-serif text-lg font-bold text-navy transition-colors group-hover:text-[#F26522] sm:text-xl line-clamp-1 px-2" title={member.name}>
           {member.name}
         </h3>
-        <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-[#F26522]/80">
-          {member.role}
+        <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-[#F26522]/80 line-clamp-1 px-2" title={displayRole}>
+          {displayRole}
         </p>
-        <p className="mt-2 line-clamp-2 max-w-[200px] text-xs leading-relaxed text-muted-foreground">
+
+        {(member.role === 'Alumni' || member.role === 'Advisor') && (
+          <div className="mt-1.5 text-xs text-muted-foreground line-clamp-2 px-2">
+            {member.current_job && <p className="font-medium text-navy/80 truncate" title={member.current_job}>💼 {member.current_job}</p>}
+            {member.past_role && <p className="truncate" title={`Was: ${member.past_role}`}>Was: {member.past_role}</p>}
+          </div>
+        )}
+
+        <div className="mt-3 flex justify-center gap-4">
+          {member.facebook_url && (
+            <a href={member.facebook_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-muted-foreground hover:text-blue-600 transition-colors">
+              <FacebookIcon className="size-4" />
+            </a>
+          )}
+          {member.instagram_url && (
+            <a href={member.instagram_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-muted-foreground hover:text-pink-600 transition-colors">
+              <InstagramIcon className="size-4" />
+            </a>
+          )}
+          {member.linkedin_url && (
+            <a href={member.linkedin_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-muted-foreground hover:text-blue-700 transition-colors">
+              <LinkedinIcon className="size-4" />
+            </a>
+          )}
+        </div>
+
+        <p className="mt-3 line-clamp-2 max-w-[200px] mx-auto text-xs leading-relaxed text-muted-foreground">
           {member.quote}
         </p>
       </div>

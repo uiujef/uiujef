@@ -163,6 +163,7 @@ interface DynamicEventFormProps {
   eventId: string
   eventName: string
   config: EventRegistrationConfig
+  registrationFee?: number
   onSuccess?: (payload: EventRegistrationPayload) => void
 }
 
@@ -170,6 +171,7 @@ export function DynamicEventForm({
   eventId,
   eventName,
   config,
+  registrationFee,
   onSuccess,
 }: DynamicEventFormProps) {
   const [teamName, setTeamName] = useState('')
@@ -375,6 +377,11 @@ export function DynamicEventForm({
             <h4 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
               <Wallet className="size-4 text-[#F26522]" /> Payment Information
             </h4>
+            {registrationFee ? (
+              <p className="text-sm font-medium text-[#F26522] mb-4 bg-[#F26522]/10 p-3 rounded-xl">
+                Required Fee: <span className="font-bold text-lg">৳{registrationFee}</span>
+              </p>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel htmlFor="payment_method" icon={Wallet} label="Method" />

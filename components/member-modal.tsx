@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import Image from 'next/image'
-import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2 } from 'lucide-react'
+import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2, Briefcase } from 'lucide-react'
+import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
 import type { Member } from '@/data/members'
 
 interface MemberModalProps {
@@ -35,6 +36,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
   if (!member) return null
 
   const isAdvisor = member.role === 'Advisor'
+  const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
 
   return (
     <div
@@ -80,7 +82,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
             {/* Category badge over image */}
             <span className="absolute left-4 bottom-4 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#1B2A4A]/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
               <ShieldCheck className="size-3" />
-              {member.role}
+              {displayRole}
             </span>
             {/* Gradient overlay at bottom on mobile */}
             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white/20 to-transparent md:hidden" />
@@ -94,9 +96,30 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                 {member.name}
               </h2>
               <p className="mt-1 text-base font-semibold text-[#F26522]">
-                {member.role}
+                {displayRole}
               </p>
             </div>
+
+            {/* Social Links */}
+            {(member.facebook_url || member.instagram_url || member.linkedin_url) && (
+              <div className="mt-3 flex gap-4">
+                {member.facebook_url && (
+                  <a href={member.facebook_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-blue-600 transition-colors">
+                    <FacebookIcon className="size-5" />
+                  </a>
+                )}
+                {member.instagram_url && (
+                  <a href={member.instagram_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-pink-600 transition-colors">
+                    <InstagramIcon className="size-5" />
+                  </a>
+                )}
+                {member.linkedin_url && (
+                  <a href={member.linkedin_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-blue-700 transition-colors">
+                    <LinkedinIcon className="size-5" />
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* About / Bio */}
             <div className="mt-5">
@@ -107,6 +130,24 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
                 {member.quote || "No quote provided."}
               </p>
             </div>
+
+            {/* Additional Alumni/Advisor info */}
+            {(member.role === 'Alumni' || member.role === 'Advisor') && (member.current_job || member.past_role) && (
+              <div className="mt-4 bg-secondary/50 rounded-xl p-4">
+                {member.current_job && (
+                  <div className="flex items-center gap-2 text-sm text-navy mb-1">
+                    <Briefcase className="size-4 text-[#F26522]" />
+                    <span className="font-semibold">Current:</span> {member.current_job}
+                  </div>
+                )}
+                {member.past_role && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <ShieldCheck className="size-4" />
+                    <span>Past Role:</span> {member.past_role}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Data points grid */}
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-navy/8 pt-5">

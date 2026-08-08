@@ -1,8 +1,20 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/brand-icons'
 import { contact, copyright, footerColumns, org, socials } from '@/lib/site-data'
+import { supabase } from '@/lib/supabase'
+
+type Sponsor = {
+  id: string
+  name: string
+  logo_url: string
+  website_url?: string
+}
 
 const socialIcons = {
   linkedin: LinkedinIcon,
@@ -11,8 +23,47 @@ const socialIcons = {
 }
 
 export function SiteFooter() {
+  const pathname = usePathname()
+  const [sponsors, setSponsors] = useState<Sponsor[]>([])
+
+  useEffect(() => {
+    async function fetchSponsors() {
+      try {
+        const { data, error } = await supabase.from('sponsors').select('*').order('created_at', { ascending: true })
+        if (error) throw error
+        if (data) setSponsors(data)
+      } catch (err) {
+        console.error('Error fetching sponsors:', err)
+      }
+    }
+    fetchSponsors()
+  }, [])
+
+  const showSponsors = pathname !== '/' && sponsors.length > 0
+
   return (
     <footer className="bg-navy-deep text-white">
+      {showSponsors && (
+        <div className="border-b border-white/10 bg-white/5 py-12">
+          <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8 text-center">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-gold mb-8">Our Official Sponsors</h3>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+              {sponsors.map((sponsor) => (
+                <div key={sponsor.id} className="relative group">
+                  {sponsor.website_url ? (
+                    <a href={sponsor.website_url} target="_blank" rel="noopener noreferrer" className="block transition-transform duration-300 hover:scale-105">
+                      <img src={sponsor.logo_url} alt={sponsor.name} className="h-12 md:h-16 w-auto object-contain brightness-0 invert opacity-70 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  ) : (
+                    <img src={sponsor.logo_url} alt={sponsor.name} className="h-12 md:h-16 w-auto object-contain brightness-0 invert opacity-70" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,0.8fr)]">
           {/* Brand + contact */}

@@ -9,6 +9,7 @@ import { MemberModal } from '@/components/member-modal'
 import { org } from '@/lib/site-data'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { MediaBackground } from '@/components/media-background'
 
 type Tab = 'advisors' | 'executive' | 'general' | 'alumni'
 
@@ -16,8 +17,11 @@ const EXECUTIVE_RANKS: Record<string, number> = {
   'President': 1,
   'Vice President': 2,
   'General Secretary': 3,
-  'Treasurer': 4,
-  'Executive Member': 5,
+  'Treasurer': 3,
+  'Executive of Events': 4,
+  'Executive of Communication': 5,
+  'Executive of PR & Marketing': 6,
+  'Executive Member': 7,
 }
 
 // ─── Section header ──────────────────────────────────────────────────────────
@@ -32,7 +36,7 @@ function SectionHeader({
   subtitle: string
 }) {
   return (
-    <div className="mb-6 flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
+    <div className="mb-8 flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
       <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#F26522]/10 text-[#F26522]">
         <Icon className="size-6" />
       </div>
@@ -51,10 +55,16 @@ export function MembersSection() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [bgMedia, setBgMedia] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchMembers() {
       try {
+        const { data: settingsData } = await supabase.from('site_settings').select('bg_members').limit(1).maybeSingle()
+        if (settingsData && settingsData.bg_members) {
+          setBgMedia(settingsData.bg_members)
+        }
+
         const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
         if (error) throw error
         if (data) {
@@ -71,9 +81,11 @@ export function MembersSection() {
 
   // Categorize and sort members
   const advisors = members.filter(m => m.role === 'Advisor')
+  const getDisplayRole = (m: Member) => m.role === 'Other (Custom Role)' && m.custom_role ? m.custom_role : m.role
+
   const executives = members
-    .filter(m => Object.keys(EXECUTIVE_RANKS).includes(m.role))
-    .sort((a, b) => EXECUTIVE_RANKS[a.role] - EXECUTIVE_RANKS[b.role])
+    .filter(m => Object.keys(EXECUTIVE_RANKS).includes(getDisplayRole(m)))
+    .sort((a, b) => EXECUTIVE_RANKS[getDisplayRole(a)] - EXECUTIVE_RANKS[getDisplayRole(b)])
   const generalMembers = members.filter(m => m.role === 'General Member')
   const alumni = members.filter(m => m.role === 'Alumni')
 
@@ -84,15 +96,24 @@ export function MembersSection() {
     { id: 'alumni',     label: 'Alumni',           icon: History,       count: alumni.length },
   ]
 
+  // Executive Hierarchy Tiers
+  const president = executives.filter(m => getDisplayRole(m) === 'President')
+  const vicePresidents = executives.filter(m => getDisplayRole(m) === 'Vice President')
+  const generalSecretaryAndTreasurer = executives.filter(m => {
+    const r = getDisplayRole(m)
+    return r.includes('General Secretary') || r === 'Treasurer'
+  })
+  const execOfEvents = executives.filter(m => getDisplayRole(m) === 'Executive of Events')
+  const execOfComm = executives.filter(m => getDisplayRole(m) === 'Executive of Communication')
+  const execOfPR = executives.filter(m => getDisplayRole(m) === 'Executive of PR & Marketing')
+  const execMembers = executives.filter(m => getDisplayRole(m) === 'Executive Member')
+
   return (
     <section className="bg-background min-h-screen">
       {/* ── Page hero ── */}
-      <div className="relative overflow-hidden border-b border-border bg-navy-deep">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(242,101,34,0.12),transparent_55%)]"
-        />
-        <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="relative overflow-hidden border-b border-border bg-navy-deep min-h-[300px] flex items-center">
+        <MediaBackground url={bgMedia} overlayClassName="bg-navy-deep/70" />
+        <div className="relative mx-auto max-w-6xl w-full px-5 py-8 sm:px-6 lg:px-8 lg:py-10 z-10">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium tracking-wide text-gold-soft">
               <Users className="size-3.5" aria-hidden="true" />
@@ -117,7 +138,7 @@ export function MembersSection() {
         <div
           role="tablist"
           aria-label="Member categories"
-          className="mb-6 flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card/60 p-1.5 backdrop-blur-sm sm:flex-row"
+          className="mb-8 flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card/60 p-1.5 backdrop-blur-sm sm:flex-row"
         >
           {tabs.map((tab) => {
             const Icon = tab.icon
@@ -163,6 +184,7 @@ export function MembersSection() {
           </div>
         ) : (
           <div className="min-h-[40vh]">
+            
             {/* ADVISORS */}
             <div id="panel-advisors" role="tabpanel" aria-labelledby="tab-advisors" hidden={activeTab !== 'advisors'}>
               {activeTab === 'advisors' && (
@@ -173,7 +195,7 @@ export function MembersSection() {
                     subtitle="Distinguished faculty members who provide academic guidance and strategic oversight to UIUJEF."
                   />
                   {advisors.length > 0 ? (
-                    <div className="grid gap-5 lg:grid-cols-2">
+                    <div className="grid gap-5 lg:grid-cols-2 mt-8">
                       {advisors.map((member) => (
                         <AdvisorCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
                       ))}
@@ -185,7 +207,7 @@ export function MembersSection() {
               )}
             </div>
 
-            {/* EXECUTIVE PANEL */}
+            {/* EXECUTIVE PANEL (Pyramid Layout) */}
             <div id="panel-executive" role="tabpanel" aria-labelledby="tab-executive" hidden={activeTab !== 'executive'}>
               {activeTab === 'executive' && (
                 <>
@@ -195,10 +217,85 @@ export function MembersSection() {
                     subtitle="The elected student leaders driving UIUJEF's mission — structured from the President down through every department."
                   />
                   {executives.length > 0 ? (
-                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {executives.map((member) => (
-                        <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
-                      ))}
+                    <div className="flex flex-col items-center gap-12 sm:gap-16 w-full py-8">
+                      
+                      {/* Tier 1: President */}
+                      {president.length > 0 && (
+                        <div className="flex justify-center w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-0">
+                          <div className="w-full max-w-sm sm:scale-110 transition-transform">
+                            {president.map(m => (
+                              <MemberCard key={m.id} member={m} onClick={() => setSelectedMember(m)} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tier 2: Vice Presidents */}
+                      {vicePresidents.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                          {vicePresidents.map(m => (
+                            <div key={m.id} className="w-full sm:w-80">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Tier 3: General Secretary & Treasurer */}
+                      {generalSecretaryAndTreasurer.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+                          {generalSecretaryAndTreasurer.map(m => (
+                            <div key={m.id} className="w-full sm:w-80">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Tier 4: Executive of Events */}
+                      {execOfEvents.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+                          {execOfEvents.map(m => (
+                            <div key={m.id} className="w-full sm:w-72">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Tier 5: Executive of Communication */}
+                      {execOfComm.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
+                          {execOfComm.map(m => (
+                            <div key={m.id} className="w-full sm:w-72">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Tier 6: Executive of PR & Marketing */}
+                      {execOfPR.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
+                          {execOfPR.map(m => (
+                            <div key={m.id} className="w-full sm:w-72">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Additional: General Executive Members */}
+                      {execMembers.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
+                          {execMembers.map(m => (
+                            <div key={m.id} className="w-full sm:w-[260px]">
+                              <MemberCard member={m} onClick={() => setSelectedMember(m)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
                     </div>
                   ) : (
                     <EmptyState message="No executive members found." />
@@ -217,7 +314,7 @@ export function MembersSection() {
                     subtitle="The heartbeat of UIUJEF — passionate students contributing to events, communications, and every initiative that moves the club forward."
                   />
                   {generalMembers.length > 0 ? (
-                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-8">
                       {generalMembers.map((member) => (
                         <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
                       ))}
@@ -239,7 +336,7 @@ export function MembersSection() {
                     subtitle="Our graduated members who continue to inspire and support the legacy of UIUJEF."
                   />
                   {alumni.length > 0 ? (
-                    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-8">
                       {alumni.map((member) => (
                         <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
                       ))}
@@ -260,20 +357,20 @@ export function MembersSection() {
         />
 
         {/* ── Join CTA ── */}
-        <div className="mt-20 rounded-2xl border border-border bg-gradient-to-br from-secondary/80 to-card p-8 text-center backdrop-blur-sm sm:p-12">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#F26522]/10 text-[#F26522]">
-            <Users className="size-7" />
+        <div className="mt-20 rounded-3xl border border-border bg-gradient-to-br from-secondary/80 to-card p-8 text-center backdrop-blur-sm sm:p-12 shadow-sm">
+          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-[#F26522]/10 text-[#F26522]">
+            <Users className="size-8" />
           </div>
-          <h2 className="font-serif text-2xl font-bold text-navy">
+          <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">
             Want to Join the Team?
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
             Membership applications open each semester. Apply now to become part of
             the most impactful student community at {org.university}.
           </p>
           <a
             href="/join"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#F26522] px-7 text-sm font-bold text-white transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-lg hover:shadow-[#F26522]/30"
+            className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#F26522] px-8 text-sm font-bold text-white transition-all duration-300 hover:bg-[#FF7A3D] hover:scale-105 active:scale-95 hover:shadow-xl hover:shadow-[#F26522]/30"
           >
             Apply Now →
           </a>
@@ -285,7 +382,7 @@ export function MembersSection() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-border p-12 text-center shadow-sm w-full">
+    <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm w-full mt-8">
       <div className="mx-auto size-16 bg-secondary rounded-full flex items-center justify-center mb-4">
         <UserCircle className="size-8 text-muted-foreground" />
       </div>
