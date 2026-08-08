@@ -93,6 +93,7 @@ export function ApplicationsManager() {
           facebook_url: memberData.facebook_url || '',
           instagram_url: memberData.instagram_url || '',
           linkedin_url: memberData.linkedin_url || '',
+          image_url: memberData.photo_url || '',
         }
 
         const { error: insertError } = await supabase.from('members').insert([memberPayload])
@@ -479,34 +480,22 @@ export function ApplicationsManager() {
                       </div>
                       
                       {member.photo_url && (
-                        <div className="flex items-center gap-4 bg-secondary/30 p-2 rounded-xl border border-border">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 bg-secondary/30 p-3 rounded-xl border border-border">
                           <img 
                             src={member.photo_url} 
                             alt={`${member.full_name || member.name}'s photo`} 
-                            className="w-16 h-16 object-cover rounded-lg border border-border" 
+                            className="w-20 h-20 object-cover rounded-lg border border-border" 
                           />
-                          <button
-                            onClick={async () => {
-                              try {
-                                const response = await fetch(member.photo_url);
-                                const blob = await response.blob();
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `Applicant_${member.full_name || member.name}_Photo`.replace(/\s+/g, '_');
-                                document.body.appendChild(a);
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                              } catch (e) {
-                                window.open(member.photo_url, '_blank');
-                              }
-                            }}
-                            className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center gap-1 shadow-sm no-print"
+                          <a
+                            href={member.photo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={`Applicant_${member.full_name || member.name}_Photo`.replace(/\s+/g, '_')}
+                            className="text-xs bg-[#F26522] text-white font-bold py-2.5 px-5 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center gap-2 shadow-sm no-print"
                           >
-                            <Printer className="size-3" />
+                            <Printer className="size-4" />
                             Download Photo
-                          </button>
+                          </a>
                         </div>
                       )}
                     </div>

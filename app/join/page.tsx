@@ -291,10 +291,16 @@ export default function JoinPage() {
       // 5. Non-blocking EmailJS
       try {
         await emailjs.send(
-          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-          { to_name: safeForm.full_name, to_email: safeForm.email, application_id: newId },
-          { publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY }
+          'service_uiujef', // The specific Service ID
+          'ha1gvnf', // Using the exact template ID from the user's dashboard URL, fallback to 'template_uiujef' if they renamed it
+          {
+            to_name: safeForm.full_name,
+            to_email: safeForm.email,
+            application_id: newId,
+          },
+          { 
+            publicKey: '1rcJpb7q1Tgd2lX2X' // Hardcoded temporarily to bypass any .env loading issues
+          }
         );
       } catch (emailErr) {
         console.warn("EmailJS failed, but DB insert succeeded:", emailErr);
