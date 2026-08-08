@@ -2,6 +2,7 @@ import { Mail, MapPin, Phone } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/brand-icons'
 import { contact, org, socials } from '@/lib/site-data'
+import { SectionHeader } from '@/components/ui/section-header'
 
 const socialIcons = {
   linkedin: LinkedinIcon,
@@ -31,12 +32,7 @@ export async function ContactSection() {
     <section id="contact" className="bg-background">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
         <div className="max-w-2xl">
-          <span className="text-xs font-semibold uppercase tracking-widest text-navy-soft">
-            Get in touch
-          </span>
-          <h1 className="mt-3 font-serif text-3xl font-bold tracking-tight text-navy text-balance sm:text-4xl">
-            Contact {org.shortName}
-          </h1>
+          <SectionHeader subtitle="Get in touch" title={`Contact ${org.shortName}`} />
           <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty">
             Have a question about membership, events, or partnerships? Reach out — we&apos;d love to
             hear from you.

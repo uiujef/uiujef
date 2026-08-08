@@ -122,7 +122,8 @@ export function MembersSection() {
             <h1 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white text-balance sm:text-4xl lg:text-5xl">
               Meet the <span className="text-gold">Members</span>
             </h1>
-            <p className="mt-3 text-base leading-relaxed text-white/70 text-pretty sm:text-lg">
+            <div className="mt-4 h-1.5 w-24 rounded-full bg-[#F26522]" />
+            <p className="mt-6 text-base leading-relaxed text-white/70 text-pretty sm:text-lg">
               From Faculty Advisors and Executive Panel to General
               Members and Alumni — explore every tier of the {org.shortName} community at{' '}
               {org.university}.

@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight, CalendarDays, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { SectionHeader } from '@/components/ui/section-header'
 
 export async function EventsSection() {
   const { data: latestEvents } = await supabase.from('events').select('*').order('date', { ascending: false }).limit(3)
@@ -11,14 +12,7 @@ export async function EventsSection() {
 
         {/* Header row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-xl">
-            <span className="text-xs font-semibold uppercase tracking-widest text-navy-soft">
-              What&apos;s happening
-            </span>
-            <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight text-navy text-balance sm:text-4xl">
-              Latest Events
-            </h2>
-          </div>
+          <SectionHeader subtitle="What's happening" title="Latest Events" />
           <Link
             href="/events"
             className="group inline-flex items-center gap-1.5 text-sm font-semibold text-navy transition-colors duration-200 hover:text-[#F26522]"

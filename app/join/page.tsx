@@ -27,6 +27,7 @@ type PendingMemberPayload = {
   mother_name: string
   blood_group: string
   department: string
+  bio: string
   why_join: string
   expect_from_jef: string
   extracurricular: string
@@ -36,6 +37,7 @@ type PendingMemberPayload = {
   payment_method: string
   transaction_id: string
   photo_url: string | null
+  other_role?: string
   status: 'pending'
   submitted_at: string
 }
@@ -125,6 +127,7 @@ export default function JoinPage() {
     mother_name: '',
     blood_group: '',
     department: '',
+    bio: '',
     why_join: '',
     expect_from_jef: '',
     extracurricular: '',
@@ -134,6 +137,7 @@ export default function JoinPage() {
     payment_method: '',
     transaction_id: '',
     photo_url: null,
+    other_role: '',
     status: 'pending',
     submitted_at: ''
   })
@@ -159,9 +163,11 @@ export default function JoinPage() {
 
   const validateStep2 = useCallback(() => {
     const newErrors: Record<string, string> = {}
+    if (form.bio.length < 30) newErrors.bio = 'Min 30 chars'
     if (form.why_join.length < 50) newErrors.why_join = 'Min 50 chars'
     if (form.expect_from_jef.length < 30) newErrors.expect_from_jef = 'Min 30 chars'
-    if (form.interested_roles.length < 20) newErrors.interested_roles = 'Min 20 chars'
+    if (!form.interested_roles) newErrors.interested_roles = 'Required'
+    if (form.interested_roles === 'Other (Specify)' && (!form.other_role || form.other_role.length < 5)) newErrors.other_role = 'Min 5 chars'
     if (form.know_about_jef.length < 30) newErrors.know_about_jef = 'Min 30 chars'
     if (!form.heard_about) newErrors.heard_about = 'Required'
 
@@ -234,7 +240,7 @@ export default function JoinPage() {
           'templete_uiujef',
           {
             to_name: form.full_name,
-            email: form.email,
+            to_email: form.email,
             application_id: newId,
           },
           {
@@ -253,7 +259,9 @@ export default function JoinPage() {
               email: form.email,
               type: 'Member',
               status: 'Pending',
-              address: form.student_address
+              address: form.student_address,
+              bio: form.bio,
+              interested_role: form.interested_roles === 'Other (Specify)' ? form.other_role : form.interested_roles
             }
           ])
           
@@ -520,6 +528,11 @@ export default function JoinPage() {
               </div>
 
               <div className="space-y-6">
+                <Field id="bio" label="Short Bio / About Yourself" icon={User} error={errors.bio}>
+                  <textarea id="bio" name="bio" rows={3} value={form.bio} onChange={handleChange} className={textareaClass} placeholder="Tell us a little bit about yourself..." />
+                  <div className="text-right text-xs text-white/30">{form.bio.length}/30 min chars</div>
+                </Field>
+
                 <Field id="why_join" label="Why do you want to join JEF?" icon={MessageSquare} error={errors.why_join}>
                   <textarea id="why_join" name="why_join" rows={3} value={form.why_join} onChange={handleChange} className={textareaClass} placeholder="I want to join because..." />
                   <div className="text-right text-xs text-white/30">{form.why_join.length}/50 min chars</div>
@@ -535,9 +548,22 @@ export default function JoinPage() {
                 </Field>
 
                 <Field id="interested_roles" label="Roles/Tasks you're interested in" icon={ListChecks} error={errors.interested_roles}>
-                  <textarea id="interested_roles" name="interested_roles" rows={2} value={form.interested_roles} onChange={handleChange} className={textareaClass} placeholder="Design, organizing events, marketing..." />
-                  <div className="text-right text-xs text-white/30">{form.interested_roles.length}/20 min chars</div>
+                  <select id="interested_roles" name="interested_roles" value={form.interested_roles} onChange={handleChange} className={selectClass}>
+                    <option value="" disabled>Select Role/Task</option>
+                    <option value="Events & Operations">Events & Operations</option>
+                    <option value="Marketing & Public Relations (PR)">Marketing & Public Relations (PR)</option>
+                    <option value="Content & Creative">Content & Creative</option>
+                    <option value="Graphics & Media">Graphics & Media</option>
+                    <option value="Communication & Coordination">Communication & Coordination</option>
+                    <option value="Other (Specify)">Other (Specify)</option>
+                  </select>
                 </Field>
+
+                {form.interested_roles === 'Other (Specify)' && (
+                  <Field id="other_role" label="Specify Other Role" icon={ListChecks} error={errors.other_role}>
+                    <input id="other_role" name="other_role" type="text" value={form.other_role} onChange={handleChange} className={inputClass} placeholder="e.g., Video Editing" />
+                  </Field>
+                )}
 
                 <Field id="know_about_jef" label="What do you know about JEF?" icon={Search} error={errors.know_about_jef}>
                   <textarea id="know_about_jef" name="know_about_jef" rows={2} value={form.know_about_jef} onChange={handleChange} className={textareaClass} placeholder="JEF is a forum that..." />

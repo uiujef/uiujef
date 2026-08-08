@@ -23,12 +23,26 @@ export function SettingsManager() {
   const [bgNews, setBgNews] = useState('')
   const [bgGallery, setBgGallery] = useState('')
   const [bgMembers, setBgMembers] = useState('')
+  const [bgMission, setBgMission] = useState('')
+  const [bgVision, setBgVision] = useState('')
+  const [bgJourney1, setBgJourney1] = useState('')
+  const [bgJourney2, setBgJourney2] = useState('')
+  const [bgJourney3, setBgJourney3] = useState('')
+  const [bgJourney4, setBgJourney4] = useState('')
+  const [bgJourney5, setBgJourney5] = useState('')
   const [bgFiles, setBgFiles] = useState<{ [key: string]: File | null }>({
     home: null,
     events: null,
     news: null,
     gallery: null,
     members: null,
+    mission: null,
+    vision: null,
+    journey1: null,
+    journey2: null,
+    journey3: null,
+    journey4: null,
+    journey5: null,
   })
 
   const loadSettings = async () => {
@@ -51,6 +65,13 @@ export function SettingsManager() {
         setBgNews(data.bg_news || '')
         setBgGallery(data.bg_gallery || '')
         setBgMembers(data.bg_members || '')
+        setBgMission(data.bg_mission || '')
+        setBgVision(data.bg_vision || '')
+        setBgJourney1(data.bg_journey_1 || '')
+        setBgJourney2(data.bg_journey_2 || '')
+        setBgJourney3(data.bg_journey_3 || '')
+        setBgJourney4(data.bg_journey_4 || '')
+        setBgJourney5(data.bg_journey_5 || '')
       }
     } catch (err: any) {
       toast.error('Database Error (Load Settings): ' + err.message)
@@ -73,6 +94,13 @@ export function SettingsManager() {
       let newBgNews = bgNews
       let newBgGallery = bgGallery
       let newBgMembers = bgMembers
+      let newBgMission = bgMission
+      let newBgVision = bgVision
+      let newBgJourney1 = bgJourney1
+      let newBgJourney2 = bgJourney2
+      let newBgJourney3 = bgJourney3
+      let newBgJourney4 = bgJourney4
+      let newBgJourney5 = bgJourney5
 
       const uploadMedia = async (file: File | null, prefix: string) => {
         if (!file) return null
@@ -89,6 +117,13 @@ export function SettingsManager() {
       if (bgFiles.news) newBgNews = await uploadMedia(bgFiles.news, 'bg_news') || newBgNews
       if (bgFiles.gallery) newBgGallery = await uploadMedia(bgFiles.gallery, 'bg_gallery') || newBgGallery
       if (bgFiles.members) newBgMembers = await uploadMedia(bgFiles.members, 'bg_members') || newBgMembers
+      if (bgFiles.mission) newBgMission = await uploadMedia(bgFiles.mission, 'bg_mission') || newBgMission
+      if (bgFiles.vision) newBgVision = await uploadMedia(bgFiles.vision, 'bg_vision') || newBgVision
+      if (bgFiles.journey1) newBgJourney1 = await uploadMedia(bgFiles.journey1, 'bg_journey_1') || newBgJourney1
+      if (bgFiles.journey2) newBgJourney2 = await uploadMedia(bgFiles.journey2, 'bg_journey_2') || newBgJourney2
+      if (bgFiles.journey3) newBgJourney3 = await uploadMedia(bgFiles.journey3, 'bg_journey_3') || newBgJourney3
+      if (bgFiles.journey4) newBgJourney4 = await uploadMedia(bgFiles.journey4, 'bg_journey_4') || newBgJourney4
+      if (bgFiles.journey5) newBgJourney5 = await uploadMedia(bgFiles.journey5, 'bg_journey_5') || newBgJourney5
 
       const payload = {
         is_recruitment_open: isRecruitmentOpen,
@@ -100,6 +135,13 @@ export function SettingsManager() {
         bg_news: newBgNews,
         bg_gallery: newBgGallery,
         bg_members: newBgMembers,
+        bg_mission: newBgMission,
+        bg_vision: newBgVision,
+        bg_journey_1: newBgJourney1,
+        bg_journey_2: newBgJourney2,
+        bg_journey_3: newBgJourney3,
+        bg_journey_4: newBgJourney4,
+        bg_journey_5: newBgJourney5,
       }
 
       if (settingsId) {
@@ -261,6 +303,66 @@ export function SettingsManager() {
                   <input 
                     type="file" 
                     accept="image/*,video/mp4,video/webm"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        item.setFile(e.target.files[0])
+                      }
+                    }} 
+                    className="w-full text-xs mt-2 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer"
+                  />
+                  {(item.file || item.state) && (
+                    <button 
+                      type="button" 
+                      onClick={() => { item.setFile(null); item.setBg('') }} 
+                      className="absolute top-3 right-3 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1 rounded-full transition-colors"
+                      title="Remove Media"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* About Page Media */}
+        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/10 text-indigo-600 rounded-xl">
+              <MonitorPlay className="size-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-navy">About Page Media</h3>
+              <p className="text-sm text-muted-foreground">Upload images for Mission, Vision, and Journey cards.</p>
+            </div>
+          </div>
+
+          <div className="p-8 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { label: 'Mission Background', key: 'mission', state: bgMission, setFile: (f: File | null) => setBgFiles(p => ({ ...p, mission: f })), file: bgFiles.mission, setBg: setBgMission },
+                { label: 'Vision Background', key: 'vision', state: bgVision, setFile: (f: File | null) => setBgFiles(p => ({ ...p, vision: f })), file: bgFiles.vision, setBg: setBgVision },
+                { label: 'Journey Image 1', key: 'journey1', state: bgJourney1, setFile: (f: File | null) => setBgFiles(p => ({ ...p, journey1: f })), file: bgFiles.journey1, setBg: setBgJourney1 },
+                { label: 'Journey Image 2', key: 'journey2', state: bgJourney2, setFile: (f: File | null) => setBgFiles(p => ({ ...p, journey2: f })), file: bgFiles.journey2, setBg: setBgJourney2 },
+                { label: 'Journey Image 3', key: 'journey3', state: bgJourney3, setFile: (f: File | null) => setBgFiles(p => ({ ...p, journey3: f })), file: bgFiles.journey3, setBg: setBgJourney3 },
+                { label: 'Journey Image 4', key: 'journey4', state: bgJourney4, setFile: (f: File | null) => setBgFiles(p => ({ ...p, journey4: f })), file: bgFiles.journey4, setBg: setBgJourney4 },
+                { label: 'Journey Image 5', key: 'journey5', state: bgJourney5, setFile: (f: File | null) => setBgFiles(p => ({ ...p, journey5: f })), file: bgFiles.journey5, setBg: setBgJourney5 },
+              ].map(item => (
+                <div key={item.key} className="space-y-2 border border-border rounded-xl p-4 bg-secondary/20 relative">
+                  <label className="text-xs font-bold uppercase text-navy">{item.label}</label>
+                  
+                  {item.file ? (
+                    <div className="text-xs text-[#F26522] font-semibold break-words">Ready to upload: {item.file.name}</div>
+                  ) : item.state ? (
+                    <div className="text-xs text-green-600 font-semibold break-all truncate">Current: {item.state.split('/').pop()}</div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">No media set</div>
+                  )}
+
+                  <input 
+                    type="file" 
+                    accept="image/*"
                     onChange={e => {
                       if (e.target.files && e.target.files.length > 0) {
                         item.setFile(e.target.files[0])

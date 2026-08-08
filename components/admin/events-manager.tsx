@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { exportToCsv } from '@/lib/export-csv'
 
 type Event = {
   id: string
@@ -235,6 +236,71 @@ export function EventsManager() {
     }
   }
 
+  const exportEventApps = async (eventTitle: string, approvedOnly: boolean) => {
+    try {
+      const toastId = toast.loading(`Exporting ${approvedOnly ? 'approved ' : ''}applications for ${eventTitle}...`)
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('type', `Event: ${eventTitle}`)
+
+      if (error) throw error
+
+      let appsToExport = data || []
+      if (approvedOnly) {
+        appsToExport = appsToExport.filter(a => a.status === 'Approved')
+      }
+
+      if (appsToExport.length === 0) {
+        toast.dismiss(toastId)
+        toast.error('No applications found to export.')
+        return
+      }
+
+      const columns = [
+        { header: 'App ID', key: (r: any) => r.application_id },
+        { header: 'Status', key: (r: any) => r.status },
+        { header: 'Name', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.name || ''
+            return r.team_members[0].name || r.name || ''
+          }
+        },
+        { header: 'Email', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.email || ''
+            return r.team_members[0].email || r.email || ''
+          }
+        },
+        { header: 'Phone', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.phone || ''
+            return r.team_members[0].phone || ''
+          }
+        },
+        { header: 'University', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.university || ''
+            return r.team_members[0].university || ''
+          }
+        },
+        { header: 'Student ID', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.student_id || ''
+            return r.team_members[0].student_id || ''
+          }
+        },
+        { header: 'Address', key: (r: any) => {
+            if (!r.team_members || !r.team_members.length) return r.address || ''
+            return r.team_members[0].address || ''
+          }
+        },
+        { header: 'TrxID', key: (r: any) => r.transaction_id || '' },
+      ]
+
+      exportToCsv(`UIUJEF_${eventTitle}_Apps_${approvedOnly ? 'Approved' : 'All'}`, appsToExport, columns)
+      toast.dismiss(toastId)
+      toast.success('Export successful!')
+    } catch (err: any) {
+      toast.error('Export failed: ' + err.message)
+    }
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -315,28 +381,40 @@ export function EventsManager() {
                   <h4 className="text-xl font-bold text-navy mb-2 line-clamp-2">{event.title}</h4>
                   <p className="text-sm text-muted-foreground line-clamp-3 mb-6 flex-1">{event.description || 'No description provided.'}</p>
                   
-                  <div className="pt-4 border-t border-border flex items-center justify-between mt-auto">
-                    {event.requires_registration ? (
-                      event.is_registration_open ? (
-                        <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-500/10 px-3 py-1.5 rounded-full">
-                          <CheckCircle className="size-3.5" />
-                          Registration Open
-                        </div>
+                  <div className="pt-4 border-t border-border flex flex-col gap-3 mt-auto">
+                    <div className="flex items-center justify-between">
+                      {event.requires_registration ? (
+                        event.is_registration_open ? (
+                          <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-500/10 px-3 py-1.5 rounded-full">
+                            <CheckCircle className="size-3.5" />
+                            Registration Open
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-muted-foreground font-bold text-xs bg-secondary px-3 py-1.5 rounded-full">
+                            <Users className="size-3.5" />
+                            Registration Closed
+                          </div>
+                        )
                       ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground font-bold text-xs bg-secondary px-3 py-1.5 rounded-full">
+                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs bg-blue-500/10 px-3 py-1.5 rounded-full">
                           <Users className="size-3.5" />
-                          Registration Closed
+                          Open to All
                         </div>
-                      )
-                    ) : (
-                      <div className="flex items-center gap-2 text-blue-600 font-bold text-xs bg-blue-500/10 px-3 py-1.5 rounded-full">
-                        <Users className="size-3.5" />
-                        Open to All
+                      )}
+                      
+                      {isPast && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Past Event</span>
+                      )}
+                    </div>
+                    {event.requires_registration && (
+                      <div className="flex items-center gap-2 border-t border-border/50 pt-3 mt-1">
+                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event.title, false); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-secondary text-navy rounded-lg hover:bg-secondary/80 transition-colors">
+                          Export All
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); exportEventApps(event.title, true); }} className="flex-1 text-center py-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#F26522]/10 text-[#F26522] rounded-lg hover:bg-[#F26522]/20 transition-colors">
+                          Export Approved
+                        </button>
                       </div>
-                    )}
-                    
-                    {isPast && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Past Event</span>
                     )}
                   </div>
                 </div>

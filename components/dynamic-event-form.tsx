@@ -275,7 +275,7 @@ export function DynamicEventForm({
             application_id: newId,
             name: members[0].name,
             email: members[0].email,
-            type: 'Event',
+            type: `Event: ${eventName}`,
             status: 'Pending',
             team_members: finalMembers,
             transaction_id: config.requiresPayment ? transactionId : null,
@@ -293,7 +293,7 @@ export function DynamicEventForm({
           process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
           {
             to_name: members[0].name,
-            email: members[0].email,
+            to_email: members[0].email,
             application_id: newId,
           },
           {
@@ -335,9 +335,12 @@ export function DynamicEventForm({
           <div className="font-mono text-xl font-bold tracking-wider text-white">
             {applicationId}
           </div>
-          <p className="mt-2 text-[11px] text-white/50">
-            Save this ID to track your application status.
-          </p>
+          <div className="mt-4 flex items-start gap-2 text-left rounded-lg bg-red-500/10 p-3 border border-red-500/20">
+            <span className="text-xl">⚠️</span>
+            <p className="text-[11px] font-semibold text-red-200">
+              Please copy and save your Application ID safely for future tracking. Do not close this window without saving it!
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -357,7 +360,7 @@ export function DynamicEventForm({
             }}
             className="w-full sm:w-auto rounded-full bg-[#F26522] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
           >
-            Close & Return to Home
+            Close & Finish
           </button>
         </div>
       </div>

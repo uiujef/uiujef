@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { exportToCsv } from '@/lib/export-csv'
 
 type Application = {
   application_id: string
@@ -132,6 +133,51 @@ export function ApplicationsManager() {
     (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const handleExport = (approvedOnly: boolean) => {
+    const dataToExport = approvedOnly 
+      ? applications.filter(a => a.status === 'Approved')
+      : applications
+
+    const columns = [
+      { header: 'App ID', key: (r: Application) => r.application_id },
+      { header: 'Type', key: (r: Application) => r.type },
+      { header: 'Status', key: (r: Application) => r.status },
+      { header: 'Name', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return r.name || ''
+          return r.team_members[0].name || r.name || ''
+        }
+      },
+      { header: 'Email', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return r.email || ''
+          return r.team_members[0].email || r.email || ''
+        }
+      },
+      { header: 'Phone', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).phone || ''
+          return r.team_members[0].phone || ''
+        }
+      },
+      { header: 'University', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).university || ''
+          return r.team_members[0].university || ''
+        }
+      },
+      { header: 'Student ID', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
+          return r.team_members[0].student_id || ''
+        }
+      },
+      { header: 'Address', key: (r: Application) => {
+          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).address || ''
+          return r.team_members[0].address || ''
+        }
+      },
+      { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
+    ]
+
+    exportToCsv(`UIUJEF_Applications_${approvedOnly ? 'Approved' : 'All'}`, dataToExport, columns)
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -151,6 +197,12 @@ export function ApplicationsManager() {
               className="pl-9 pr-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none text-sm w-full sm:w-64"
             />
           </div>
+          <button onClick={() => handleExport(false)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-secondary text-navy hover:bg-secondary/80 border border-border transition-colors">
+            Export All (CSV)
+          </button>
+          <button onClick={() => handleExport(true)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-[#F26522]/10 text-[#F26522] hover:bg-[#F26522]/20 border border-[#F26522]/30 transition-colors">
+            Export Approved Only (CSV)
+          </button>
         </div>
       </div>
 

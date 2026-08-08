@@ -231,7 +231,8 @@ export default function EventsArchive() {
             <h1 className="mt-5 font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
               Events &amp; <span className="text-gold">Archive</span>
             </h1>
-            <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
+            <div className="mt-4 h-1.5 w-24 rounded-full bg-[#F26522]" />
+            <p className="mt-6 text-base leading-relaxed text-white/70 sm:text-lg">
               Browse all UIUJEF events — from flagship summits and competitions to
               hands-on workshops and career seminars.
             </p>
