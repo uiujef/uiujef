@@ -102,7 +102,7 @@ export default function JoinPage() {
   const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false)
   const [recruitmentDeadline, setRecruitmentDeadline] = useState<string | null>(null)
   const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
-  const [membershipFee, setMembershipFee] = useState<number>(500)
+  const [membershipFee, setMembershipFee] = useState<number | string>(600)
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   
   useEffect(() => {

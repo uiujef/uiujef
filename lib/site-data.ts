@@ -231,8 +231,8 @@ export const footerColumns: { id: string; title: string; links: NavLink[] }[] = 
     id: 'legal',
     title: 'Legal',
     links: [
-      { id: 'privacy', label: 'Privacy Policy', href: '#' },
-      { id: 'terms', label: 'Terms & Conditions', href: '#' },
+      { id: 'privacy', label: 'Privacy Policy', href: '/privacy' },
+      { id: 'terms', label: 'Terms & Conditions', href: '/terms' },
     ],
   },
 ]
