@@ -38,6 +38,8 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
   const isAdvisor = member.role === 'Advisor'
   const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
   const isDeveloper = member.name === 'Shaikh Jubair'
+  const shouldHide = member.role === 'General Member' && member.name !== 'Shaikh Jubair'
+  const showSensitiveInfo = !shouldHide
 
   return (
     <div
@@ -153,7 +155,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
             {/* Data points grid */}
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-navy/8 pt-5">
               {/* Student ID */}
-              {isDeveloper && (
+              {showSensitiveInfo && (
                 <div className="flex items-start gap-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
                     <Hash className="size-4" />
@@ -170,7 +172,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               )}
 
               {/* Student Address */}
-              {isDeveloper && (
+              {showSensitiveInfo && (
                 <div className="flex items-start gap-3 col-span-full">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                     <Building2 className="size-4" />
@@ -220,7 +222,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               </div>
 
               {/* Phone */}
-              {isDeveloper && (
+              {showSensitiveInfo && (
                 <div className="flex items-start gap-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
                     <Phone className="size-4" />
