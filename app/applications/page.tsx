@@ -24,18 +24,37 @@ export default function ApplicationsTrackingPage() {
 
     const cleanId = appId.trim().replace(/—|–/g, '-')
     
+    // First query applications table
     const { data, error } = await supabase
       .from('applications')
       .select('*')
-      .ilike('application_id', `%${cleanId}%`)
+      .ilike('application_id', cleanId) // Removed % for exact but case-insensitive match
       .limit(1)
       .maybeSingle()
 
     if (data && !error) {
       setResult({
-        name: data.name,
+        name: data.name || (data.team_members && data.team_members[0]?.name) || 'Applicant',
         type: data.type,
         status: data.status
+      })
+      setIsLoading(false)
+      return
+    }
+    
+    // Fallback: Check if it's already an approved member in the members table
+    const { data: memberData, error: memberError } = await supabase
+      .from('members')
+      .select('*')
+      .ilike('application_id', cleanId) // Assumes application_id is mapped in members table
+      .limit(1)
+      .maybeSingle()
+      
+    if (memberData && !memberError) {
+      setResult({
+        name: memberData.name,
+        type: 'Membership',
+        status: 'Approved / Active Member'
       })
     } else {
       setResult('not-found')
@@ -100,19 +119,19 @@ export default function ApplicationsTrackingPage() {
                   )}>
                     <div className={cn(
                       "size-14 rounded-full flex items-center justify-center shrink-0",
-                      result.status === 'Approved' ? "bg-green-500/20" :
+                      result.status.includes('Approved') ? "bg-green-500/20" :
                       result.status === 'Rejected' ? "bg-red-500/20" :
                       "bg-[#F26522]/20"
                     )}>
-                      {result.status === 'Approved' ? <CheckCircle2 className="size-6 text-green-500" /> : <Clock className={cn("size-6", result.status === 'Rejected' ? "text-red-500" : "text-[#F26522]")} />}
+                      {result.status.includes('Approved') ? <CheckCircle2 className="size-6 text-green-500" /> : <Clock className={cn("size-6", result.status === 'Rejected' ? "text-red-500" : "text-[#F26522]")} />}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white">
-                        {result.type} Application {result.status}
+                        {result.type} Application: {result.status}
                       </h3>
                       <p className="text-sm text-white/70 mt-1">
                         <span className="font-semibold text-white">Applicant:</span> {result.name}<br/>
-                        {result.status === 'Approved' ? "Congratulations! Check your email for further instructions." :
+                        {result.status.includes('Approved') ? "Congratulations! Check your email for further instructions or welcome to the club!" :
                          result.status === 'Rejected' ? "Unfortunately, your application was not approved at this time." :
                          "Your application is currently under review. You will receive an email once a decision is made."}
                       </p>

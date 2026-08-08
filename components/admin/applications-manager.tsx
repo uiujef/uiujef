@@ -78,6 +78,7 @@ export function ApplicationsManager() {
         const memberData = app.team_members?.[0] || {}
         
         const memberPayload = {
+          application_id: app.application_id,
           name: app.name || memberData.full_name || '',
           email: app.email || memberData.email || '',
           role: 'General Member',
