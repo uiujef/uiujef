@@ -19,6 +19,8 @@ type Application = {
   transaction_id?: string
 }
 
+const isMemberApp = (type?: string) => type === 'Member' || type === 'Membership'
+
 export function ApplicationsManager() {
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -55,7 +57,7 @@ export function ApplicationsManager() {
     setApplications(apps => apps.map(a => a.application_id === appId ? { ...a, status: newStatus } : a))
     
     try {
-      if (newStatus === 'Approved' && app.type === 'Member') {
+      if (newStatus === 'Approved' && isMemberApp(app.type)) {
         // Fetch highest member_serial
         const { data: maxSerialData, error: maxSerialError } = await supabase
           .from('members')
@@ -98,7 +100,7 @@ export function ApplicationsManager() {
         toast.success(`Member registered with serial ${formattedSerial}`)
       }
 
-      if (app.status === 'Approved' && newStatus !== 'Approved' && app.type === 'Member') {
+      if (app.status === 'Approved' && newStatus !== 'Approved' && isMemberApp(app.type)) {
         const { error: deleteError } = await supabase.from('members').delete().eq('email', app.email)
         if (deleteError) {
           console.error("Failed to delete auto-created member:", deleteError)
@@ -138,7 +140,7 @@ export function ApplicationsManager() {
   }
 
   const tabFilteredApps = applications.filter(app => {
-    if (activeTab === 'Member') return app.type === 'Member'
+    if (activeTab === 'Member') return isMemberApp(app.type)
     return app.type.startsWith('Event')
   })
 
@@ -149,7 +151,7 @@ export function ApplicationsManager() {
   )
 
   const handleExport = (approvedOnly: boolean) => {
-    let dataToExport = applications.filter(a => a.type === 'Member')
+    let dataToExport = applications.filter(a => isMemberApp(a.type))
     if (approvedOnly) {
       dataToExport = dataToExport.filter(a => a.status === 'Approved')
     }
@@ -159,32 +161,32 @@ export function ApplicationsManager() {
       { header: 'Type', key: (r: Application) => r.type },
       { header: 'Status', key: (r: Application) => r.status },
       { header: 'Name', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return r.name || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
           return r.team_members[0].name || r.name || ''
         }
       },
       { header: 'Email', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return r.email || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.email || ''
           return r.team_members[0].email || r.email || ''
         }
       },
       { header: 'Phone', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).phone || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).phone || ''
           return r.team_members[0].phone || ''
         }
       },
       { header: 'University', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).university || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).university || ''
           return r.team_members[0].university || ''
         }
       },
       { header: 'Student ID', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
           return r.team_members[0].student_id || ''
         }
       },
       { header: 'Address', key: (r: Application) => {
-          if (r.type === 'Member' || !r.team_members || !r.team_members.length) return (r as any).address || ''
+          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).address || ''
           return r.team_members[0].address || ''
         }
       },
