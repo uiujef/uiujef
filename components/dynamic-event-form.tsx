@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useId } from 'react'
+import { useState, useCallback, useId, useEffect } from 'react'
 import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import emailjs from '@emailjs/browser'
@@ -224,6 +224,23 @@ export function DynamicEventForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [applicationId, setApplicationId] = useState('')
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string}[]>([])
+
+  useEffect(() => {
+    if (config.requiresPayment) {
+      const loadPaymentMethods = async () => {
+        try {
+          const { data, error } = await supabase.from('site_settings').select('payment_methods').limit(1).maybeSingle()
+          if (!error && data?.payment_methods) {
+            setPaymentMethods(data.payment_methods)
+          }
+        } catch (err) {
+          console.error('Failed to load payment methods', err)
+        }
+      }
+      loadPaymentMethods()
+    }
+  }, [config.requiresPayment])
 
   // Update a specific member's field
   const handleMemberChange = useCallback(
@@ -316,7 +333,7 @@ export function DynamicEventForm({
 
     setIsSubmitting(false)
     setIsSuccess(true)
-    onSuccess?.(payload)
+    // Note: Deliberately removed auto onSuccess call here so the modal stays open until user clicks Close
   }
 
   if (isSuccess) {
@@ -350,7 +367,7 @@ export function DynamicEventForm({
           <button
             onClick={() => {
               navigator.clipboard.writeText(applicationId)
-              alert('Application ID copied to clipboard!')
+              toast.success('Application ID copied!')
             }}
             className="w-full sm:w-auto rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
           >
@@ -444,6 +461,23 @@ export function DynamicEventForm({
                 Required Fee: <span className="font-bold text-lg">৳{registrationFee}</span>
               </p>
             ) : null}
+
+            {paymentMethods.length > 0 && (
+              <div className="mb-6 rounded-xl border border-white/10 bg-[#1B2A4A]/50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-white/70 mb-3">
+                  Please send the required fee to any of the following numbers:
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {paymentMethods.map((pm, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 border border-white/5">
+                      <span className="text-sm font-semibold text-white/80">{pm.method}</span>
+                      <span className="font-mono text-sm font-bold text-[#F26522]">{pm.account_number}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel htmlFor="payment_method" icon={Wallet} label="Method" />

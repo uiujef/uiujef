@@ -23,6 +23,7 @@ export function ApplicationsManager() {
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<'Member' | 'Event'>('Member')
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [appToDelete, setAppToDelete] = useState<string | null>(null)
 
@@ -127,16 +128,22 @@ export function ApplicationsManager() {
     }
   }
 
-  const filteredApps = applications.filter(app => 
+  const tabFilteredApps = applications.filter(app => {
+    if (activeTab === 'Member') return app.type === 'Member'
+    return app.type.startsWith('Event')
+  })
+
+  const filteredApps = tabFilteredApps.filter(app => 
     (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
     (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleExport = (approvedOnly: boolean) => {
-    const dataToExport = approvedOnly 
-      ? applications.filter(a => a.status === 'Approved')
-      : applications
+    let dataToExport = applications.filter(a => a.type === 'Member')
+    if (approvedOnly) {
+      dataToExport = dataToExport.filter(a => a.status === 'Approved')
+    }
 
     const columns = [
       { header: 'App ID', key: (r: Application) => r.application_id },
@@ -197,13 +204,39 @@ export function ApplicationsManager() {
               className="pl-9 pr-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none text-sm w-full sm:w-64"
             />
           </div>
-          <button onClick={() => handleExport(false)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-secondary text-navy hover:bg-secondary/80 border border-border transition-colors">
-            Export All (CSV)
-          </button>
-          <button onClick={() => handleExport(true)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-[#F26522]/10 text-[#F26522] hover:bg-[#F26522]/20 border border-[#F26522]/30 transition-colors">
-            Export Approved Only (CSV)
-          </button>
+          {activeTab === 'Member' && (
+            <>
+              <button onClick={() => handleExport(false)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-secondary text-navy hover:bg-secondary/80 border border-border transition-colors">
+                Export All (CSV)
+              </button>
+              <button onClick={() => handleExport(true)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-[#F26522]/10 text-[#F26522] hover:bg-[#F26522]/20 border border-[#F26522]/30 transition-colors">
+                Export Approved Only
+              </button>
+            </>
+          )}
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-2">
+        <button
+          onClick={() => setActiveTab('Member')}
+          className={cn(
+            "px-6 py-2.5 text-sm font-bold rounded-full transition-colors",
+            activeTab === 'Member' ? "bg-[#F26522] text-white shadow-lg shadow-[#F26522]/20" : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-navy"
+          )}
+        >
+          Member Applications
+        </button>
+        <button
+          onClick={() => setActiveTab('Event')}
+          className={cn(
+            "px-6 py-2.5 text-sm font-bold rounded-full transition-colors",
+            activeTab === 'Event' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-navy"
+          )}
+        >
+          Event Applications
+        </button>
       </div>
 
       {isLoading ? (
@@ -226,12 +259,17 @@ export function ApplicationsManager() {
               <thead className="bg-secondary/80 text-muted-foreground border-b border-border">
                 <tr>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Tracking ID</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Type</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Team Name</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>
+                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Event Name</th>}
+                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Team Name</th>}
+                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>}
+                  
+                  {activeTab === 'Member' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Name & Contact</th>}
+                  {activeTab === 'Member' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Role / Bio</th>}
+                  
+                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Contact Person</th>}
+                  
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">University</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Contact Person</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">TrxID</th>
+                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">TrxID</th>}
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
                   <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px] text-right">Action</th>
                 </tr>
@@ -247,34 +285,62 @@ export function ApplicationsManager() {
                   return (
                     <tr key={app.application_id} className="hover:bg-secondary/30 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs font-semibold text-navy">{app.application_id}</td>
-                      <td className="px-4 py-3">
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
-                          app.type === 'Member' ? "bg-blue-500/10 text-blue-700 border-blue-500/20" : "bg-purple-500/10 text-purple-700 border-purple-500/20"
-                        )}>
-                          {app.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-navy text-xs">{teamName}</td>
-                      <td className="px-4 py-3 text-xs">
-                        <span className="inline-flex items-center justify-center bg-secondary text-muted-foreground font-bold px-2 py-0.5 rounded-full min-w-[24px]">
-                          {memberCount}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground truncate max-w-[150px]" title={university}>{university}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-bold text-navy text-xs">{app.name}</div>
-                        <div className="text-muted-foreground text-[10px]">{app.email}</div>
-                        {contactPhone !== '-' && <div className="text-muted-foreground text-[10px]">{contactPhone}</div>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {app.transaction_id ? (
-                          <span className="font-mono text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded border border-gray-200">
-                            {app.transaction_id}
+                      
+                      {activeTab === 'Event' && (
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border bg-purple-500/10 text-purple-700 border-purple-500/20">
+                            {app.type.replace('Event: ', '')}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">-</span>
-                        )}
-                      </td>
+                        </td>
+                      )}
+                      
+                      {activeTab === 'Event' && <td className="px-4 py-3 font-semibold text-navy text-xs">{teamName}</td>}
+                      
+                      {activeTab === 'Event' && (
+                        <td className="px-4 py-3 text-xs">
+                          <span className="inline-flex items-center justify-center bg-secondary text-muted-foreground font-bold px-2 py-0.5 rounded-full min-w-[24px]">
+                            {memberCount}
+                          </span>
+                        </td>
+                      )}
+                      
+                      {activeTab === 'Member' && (
+                        <td className="px-4 py-3">
+                          <div className="font-bold text-navy text-xs">{app.name}</div>
+                          <div className="text-muted-foreground text-[10px]">{app.email}</div>
+                          <div className="text-muted-foreground text-[10px]">{contactPhone !== '-' ? contactPhone : ''}</div>
+                        </td>
+                      )}
+
+                      {activeTab === 'Member' && (
+                        <td className="px-4 py-3 text-xs max-w-[200px] truncate">
+                          <div className="font-semibold text-[#F26522]">{leadMember?.interested_role || '-'}</div>
+                          <div className="text-muted-foreground text-[10px] truncate" title={leadMember?.bio}>{leadMember?.bio || '-'}</div>
+                        </td>
+                      )}
+
+                      {activeTab === 'Event' && (
+                        <td className="px-4 py-3">
+                          <div className="font-bold text-navy text-xs">{app.name}</div>
+                          <div className="text-muted-foreground text-[10px]">{app.email}</div>
+                          {contactPhone !== '-' && <div className="text-muted-foreground text-[10px]">{contactPhone}</div>}
+                        </td>
+                      )}
+                      
+                      <td className="px-4 py-3 text-xs text-muted-foreground truncate max-w-[150px]" title={university}>{university}</td>
+                      
+                      {activeTab === 'Event' && (
+                        <td className="px-4 py-3">
+                          {app.transaction_id ? (
+                            <span className="font-mono text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded border border-gray-200">
+                              {app.transaction_id}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </td>
+                      )}
+                      
                       <td className="px-4 py-3">
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
                           app.status === 'Approved' ? "bg-green-500/10 text-green-700 border-green-500/20" :

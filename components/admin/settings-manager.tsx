@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Phone, CalendarClock, RefreshCw, MonitorPlay, X } from 'lucide-react'
+import { Save, Loader2, Phone, CalendarClock, RefreshCw, MonitorPlay, X, Wallet } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -16,6 +16,7 @@ export function SettingsManager() {
   const [recruitmentStart, setRecruitmentStart] = useState('')
   const [recruitmentEnd, setRecruitmentEnd] = useState('')
   const [officialContact, setOfficialContact] = useState('')
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string}[]>([])
 
   // Background Media State
   const [bgHome, setBgHome] = useState('')
@@ -72,6 +73,7 @@ export function SettingsManager() {
         setBgJourney3(data.bg_journey_3 || '')
         setBgJourney4(data.bg_journey_4 || '')
         setBgJourney5(data.bg_journey_5 || '')
+        if (data.payment_methods) setPaymentMethods(data.payment_methods)
       }
     } catch (err: any) {
       toast.error('Database Error (Load Settings): ' + err.message)
@@ -142,6 +144,7 @@ export function SettingsManager() {
         bg_journey_3: newBgJourney3,
         bg_journey_4: newBgJourney4,
         bg_journey_5: newBgJourney5,
+        payment_methods: paymentMethods,
       }
 
       if (settingsId) {
@@ -265,6 +268,75 @@ export function SettingsManager() {
               </div>
               <p className="text-xs text-muted-foreground">This number is public. Clicking sync will find the current President in the member directory and copy their number.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Payment Methods */}
+        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-border bg-secondary/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 text-green-600 rounded-xl">
+                <Wallet className="size-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-navy">Payment Methods</h3>
+                <p className="text-sm text-muted-foreground">Manage numbers for bKash, Nagad, etc.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPaymentMethods([...paymentMethods, { method: 'bKash', account_number: '' }])}
+              className="bg-[#F26522]/10 text-[#F26522] px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#F26522]/20 transition-colors"
+            >
+              + Add Number
+            </button>
+          </div>
+          
+          <div className="p-8 space-y-4">
+            {paymentMethods.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No payment methods configured.</p>
+            ) : (
+              paymentMethods.map((pm, idx) => (
+                <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-secondary/30 p-4 rounded-xl border border-border">
+                  <div className="w-full sm:w-1/3">
+                    <select
+                      value={pm.method}
+                      onChange={(e) => {
+                        const newMethods = [...paymentMethods];
+                        newMethods[idx].method = e.target.value;
+                        setPaymentMethods(newMethods);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                    >
+                      <option value="bKash">bKash</option>
+                      <option value="Nagad">Nagad</option>
+                      <option value="Rocket">Rocket</option>
+                      <option value="Bank">Bank</option>
+                    </select>
+                  </div>
+                  <div className="w-full sm:flex-1">
+                    <input
+                      type="text"
+                      placeholder="e.g. 017XXXXXXXX (Personal)"
+                      value={pm.account_number}
+                      onChange={(e) => {
+                        const newMethods = [...paymentMethods];
+                        newMethods[idx].account_number = e.target.value;
+                        setPaymentMethods(newMethods);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethods(paymentMethods.filter((_, i) => i !== idx))}
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

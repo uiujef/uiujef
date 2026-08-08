@@ -384,7 +384,7 @@ export default function EventsArchive() {
                   eventName={registerEvent.title}
                   config={registerEvent.registration}
                   registrationFee={(registerEvent as any).registrationFee}
-                  onSuccess={() => setTimeout(() => setRegisterEvent(null), 3000)}
+                  onSuccess={() => setRegisterEvent(null)}
                 />
               ) : (
                 <p className="text-white/60">Registration details coming soon.</p>
