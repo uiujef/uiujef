@@ -168,7 +168,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               </div>
 
               {/* Student Address */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 col-span-full">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                   <Building2 className="size-4" />
                 </div>
@@ -204,7 +204,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               </div>
 
               {/* Email */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 col-span-full">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                   <Mail className="size-4" />
                 </div>
