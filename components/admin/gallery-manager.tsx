@@ -25,6 +25,8 @@ export function GalleryManager() {
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null)
   
   const [title, setTitle] = useState('')
+  const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
+  const [externalImageUrl, setExternalImageUrl] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [isPinned, setIsPinned] = useState(false)
 
@@ -47,29 +49,41 @@ export function GalleryManager() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!imageFile) {
+    if (imageInputType === 'upload' && !imageFile) {
       toast.error('Please select an image first.')
+      return
+    }
+    if (imageInputType === 'url' && !externalImageUrl) {
+      toast.error('Please provide an image URL.')
       return
     }
 
     setIsUploading(true)
     try {
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      let finalImageUrl = ''
 
-      const { error: uploadError } = await supabase.storage
-        .from('jef-images')
-        .upload(`gallery/${fileName}`, imageFile)
+      if (imageInputType === 'upload' && imageFile) {
+        const fileExt = imageFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
 
-      if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
+        const { error: uploadError } = await supabase.storage
+          .from('jef-images')
+          .upload(`gallery/${fileName}`, imageFile)
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('jef-images')
-        .getPublicUrl(`gallery/${fileName}`)
+        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('jef-images')
+          .getPublicUrl(`gallery/${fileName}`)
+          
+        finalImageUrl = publicUrl
+      } else {
+        finalImageUrl = externalImageUrl
+      }
 
       const { data, error } = await supabase.from('gallery').insert([{
         title,
-        image_url: publicUrl,
+        image_url: finalImageUrl,
         is_pinned: isPinned,
         pinned_at: isPinned ? new Date().toISOString() : null
       }]).select().single()
@@ -81,6 +95,8 @@ export function GalleryManager() {
       setIsModalOpen(false)
       setTitle('')
       setImageFile(null)
+      setExternalImageUrl('')
+      setIsPinned(false)
       setIsPinned(false)
     } catch (err: any) {
       toast.error('Upload Error: ' + err.message)
@@ -204,21 +220,42 @@ export function GalleryManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Select Image *</label>
-                <div className="relative border-2 border-dashed border-border rounded-2xl p-8 hover:border-[#F26522] hover:bg-[#F26522]/5 transition-all text-center group cursor-pointer overflow-hidden">
-                  <input required type="file" accept="image/*" onChange={e => {
-                    const file = e.target.files?.[0]
-                    if (file) setImageFile(file)
-                  }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                  <div className="relative z-0">
-                    <ImageIcon className="size-10 text-muted-foreground mx-auto mb-3 group-hover:text-[#F26522] transition-colors" />
-                    {imageFile ? (
-                      <p className="text-sm font-bold text-[#F26522] truncate px-4">{imageFile.name}</p>
-                    ) : (
-                      <p className="text-sm font-medium text-muted-foreground">Drag and drop or click to browse</p>
-                    )}
-                  </div>
+                <label className="text-xs font-bold uppercase text-muted-foreground">Image Source *</label>
+                <div className="flex bg-secondary/50 p-1 rounded-xl w-fit mb-4 border border-border">
+                  <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Upload File</button>
+                  <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
                 </div>
+
+                {imageInputType === 'upload' ? (
+                  <div className="relative border-2 border-dashed border-border rounded-2xl p-8 hover:border-[#F26522] hover:bg-[#F26522]/5 transition-all text-center group cursor-pointer overflow-hidden">
+                    <input required type="file" accept="image/*" onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) setImageFile(file)
+                    }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    <div className="relative z-0">
+                      <ImageIcon className="size-10 text-muted-foreground mx-auto mb-3 group-hover:text-[#F26522] transition-colors" />
+                      {imageFile ? (
+                        <p className="text-sm font-bold text-[#F26522] truncate px-4">{imageFile.name}</p>
+                      ) : (
+                        <p className="text-sm font-medium text-muted-foreground">Drag and drop or click to browse</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
+                )}
+
+                {/* Real-time Preview */}
+                {(imageInputType === 'upload' && imageFile) && (
+                  <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="object-cover w-full h-full" />
+                  </div>
+                )}
+                {(imageInputType === 'url' && externalImageUrl) && (
+                  <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                    <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -238,7 +275,7 @@ export function GalleryManager() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isUploading || !imageFile} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
+                <button type="submit" disabled={isUploading || (imageInputType === 'upload' && !imageFile) || (imageInputType === 'url' && !externalImageUrl)} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
                   {isUploading && <Loader2 className="size-5 animate-spin" />}
                   {isUploading ? 'Uploading...' : 'Upload Image'}
                 </button>

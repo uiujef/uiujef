@@ -35,8 +35,10 @@ export function EventsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
+  const [externalImageUrl, setExternalImageUrl] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Form State
   const [title, setTitle] = useState('')
@@ -140,6 +142,8 @@ export function EventsManager() {
       setRegistrationDeadline('')
     }
     setImageFile(null)
+    setExternalImageUrl('')
+    setImageInputType('upload')
     setIsModalOpen(true)
   }
 
@@ -150,7 +154,7 @@ export function EventsManager() {
     let finalImageUrl = image
 
     try {
-      if (imageFile) {
+      if (imageInputType === 'upload' && imageFile) {
         setIsUploading(true)
         const fileExt = imageFile.name.split('.').pop()
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
@@ -166,6 +170,8 @@ export function EventsManager() {
           .getPublicUrl(fileName)
 
         finalImageUrl = publicUrl
+      } else if (imageInputType === 'url' && externalImageUrl) {
+        finalImageUrl = externalImageUrl
       }
 
       const payload = {
@@ -503,17 +509,35 @@ export function EventsManager() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground">Cover Image</label>
-                    <input type="file" accept="image/*" onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) setImageFile(file)
-                    }} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" />
-                    {image && !imageFile && (
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Cover Image *</label>
+                    <div className="flex bg-secondary/50 p-1 rounded-xl w-fit mb-4 border border-border">
+                      <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Upload File</button>
+                      <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
+                    </div>
+                    {imageInputType === 'upload' ? (
+                      <input type="file" accept="image/*" onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (file) setImageFile(file)
+                      }} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" />
+                    ) : (
+                      <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
+                    )}
+
+                    {/* Preview logic */}
+                    {(imageInputType === 'upload' && imageFile) ? (
+                      <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                        <img src={URL.createObjectURL(imageFile)} alt="Preview" className="object-cover w-full h-full" />
+                      </div>
+                    ) : (imageInputType === 'url' && externalImageUrl) ? (
+                      <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                        <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
+                      </div>
+                    ) : (image && !imageFile && !externalImageUrl) ? (
                       <div className="mt-3 flex items-center gap-3 bg-secondary/50 p-2 rounded-xl border border-border w-max">
                         <img src={image} alt="Current" className="w-16 h-10 rounded-lg object-cover" />
                         <a href={image} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline pr-4">View Current Cover</a>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>
