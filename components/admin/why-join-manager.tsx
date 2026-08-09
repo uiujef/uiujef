@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Loader2, Save, X, Image as ImageIcon } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
@@ -164,7 +165,23 @@ export function WhyJoinManager() {
               </div>
             )}
             <div className="p-6 flex-1 flex flex-col">
-              <h3 className="text-xl font-bold text-navy mb-2">{item.icon} {item.title}</h3>
+              <h3 className="text-xl font-bold text-navy mb-2 flex items-center gap-2">
+                {(() => {
+                  const LucideIcon = (LucideIcons as any)[item.icon || 'Star'];
+                  if (LucideIcon) {
+                    return <LucideIcon className="size-5" />;
+                  }
+                  return (
+                    <span 
+                      className="text-xl leading-none flex items-center justify-center" 
+                      style={{ fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif" }}
+                    >
+                      {item.icon}
+                    </span>
+                  );
+                })()}
+                <span>{item.title}</span>
+              </h3>
               <p className="text-sm text-muted-foreground flex-1 line-clamp-3 mb-4">{item.description}</p>
               
               <div className="flex gap-2 justify-end mt-auto pt-4 border-t border-border">
@@ -210,8 +227,25 @@ export function WhyJoinManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Icon (Emoji or short text)</label>
-                <input type="text" value={icon} onChange={e => setIcon(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <label className="text-xs font-bold uppercase text-muted-foreground">Icon *</label>
+                <select value={icon} onChange={e => setIcon(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all bg-white appearance-none">
+                  <option value="" disabled>Select an icon...</option>
+                  <option value="Star">Star (Default)</option>
+                  <option value="Lightbulb">Lightbulb</option>
+                  <option value="Rocket">Rocket</option>
+                  <option value="Users">Users</option>
+                  <option value="Target">Target</option>
+                  <option value="Briefcase">Briefcase</option>
+                  <option value="Award">Award</option>
+                  <option value="Mic">Mic</option>
+                  <option value="TrendingUp">Trending Up</option>
+                  <option value="Globe">Globe</option>
+                  <option value="BookOpen">Book Open</option>
+                  <option value="Zap">Zap</option>
+                  <option value="Shield">Shield</option>
+                  <option value="Heart">Heart</option>
+                  <option value="Compass">Compass</option>
+                </select>
               </div>
 
               <div className="space-y-2">

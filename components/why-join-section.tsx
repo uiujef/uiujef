@@ -61,9 +61,10 @@ export function WhyJoinSection() {
         ) : (
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {items.map((benefit) => {
-              // Dynamically get the icon from lucide-react, fallback to Star
+              // Dynamically get the icon from lucide-react, fallback to treating as emoji/string
               const IconName = benefit.icon || 'Star'
-              const Icon = (LucideIcons as any)[IconName] || LucideIcons.Star
+              const LucideIcon = (LucideIcons as any)[IconName]
+              const isLucide = !!LucideIcon
               
               // Special highlighting logic
               const isHultPrize = benefit.title.toLowerCase().includes('hult')
@@ -93,7 +94,16 @@ export function WhyJoinSection() {
                       </span>
                     )}
                     <span className={`inline-flex size-10 items-center justify-center rounded-xl border backdrop-blur-sm ${isHighlighted ? 'border-gold bg-gold/20 text-gold shadow-[0_0_15px_rgba(244,196,48,0.3)]' : 'border-white/20 bg-white/10 text-white'}`}>
-                      <Icon className="size-5" aria-hidden="true" />
+                      {isLucide ? (
+                        <LucideIcon className="size-5" aria-hidden="true" />
+                      ) : (
+                        <span 
+                          className="text-xl leading-none flex items-center justify-center" 
+                          style={{ fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif" }}
+                        >
+                          {benefit.icon}
+                        </span>
+                      )}
                     </span>
                     <h2 className={`mt-4 text-base font-bold ${isHighlighted ? 'text-gold' : 'text-white'}`}>{benefit.title}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-white/80">{benefit.description}</p>
