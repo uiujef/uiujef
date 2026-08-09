@@ -40,7 +40,7 @@ export const org = {
   university: 'United International University',
   tagline: 'Together We Thrive, Together We Rise',
   subtext:
-    'Empowering the next generation of economists and leaders at United International University.',
+    'Empowering a diverse community of future leaders, innovators, and strategic thinkers at United International University.',
   ctaLabel: 'Join Us',
   ctaHref: '/join',
 }

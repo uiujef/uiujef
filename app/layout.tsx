@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "UIU Junior Economists' Forum (UIUJEF) — Together We Thrive, Together We Rise",
   description:
-    'UIUJEF empowers the next generation of economists and leaders at United International University through research, debate, and national summits. 500+ members since 2016.',
+    'UIUJEF empowers a diverse community of future leaders, innovators, and strategic thinkers at United International University through research, debate, and national summits. 500+ members since 2016.',
   generator: 'v0.app',
   keywords: [
     'UIUJEF',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "UIU Junior Economists' Forum (UIUJEF)",
     description:
-      'Empowering the next generation of economists and leaders at United International University.',
+      'Empowering a diverse community of future leaders, innovators, and strategic thinkers at United International University.',
     type: 'website',
   },
   icons: {
