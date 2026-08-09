@@ -17,27 +17,52 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "UIU Junior Economists' Forum (UIUJEF) — Together We Thrive, Together We Rise",
+  metadataBase: new URL('https://www.uiujef.org'),
+  title: {
+    default: "UIU Junior Economists' Forum (UIUJEF) — Together We Thrive, Together We Rise",
+    template: "%s | UIUJEF",
+  },
   description:
     'UIUJEF empowers a diverse community of future leaders, innovators, and strategic thinkers at United International University through research, debate, and national summits. 500+ members since 2016.',
-  generator: 'v0.app',
   keywords: [
+    'UIU',
     'UIUJEF',
-    'UIU Junior Economists Forum',
+    'Economics Club',
     'United International University',
-    'economics club',
+    'UIU Junior Economists Forum',
     'Dhaka',
   ],
+  authors: [{ name: 'UIUJEF', url: 'https://www.uiujef.org' }],
   openGraph: {
     title: "UIU Junior Economists' Forum (UIUJEF)",
     description:
       'Empowering a diverse community of future leaders, innovators, and strategic thinkers at United International University.',
     type: 'website',
+    url: 'https://www.uiujef.org',
+    siteName: 'UIUJEF',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'UIUJEF Open Graph Image',
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "UIU Junior Economists' Forum (UIUJEF)",
+    description:
+      'Empowering a diverse community of future leaders, innovators, and strategic thinkers at United International University.',
+    images: ['/og-image.jpg'],
   },
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
     apple: '/favicon.ico',
+  },
+  verification: {
+    google: 'IFrhmeMCl72Qo9ZPBPUzK4lr2oU2FxJ3Ynpg_G8ApVE',
   },
 }
 
