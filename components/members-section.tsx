@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, GraduationCap, Star, UserCheck, History, Loader2, UserCircle } from 'lucide-react'
+import { Users, GraduationCap, Star, UserCheck, History, Loader2, UserCircle, Shield } from 'lucide-react'
 import type { Member } from '@/types'
 import { AdvisorCard } from '@/components/advisor-card'
 import { MemberCard } from '@/components/member-card'
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { MediaBackground } from '@/components/media-background'
 
-type Tab = 'advisors' | 'executive' | 'general' | 'alumni'
+type Tab = 'advisors' | 'executive' | 'general' | 'alumni' | 'moderators'
 
 const EXECUTIVE_RANKS: Record<string, number> = {
   'President': 1,
@@ -93,6 +93,7 @@ export function MembersSection() {
   const advisors = sortMembers(members.filter(m => m.role === 'Advisor'))
   const generalMembers = sortMembers(members.filter(m => m.role === 'General Member'))
   const alumni = sortMembers(members.filter(m => m.role === 'Alumni'))
+  const moderators = sortMembers(members.filter(m => m.role === 'Moderator'))
 
   const executives = sortMembers(
     members.filter(m => Object.keys(EXECUTIVE_RANKS).includes(getDisplayRole(m))),
@@ -103,6 +104,7 @@ export function MembersSection() {
     { id: 'executive',  label: 'Executive Panel',  icon: Star,          count: executives.length },
     { id: 'general',    label: 'General Members',  icon: UserCheck,     count: generalMembers.length },
     { id: 'advisors',   label: 'Advisors',         icon: GraduationCap, count: advisors.length },
+    { id: 'moderators', label: 'Moderators',       icon: Shield,        count: moderators.length },
     { id: 'alumni',     label: 'Alumni',           icon: History,       count: alumni.length },
   ]
 
@@ -332,6 +334,28 @@ export function MembersSection() {
                     </div>
                   ) : (
                     <EmptyState message="No general members found." />
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* MODERATORS */}
+            <div id="panel-moderators" role="tabpanel" aria-labelledby="tab-moderators" hidden={activeTab !== 'moderators'}>
+              {activeTab === 'moderators' && (
+                <>
+                  <SectionHeader
+                    icon={Shield}
+                    title="Moderators"
+                    subtitle="Dedicated mentors guiding the community and ensuring seamless operations."
+                  />
+                  {moderators.length > 0 ? (
+                    <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-8">
+                      {moderators.map((member) => (
+                        <MemberCard key={member.id} member={member} onClick={() => setSelectedMember(member)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No moderators found." />
                   )}
                 </>
               )}

@@ -25,6 +25,8 @@ const authenticator = async () => {
 
 interface ImageKitUploaderProps {
   onUploadSuccess: (url: string) => void;
+  onUploadStart?: () => void;
+  onUploadError?: (error: any) => void;
   folder?: string;
   className?: string;
   buttonText?: string;
@@ -32,6 +34,8 @@ interface ImageKitUploaderProps {
 
 export function ImageKitUploader({
   onUploadSuccess,
+  onUploadStart: onUploadStartProp,
+  onUploadError,
   folder = "/uiujef",
   className,
   buttonText = "Upload Image"
@@ -43,6 +47,7 @@ export function ImageKitUploader({
     setIsUploading(false);
     setProgress(0);
     toast.error("Image upload failed: " + (err?.message || "Unknown error"));
+    if (onUploadError) onUploadError(err);
   };
 
   const onSuccess = (res: any) => {
@@ -57,6 +62,7 @@ export function ImageKitUploader({
   const onUploadStart = () => {
     setIsUploading(true);
     setProgress(0);
+    if (onUploadStartProp) onUploadStartProp();
   };
 
   const onUploadProgress = (evt: any) => {

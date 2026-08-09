@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, UserCircle, Users, GraduationCap, Shield, Star, Briefcase, Award } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { ImageKitUploader } from '@/components/imagekit-uploader'
 import { toast } from 'sonner'
 
 type Member = {
@@ -26,7 +27,8 @@ type Member = {
 }
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
-const ROLES = ['President', 'Vice President', 'General Secretary', 'Treasurer', 'Advisor', 'Moderator', 'Executive Member', 'General Member', 'Alumni', 'Other (Custom Role)']
+const BASE_CATEGORIES = ['Executive Panel', 'Moderator', 'General Member', 'Advisor', 'Alumni', 'Other']
+const PREDEFINED_EXEC_ROLES = ['President', 'Vice President', 'General Secretary', 'Treasurer', 'Executive of Event', 'Executive of Communication', 'Executive of PR & Marketing', 'Executive of Finance', 'Other (Custom)']
 
 export function MembersManager() {
   const [members, setMembers] = useState<Member[]>([])
@@ -47,8 +49,11 @@ export function MembersManager() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [bloodGroup, setBloodGroup] = useState('O+')
-  const [role, setRole] = useState('General Member')
+  
+  const [baseCategory, setBaseCategory] = useState('General Member')
+  const [executiveDesignation, setExecutiveDesignation] = useState('Executive of Event')
   const [customRole, setCustomRole] = useState('')
+  
   const [pastRole, setPastRole] = useState('')
   const [currentJob, setCurrentJob] = useState('')
   const [facebookUrl, setFacebookUrl] = useState('')
@@ -87,9 +92,28 @@ export function MembersManager() {
       setPhone(member.phone || '')
       setBloodGroup(member.blood_group || 'O+')
       
-      const isCustomRole = !ROLES.includes(member.role) && member.role !== 'Other (Custom Role)'
-      setRole(isCustomRole ? 'Other (Custom Role)' : member.role)
-      setCustomRole(isCustomRole ? member.role : (member.custom_role || ''))
+      const roleStr = member.role || 'General Member';
+      const isExec = ['President', 'Vice President', 'General Secretary', 'Treasurer'].includes(roleStr) || roleStr.startsWith('Executive');
+      const isPredefinedExec = ['President', 'Vice President', 'General Secretary', 'Treasurer', 'Executive of Event', 'Executive of Communication', 'Executive of PR & Marketing', 'Executive of Finance'].includes(roleStr);
+      
+      if (isExec) {
+        setBaseCategory('Executive Panel');
+        if (isPredefinedExec) {
+          setExecutiveDesignation(roleStr);
+          setCustomRole('');
+        } else {
+          setExecutiveDesignation('Other (Custom)');
+          setCustomRole(roleStr);
+        }
+      } else if (['Advisor', 'Moderator', 'Alumni', 'General Member'].includes(roleStr)) {
+        setBaseCategory(roleStr);
+        setExecutiveDesignation('Executive of Event');
+        setCustomRole('');
+      } else {
+        setBaseCategory('Other');
+        setExecutiveDesignation('Executive of Event');
+        setCustomRole(roleStr);
+      }
       
       setPastRole(member.past_role || '')
       setCurrentJob(member.current_job || '')
@@ -108,8 +132,8 @@ export function MembersManager() {
       setName('')
       setEmail('')
       setPhone('')
-      setBloodGroup('O+')
-      setRole('General Member')
+      setBaseCategory('General Member')
+      setExecutiveDesignation('Executive of Event')
       setCustomRole('')
       setPastRole('')
       setCurrentJob('')
@@ -134,24 +158,15 @@ export function MembersManager() {
     let finalImageUrl = imageUrl
 
     try {
-      if (imageInputType === 'upload' && imageFile) {
-        setIsUploading(true)
-        const fileExt = imageFile.name.split('.').pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('jef-images')
-          .upload(fileName, imageFile)
-
-        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('jef-images')
-          .getPublicUrl(fileName)
-
-        finalImageUrl = publicUrl
-      } else if (imageInputType === 'url' && externalImageUrl) {
+      if (imageInputType === 'url' && externalImageUrl) {
         finalImageUrl = externalImageUrl
+      }
+
+      let finalRole = baseCategory;
+      if (baseCategory === 'Executive Panel') {
+        finalRole = executiveDesignation === 'Other (Custom)' ? customRole : executiveDesignation;
+      } else if (baseCategory === 'Other') {
+        finalRole = customRole;
       }
 
       const payload = {
@@ -159,8 +174,7 @@ export function MembersManager() {
         email,
         phone,
         blood_group: bloodGroup,
-        role: role === 'Other (Custom Role)' ? customRole : role,
-        custom_role: role === 'Other (Custom Role)' ? customRole : null,
+        role: finalRole,
         past_role: pastRole,
         current_job: currentJob,
         facebook_url: facebookUrl,
@@ -216,15 +230,17 @@ export function MembersManager() {
     }
   }
 
-  const executiveRoles = ['President', 'Vice President', 'General Secretary', 'Treasurer', 'Executive Member']
+  const isExecutive = (role: string) => {
+    return ['President', 'Vice President', 'General Secretary', 'Treasurer'].includes(role) || role.startsWith('Executive');
+  }
   
   const groupedMembers = {
-    executive: members.filter(m => executiveRoles.includes(m.role)),
+    executive: members.filter(m => isExecutive(m.role)),
     advisors: members.filter(m => m.role === 'Advisor'),
     moderators: members.filter(m => m.role === 'Moderator'),
     alumni: members.filter(m => m.role === 'Alumni'),
     general: members.filter(m => m.role === 'General Member'),
-    other: members.filter(m => !executiveRoles.includes(m.role) && !['Advisor', 'Moderator', 'Alumni', 'General Member'].includes(m.role))
+    other: members.filter(m => !isExecutive(m.role) && !['Advisor', 'Moderator', 'Alumni', 'General Member'].includes(m.role))
   }
 
   const renderSection = (title: string, icon: React.ReactNode, data: Member[]) => {
@@ -262,9 +278,9 @@ export function MembersManager() {
                   )}
                   <h4 className="font-bold text-navy text-lg line-clamp-1 w-full" title={member.name}>{member.name}</h4>
                   <span className="inline-flex mt-2 items-center px-3 py-1 rounded-full bg-[#F26522]/10 text-[#F26522] text-[10px] font-bold uppercase tracking-wider">
-                    {member.role === 'Other (Custom Role)' ? member.custom_role : member.role}
+                    {member.role}
                   </span>
-                  {(member.role === 'Alumni' || member.role === 'Advisor') && (
+                  {(member.role === 'Alumni' || member.role === 'Advisor' || member.role === 'Moderator') && (
                     <div className="mt-3 text-xs text-muted-foreground line-clamp-2">
                       {member.current_job && <p className="font-medium">💼 {member.current_job}</p>}
                       {member.past_role && <p>Was: {member.past_role}</p>}
@@ -374,12 +390,22 @@ export function MembersManager() {
                   <h4 className="text-sm font-bold text-navy uppercase tracking-wider mb-4 border-b border-border pb-2">Role & Assignment</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground">Designation *</label>
-                      <select value={role} onChange={e => setRole(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
-                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      <label className="text-xs font-bold uppercase text-muted-foreground">Category *</label>
+                      <select value={baseCategory} onChange={e => setBaseCategory(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
+                        {BASE_CATEGORIES.map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
-                    {role === 'Other (Custom Role)' && (
+
+                    {baseCategory === 'Executive Panel' && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                        <label className="text-xs font-bold uppercase text-muted-foreground">Executive Designation *</label>
+                        <select value={executiveDesignation} onChange={e => setExecutiveDesignation(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
+                          {PREDEFINED_EXEC_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    
+                    {((baseCategory === 'Executive Panel' && executiveDesignation === 'Other (Custom)') || baseCategory === 'Other') && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-bold uppercase text-muted-foreground">Custom Role Title *</label>
                         <input required type="text" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="e.g. IT Lead" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
@@ -387,7 +413,7 @@ export function MembersManager() {
                     )}
                   </div>
 
-                  {(role === 'Alumni' || role === 'Advisor') && (
+                  {(baseCategory === 'Alumni' || baseCategory === 'Advisor' || baseCategory === 'Moderator') && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 animate-in fade-in slide-in-from-top-2">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-muted-foreground">Past Role in Club</label>
@@ -445,24 +471,25 @@ export function MembersManager() {
                       </div>
                       
                       {imageInputType === 'upload' ? (
-                        <input type="file" accept="image/*" onChange={e => {
-                          const file = e.target.files?.[0]
-                          if (file) setImageFile(file)
-                        }} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" />
+                        <div className="w-full">
+                          <ImageKitUploader 
+                            onUploadSuccess={(url) => { setImageUrl(url); setIsUploading(false); }}
+                            onUploadStart={() => setIsUploading(true)}
+                            onUploadError={() => setIsUploading(false)}
+                            folder="/uiujef/members"
+                            className="w-full"
+                          />
+                        </div>
                       ) : (
                         <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
                       )}
 
                       {/* Preview logic */}
-                      {(imageInputType === 'upload' && imageFile) ? (
-                        <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50 w-full max-w-[200px] h-32">
-                          <img src={URL.createObjectURL(imageFile)} alt="Preview" className="object-cover w-full h-full" />
-                        </div>
-                      ) : (imageInputType === 'url' && externalImageUrl) ? (
+                      {(imageInputType === 'url' && externalImageUrl) ? (
                         <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50 w-full max-w-[200px] h-32">
                           <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/200x200?text=Invalid+Image+URL')} />
                         </div>
-                      ) : (imageUrl && !imageFile && !externalImageUrl) ? (
+                      ) : (imageUrl && !externalImageUrl) ? (
                         <div className="mt-3 flex items-center gap-3 bg-secondary/50 p-2 rounded-xl border border-border w-max">
                           <img src={imageUrl} alt="Current" className="size-10 rounded-lg object-cover" />
                           <span className="text-sm font-medium text-navy pr-4">Current Image Active</span>
