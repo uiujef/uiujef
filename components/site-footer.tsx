@@ -223,8 +223,8 @@ export function SiteFooter() {
                 Hi, I'm Shaikh Jubair. I specialize in modern web development, crafting seamless user experiences, and integrating AI solutions. Welcome to the UIUJEF platform!
               </p>
               <div className="flex flex-col w-full gap-3">
-                <a href="https://yourwebsite.com" target="_blank" rel="noopener noreferrer" className="w-full py-3 bg-[#F26522] text-white font-bold rounded-xl hover:bg-[#F26522]/90 transition-all text-sm shadow-md">
-                  Visit Website
+                <a href="https://shaikhjubair.me" target="_blank" rel="noopener noreferrer" className="w-full py-3 bg-[#F26522] text-white font-bold rounded-xl hover:bg-[#F26522]/90 transition-all text-sm shadow-md">
+                  Visit shaikhjubair.me
                 </a>
                 <div className="flex justify-center gap-4 mt-2">
                   <a href="https://linkedin.com/in/shaikhjubair" target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-[#0077B5] transition-colors">

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { IKContext, IKUpload } from "imagekitio-next";
+import { ImageKitProvider, IKUpload } from "imagekitio-next";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ export function ImageKitUploader({
   };
 
   return (
-    <IKContext
+    <ImageKitProvider
       urlEndpoint={urlEndpoint}
       publicKey={publicKey}
       authenticator={authenticator}
@@ -112,6 +112,6 @@ export function ImageKitUploader({
           )}
         </div>
       </div>
-    </IKContext>
+    </ImageKitProvider>
   );
 }
