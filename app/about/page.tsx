@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: `Discover ${org.shortName}'s mission, vision, and core pillars — shaping the economic minds of tomorrow at ${org.university}.`,
 }
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function AboutPage() {
   return (
     <div className="relative flex min-h-full flex-1 flex-col">
