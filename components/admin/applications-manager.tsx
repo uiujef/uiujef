@@ -95,6 +95,9 @@ export function ApplicationsManager() {
           linkedin_url: memberData.linkedin_url || '',
           photo_url: memberData.photo_url || '',
           image_url: memberData.photo_url || '',
+          quote: memberData.bio || memberData.personal_quote || '',
+          bio: memberData.bio || '',
+          student_address: memberData.address || memberData.student_address || '',
         }
 
         const { error: insertError } = await supabase.from('members').insert([memberPayload])
