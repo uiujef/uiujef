@@ -4,6 +4,9 @@ import { SiteFooter } from '@/components/site-footer'
 import { SiteNav } from '@/components/site-nav'
 import { org } from '@/lib/site-data'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: `Members — ${org.shortName}`,
   description: `Meet the members and executive board of ${org.shortName}.`,
