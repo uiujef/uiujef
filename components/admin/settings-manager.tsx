@@ -25,6 +25,7 @@ export function SettingsManager() {
   const [bgNews, setBgNews] = useState('')
   const [bgGallery, setBgGallery] = useState('')
   const [bgMembers, setBgMembers] = useState('')
+  const [bgAboutHeader, setBgAboutHeader] = useState('')
   const [bgMission, setBgMission] = useState('')
   const [bgVision, setBgVision] = useState('')
   const [bgJourney1, setBgJourney1] = useState('')
@@ -38,6 +39,7 @@ export function SettingsManager() {
     news: null,
     gallery: null,
     members: null,
+    aboutHeader: null,
     mission: null,
     vision: null,
     journey1: null,
@@ -67,6 +69,7 @@ export function SettingsManager() {
         setBgNews(data.bg_news || '')
         setBgGallery(data.bg_gallery || '')
         setBgMembers(data.bg_members || '')
+        setBgAboutHeader(data.bg_about_header || '')
         setBgMission(data.bg_mission || '')
         setBgVision(data.bg_vision || '')
         setBgJourney1(data.bg_journey_1 || '')
@@ -98,6 +101,7 @@ export function SettingsManager() {
       let newBgNews = bgNews
       let newBgGallery = bgGallery
       let newBgMembers = bgMembers
+      let newBgAboutHeader = bgAboutHeader
       let newBgMission = bgMission
       let newBgVision = bgVision
       let newBgJourney1 = bgJourney1
@@ -121,6 +125,7 @@ export function SettingsManager() {
       if (bgFiles.news) newBgNews = await uploadMedia(bgFiles.news, 'bg_news') || newBgNews
       if (bgFiles.gallery) newBgGallery = await uploadMedia(bgFiles.gallery, 'bg_gallery') || newBgGallery
       if (bgFiles.members) newBgMembers = await uploadMedia(bgFiles.members, 'bg_members') || newBgMembers
+      if (bgFiles.aboutHeader) newBgAboutHeader = await uploadMedia(bgFiles.aboutHeader, 'bg_about_header') || newBgAboutHeader
       if (bgFiles.mission) newBgMission = await uploadMedia(bgFiles.mission, 'bg_mission') || newBgMission
       if (bgFiles.vision) newBgVision = await uploadMedia(bgFiles.vision, 'bg_vision') || newBgVision
       if (bgFiles.journey1) newBgJourney1 = await uploadMedia(bgFiles.journey1, 'bg_journey_1') || newBgJourney1
@@ -139,6 +144,7 @@ export function SettingsManager() {
         bg_news: newBgNews,
         bg_gallery: newBgGallery,
         bg_members: newBgMembers,
+        bg_about_header: newBgAboutHeader,
         bg_mission: newBgMission,
         bg_vision: newBgVision,
         bg_journey_1: newBgJourney1,
@@ -383,6 +389,7 @@ export function SettingsManager() {
                 { label: 'News Page Header', key: 'news', state: bgNews, setFile: (f: File | null) => setBgFiles(p => ({ ...p, news: f })), file: bgFiles.news, setBg: setBgNews },
                 { label: 'Gallery Page Header', key: 'gallery', state: bgGallery, setFile: (f: File | null) => setBgFiles(p => ({ ...p, gallery: f })), file: bgFiles.gallery, setBg: setBgGallery },
                 { label: 'Members Page Header', key: 'members', state: bgMembers, setFile: (f: File | null) => setBgFiles(p => ({ ...p, members: f })), file: bgFiles.members, setBg: setBgMembers },
+                { label: 'About Page Header', key: 'about', state: bgAboutHeader, setFile: (f: File | null) => setBgFiles(p => ({ ...p, aboutHeader: f })), file: bgFiles.aboutHeader, setBg: setBgAboutHeader },
               ].map(item => (
                 <div key={item.key} className="space-y-2 border border-border rounded-xl p-4 bg-secondary/20 relative">
                   <label className="text-xs font-bold uppercase text-navy">{item.label}</label>

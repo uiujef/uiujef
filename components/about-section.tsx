@@ -38,10 +38,11 @@ const pillars = [
 export async function AboutSection() {
   const { data: settings } = await supabase
     .from('site_settings')
-    .select('bg_mission, bg_vision, bg_journey_1, bg_journey_2, bg_journey_3, bg_journey_4, bg_journey_5')
+    .select('bg_about_header, bg_mission, bg_vision, bg_journey_1, bg_journey_2, bg_journey_3, bg_journey_4, bg_journey_5')
     .limit(1)
     .maybeSingle()
 
+  const bgAboutHeader = settings?.bg_about_header || ''
   const bgMission = settings?.bg_mission || ''
   const bgVision = settings?.bg_vision || ''
   const journeyImages = [
@@ -55,10 +56,19 @@ export async function AboutSection() {
   return (
     <>
       {/* Hero Intro */}
-      <section className="relative overflow-hidden bg-navy-deep">
+      {/* Hero Intro */}
+      <section 
+        className="relative overflow-hidden bg-navy-deep"
+        style={{
+          backgroundImage: bgAboutHeader ? `url(${bgAboutHeader})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-navy-deep/80" />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(242,101,34,0.18),transparent_50%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(242,101,34,0.3),transparent_50%)]"
         />
         <div
           aria-hidden="true"
@@ -70,15 +80,13 @@ export async function AboutSection() {
               {org.name}
             </span>
             <h1 className="mt-8 font-serif text-4xl font-bold leading-[1.08] tracking-tight text-white text-balance sm:text-5xl lg:text-6xl xl:text-7xl">
-              Shaping the Economic Minds of{' '}
+              Inspiring Minds, Driving Innovation, Shaping{' '}
               <span className="bg-gradient-to-r from-gold via-gold-soft to-gold bg-clip-text text-transparent">
                 Tomorrow.
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/65 text-pretty sm:text-lg">
-              Since 2016, {org.shortName} has been {org.university}&apos;s premier student forum for
-              economics — where theory meets policy, debate sharpens judgment, and the next
-              generation of Bangladeshi economists finds its voice.
+            <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/90 text-pretty sm:text-lg drop-shadow-sm">
+              Since 2016, UIUJEF has been United International University&apos;s premier multidisciplinary student forum — uniting passionate minds across Economics, Computer Science, Data Science, Engineering, and Business to foster research, leadership, and impactful change.
             </p>
           </div>
         </div>
