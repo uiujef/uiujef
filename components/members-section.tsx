@@ -18,10 +18,16 @@ const EXECUTIVE_RANKS: Record<string, number> = {
   'Vice President': 2,
   'General Secretary': 3,
   'Treasurer': 3,
+  'Executive of Event': 4,
   'Executive of Events': 4,
   'Executive of Communication': 5,
   'Executive of PR & Marketing': 6,
-  'Executive Member': 7,
+  'Executive of Finance': 7,
+  'Executive Member': 8,
+}
+
+const isExecutiveRole = (role: string) => {
+  return ['President', 'Vice President', 'General Secretary', 'Treasurer'].includes(role) || role.startsWith('Executive');
 }
 
 // ─── Section header ──────────────────────────────────────────────────────────
@@ -96,8 +102,12 @@ export function MembersSection() {
   const moderators = sortMembers(members.filter(m => m.role === 'Moderator'))
 
   const executives = sortMembers(
-    members.filter(m => Object.keys(EXECUTIVE_RANKS).includes(getDisplayRole(m))),
-    (a, b) => EXECUTIVE_RANKS[getDisplayRole(a)] - EXECUTIVE_RANKS[getDisplayRole(b)]
+    members.filter(m => isExecutiveRole(getDisplayRole(m))),
+    (a, b) => {
+      const rankA = EXECUTIVE_RANKS[getDisplayRole(a)] || 99
+      const rankB = EXECUTIVE_RANKS[getDisplayRole(b)] || 99
+      return rankA - rankB
+    }
   )
 
   const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
@@ -115,10 +125,20 @@ export function MembersSection() {
     const r = getDisplayRole(m)
     return r.includes('General Secretary') || r === 'Treasurer'
   })
-  const execOfEvents = executives.filter(m => getDisplayRole(m) === 'Executive of Events')
+  const execOfEvents = executives.filter(m => getDisplayRole(m) === 'Executive of Events' || getDisplayRole(m) === 'Executive of Event')
   const execOfComm = executives.filter(m => getDisplayRole(m) === 'Executive of Communication')
   const execOfPR = executives.filter(m => getDisplayRole(m) === 'Executive of PR & Marketing')
-  const execMembers = executives.filter(m => getDisplayRole(m) === 'Executive Member')
+  const otherExecutives = executives.filter(m => {
+    const r = getDisplayRole(m)
+    return r !== 'President' && 
+           r !== 'Vice President' && 
+           !r.includes('General Secretary') && 
+           r !== 'Treasurer' && 
+           r !== 'Executive of Events' && 
+           r !== 'Executive of Event' &&
+           r !== 'Executive of Communication' && 
+           r !== 'Executive of PR & Marketing'
+  })
 
   return (
     <section className="bg-background min-h-screen">
@@ -298,10 +318,10 @@ export function MembersSection() {
                         </div>
                       )}
 
-                      {/* Additional: General Executive Members */}
-                      {execMembers.length > 0 && (
+                      {/* Additional: General Executive Members & Custom Roles */}
+                      {otherExecutives.length > 0 && (
                         <div className="flex flex-wrap justify-center gap-6 sm:gap-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
-                          {execMembers.map(m => (
+                          {otherExecutives.map(m => (
                             <div key={m.id} className="w-full sm:w-[260px]">
                               <MemberCard member={m} onClick={() => setSelectedMember(m)} />
                             </div>
