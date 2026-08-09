@@ -201,14 +201,17 @@ export function EventsManager() {
         const { error } = await supabase.from('events').update(payload).eq('id', editingEvent.id)
         if (error) throw error
         toast.success('Event updated successfully!')
-        setEvents(events.map(ev => ev.id === editingEvent.id ? { ...ev, ...payload } : ev))
+        setEvents(events.map(ev => {
+          if (ev.id === editingEvent.id) return { ...ev, ...payload }
+          return isFeatured ? { ...ev, is_featured: false } : ev
+        }))
         setIsModalOpen(false)
       } else {
         const { data, error } = await supabase.from('events').insert([payload]).select().single()
         if (error) throw error
         if (data) {
           toast.success('Event created successfully!')
-          setEvents([data as Event, ...events])
+          setEvents([data as Event, ...events.map(ev => isFeatured ? { ...ev, is_featured: false } : ev)])
           setIsModalOpen(false)
         }
       }

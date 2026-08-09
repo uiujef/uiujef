@@ -10,7 +10,9 @@ export async function HeroSection() {
     .from('events')
     .select('*')
     .eq('is_featured', true)
-    .single()
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
   const { data: settings } = await supabase
     .from('site_settings')
