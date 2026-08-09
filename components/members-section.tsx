@@ -80,14 +80,24 @@ export function MembersSection() {
   }, [])
 
   // Categorize and sort members
-  const advisors = members.filter(m => m.role === 'Advisor')
+  const sortMembers = (membersArray: Member[], fallbackSort?: (a: Member, b: Member) => number) => {
+    return [...membersArray].sort((a, b) => {
+      if (a.name === 'Shaikh Jubair') return -1
+      if (b.name === 'Shaikh Jubair') return 1
+      return fallbackSort ? fallbackSort(a, b) : 0
+    })
+  }
+
   const getDisplayRole = (m: Member) => m.role === 'Other (Custom Role)' && m.custom_role ? m.custom_role : m.role
 
-  const executives = members
-    .filter(m => Object.keys(EXECUTIVE_RANKS).includes(getDisplayRole(m)))
-    .sort((a, b) => EXECUTIVE_RANKS[getDisplayRole(a)] - EXECUTIVE_RANKS[getDisplayRole(b)])
-  const generalMembers = members.filter(m => m.role === 'General Member')
-  const alumni = members.filter(m => m.role === 'Alumni')
+  const advisors = sortMembers(members.filter(m => m.role === 'Advisor'))
+  const generalMembers = sortMembers(members.filter(m => m.role === 'General Member'))
+  const alumni = sortMembers(members.filter(m => m.role === 'Alumni'))
+
+  const executives = sortMembers(
+    members.filter(m => Object.keys(EXECUTIVE_RANKS).includes(getDisplayRole(m))),
+    (a, b) => EXECUTIVE_RANKS[getDisplayRole(a)] - EXECUTIVE_RANKS[getDisplayRole(b)]
+  )
 
   const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
     { id: 'executive',  label: 'Executive Panel',  icon: Star,          count: executives.length },

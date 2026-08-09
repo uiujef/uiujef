@@ -272,8 +272,8 @@ export default function JoinPage() {
         finalPhotoUrl = publicUrl
       }
 
-      // 3. Clean the payload (use finalPhotoUrl and remove Blob URLs from JSONB)
-      const { photo_url, ...safeForm } = { ...form, photo_url: finalPhotoUrl };
+      // 3. Clean the payload (use finalPhotoUrl)
+      const safeForm = { ...form, photo_url: finalPhotoUrl };
 
       // 4. STRICT Supabase Insert FIRST
       const { error: dbError } = await supabase.from('applications').insert([{
@@ -283,6 +283,7 @@ export default function JoinPage() {
         type: 'Membership',
         status: 'Pending',
         transaction_id: safeForm.transaction_id,
+        photo_url: finalPhotoUrl, // ALSO insert at root in case it's needed
         team_members: [{ ...safeForm, application_id: newId, submitted_at: new Date().toISOString() }]
       }]);
 

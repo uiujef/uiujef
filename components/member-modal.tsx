@@ -189,41 +189,37 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               )}
 
               {/* Blood Group */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
-                    <Droplet className="size-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                      Blood Group
-                    </p>
-                    <p className="text-xs font-bold text-navy">
-                      {member.blood_group || 'N/A'}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
+                  <Droplet className="size-4" />
                 </div>
-              )}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                    Blood Group
+                  </p>
+                  <p className="text-xs font-bold text-navy">
+                    {member.blood_group || 'N/A'}
+                  </p>
+                </div>
+              </div>
 
               {/* Email */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-3 col-span-full">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                    <Mail className="size-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                      Email
-                    </p>
-                    <a
-                      href={`mailto:${member.email}`}
-                      className="block break-all whitespace-normal text-xs font-bold text-navy transition-colors hover:text-[#F26522] leading-relaxed"
-                    >
-                      {member.email || 'N/A'}
-                    </a>
-                  </div>
+              <div className="flex items-start gap-3 col-span-full">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <Mail className="size-4" />
                 </div>
-              )}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                    Email
+                  </p>
+                  <a
+                    href={`mailto:${member.email}`}
+                    className="block break-all whitespace-normal text-xs font-bold text-navy transition-colors hover:text-[#F26522] leading-relaxed"
+                  >
+                    {member.email || 'N/A'}
+                  </a>
+                </div>
+              </div>
 
               {/* Phone */}
               {showSensitiveInfo && (
