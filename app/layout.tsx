@@ -34,18 +34,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'UIUJEF', url: 'https://www.uiujef.org' }],
   openGraph: {
-    title: "UIU Junior Economists' Forum (UIUJEF)",
-    description:
-      'Empowering a diverse community of future leaders, innovators, and strategic thinkers at United International University.',
+    title: 'UIUJEF - United International University Junior Economists Forum',
+    description: 'The official platform of UIUJEF. Join us to explore economics, business, and leadership.',
     type: 'website',
-    url: 'https://www.uiujef.org',
+    url: 'https://uiujef.org',
     siteName: 'UIUJEF',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/logo.png',
         width: 1200,
         height: 630,
-        alt: 'UIUJEF Open Graph Image',
+        alt: 'UIUJEF Preview Image',
       }
     ]
   },
