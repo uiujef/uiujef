@@ -275,7 +275,7 @@ export function ApplicationsManager() {
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-secondary/80 text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Tracking ID</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Tracking ID & Date</th>
                   {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Event Name</th>}
                   {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Team Name</th>}
                   {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>}
@@ -301,7 +301,26 @@ export function ApplicationsManager() {
 
                   return (
                     <tr key={app.application_id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs font-semibold text-navy">{app.application_id}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-mono text-xs font-semibold text-navy">{app.application_id}</div>
+                        {app.created_at && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            {new Date(app.created_at).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
+                        )}
+                        {app.transaction_id && activeTab === 'Member' && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                            TrxID: {app.transaction_id}
+                          </div>
+                        )}
+                      </td>
                       
                       {activeTab === 'Event' && (
                         <td className="px-4 py-3">
@@ -457,6 +476,23 @@ export function ApplicationsManager() {
               <div>
                 <h3 className="text-2xl font-bold text-navy">Application Details</h3>
                 <p className="text-sm font-mono text-muted-foreground mt-1">{selectedApp.application_id}</p>
+                {selectedApp.created_at && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    <span className="font-semibold text-navy">Applied on:</span> {new Date(selectedApp.created_at).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </p>
+                )}
+                {selectedApp.transaction_id && (
+                  <p className="text-sm font-mono text-muted-foreground mt-1">
+                    <span className="font-semibold text-navy font-sans">TrxID:</span> {selectedApp.transaction_id}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3 no-print">
                 <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-secondary text-navy font-bold rounded-xl hover:bg-secondary/80 transition-colors">
@@ -530,7 +566,9 @@ export function ApplicationsManager() {
                       <dl className="space-y-3 text-sm">
                         <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-navy">{member.interested_roles || member.interested_role || '-'}</dd></div>
                         {member.other_role && <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-navy">{member.other_role}</dd></div>}
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-navy">{selectedApp.transaction_id ? `${member.payment_method || 'Paid'} (TrxID: ${selectedApp.transaction_id})` : '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-navy">{member.payment_method || (selectedApp.transaction_id ? 'Paid' : '-')}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-navy font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-navy">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
                         
                         <div className="pt-3 flex flex-col gap-2">
                           <dt className="text-muted-foreground text-xs uppercase font-bold">Social Links</dt>
