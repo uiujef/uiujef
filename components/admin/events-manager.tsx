@@ -90,7 +90,8 @@ export function EventsManager() {
       try {
         if (event.date) {
           const d = new Date(event.date)
-          formattedDate = d.toISOString().slice(0, 16)
+          const pad = (n: number) => n.toString().padStart(2, '0')
+          formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
         }
       } catch (e) {
         console.error('Error parsing date', e)
@@ -113,7 +114,8 @@ export function EventsManager() {
       try {
         if (event.registration_deadline) {
           const d = new Date(event.registration_deadline)
-          formattedDeadline = d.toISOString().slice(0, 16)
+          const pad = (n: number) => n.toString().padStart(2, '0')
+          formattedDeadline = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
         }
       } catch (e) {
         console.error('Error parsing deadline', e)

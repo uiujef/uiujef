@@ -79,13 +79,13 @@ export async function HeroSection() {
                         Upcoming Event: {featuredEvent.title}
                       </h3>
                     </div>
-                    {!(featuredEvent.requires_registration && featuredEvent.registration_deadline && new Date(featuredEvent.registration_deadline) < new Date()) && (
+                    {!(featuredEvent.registration_deadline && new Date(featuredEvent.registration_deadline) < new Date()) && (
                       <div className="mt-2 sm:mt-3">
-                        <CountdownTimer targetDate={featuredEvent.requires_registration && featuredEvent.registration_deadline ? featuredEvent.registration_deadline : featuredEvent.date} />
+                        <CountdownTimer targetDate={featuredEvent.registration_deadline || featuredEvent.date} />
                       </div>
                     )}
                   </div>
-                  {featuredEvent.requires_registration && featuredEvent.registration_deadline && new Date(featuredEvent.registration_deadline) < new Date() ? (
+                  {featuredEvent.registration_deadline && new Date(featuredEvent.registration_deadline) < new Date() ? (
                     <button 
                       disabled
                       className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white/50 cursor-not-allowed"
