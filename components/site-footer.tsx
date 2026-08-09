@@ -25,7 +25,7 @@ const socialIcons = {
 export function SiteFooter() {
   const pathname = usePathname()
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
-  const [phoneNumber, setPhoneNumber] = useState(contact.phone)
+  const [contactPhone, setContactPhone] = useState("01757855806")
   const [showDeveloperModal, setShowDeveloperModal] = useState(false)
   const [devPhoto, setDevPhoto] = useState<string | null>(null)
 
@@ -44,11 +44,11 @@ export function SiteFooter() {
       try {
         const { data: settings } = await supabase.from('site_settings').select('official_contact_number').limit(1).maybeSingle()
         if (settings?.official_contact_number) {
-          setPhoneNumber(settings.official_contact_number)
+          setContactPhone(settings.official_contact_number)
         } else {
           const { data: president } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle()
           if (president?.phone) {
-            setPhoneNumber(president.phone)
+            setContactPhone(president.phone)
           }
         }
       } catch (err) {
@@ -122,11 +122,11 @@ export function SiteFooter() {
             <ul className="mt-6 space-y-3 text-sm">
               <li>
                 <a
-                  href={`tel:${phoneNumber.replace(/\s/g, '')}`}
+                  href={`tel:${contactPhone.replace(/\s/g, '')}`}
                   className="flex items-start gap-3 text-white/70 transition-colors hover:text-[#F26522]"
                 >
                   <Phone className="mt-0.5 size-4 shrink-0 text-[#F26522]" aria-hidden="true" />
-                  {phoneNumber}
+                  {contactPhone}
                 </a>
               </li>
               <li>
