@@ -34,7 +34,10 @@ export function MemberCard({ member, onClick, className }: MemberCardProps) {
               src={member.image_url}
               alt={member.name}
               fill
-              className="object-cover"
+              className={cn(
+                'object-cover',
+                member.name === 'Shaikh Jubair' ? 'scale-[1.6] object-bottom' : 'object-center'
+              )}
               sizes="(max-width: 640px) 128px, 160px"
             />
           ) : (
