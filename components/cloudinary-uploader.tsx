@@ -10,18 +10,24 @@ interface CloudinaryUploaderProps {
   onUploadSuccess: (url: string) => void;
   onUploadStart?: () => void;
   onUploadError?: (error: any) => void;
+  onUploadClose?: () => void;
   folder?: string;
   className?: string;
   buttonText?: string;
+  multiple?: boolean;
+  resourceType?: "image" | "video" | "auto";
 }
 
 export function CloudinaryUploader({
   onUploadSuccess,
   onUploadStart,
   onUploadError,
+  onUploadClose,
   folder = "uiujef",
   className,
-  buttonText = "Upload Image"
+  buttonText = "Upload Image",
+  multiple = false,
+  resourceType = "image"
 }: CloudinaryUploaderProps) {
   return (
     <div className={cn("relative group inline-block w-full", className)}>
@@ -29,10 +35,11 @@ export function CloudinaryUploader({
         uploadPreset="uiujef_preset"
         options={{
           folder: folder,
-          maxFiles: 1,
-          resourceType: "image",
-          clientAllowedFormats: ["png", "jpeg", "jpg", "webp", "gif"],
-          maxFileSize: 5 * 1024 * 1024,
+          maxFiles: multiple ? 50 : 1,
+          resourceType: resourceType,
+          clientAllowedFormats: resourceType === "image" ? ["png", "jpeg", "jpg", "webp", "gif"] : undefined,
+          maxFileSize: 10 * 1024 * 1024,
+          showCompletedButton: true,
         }}
         onSuccess={(result: any) => {
           toast.success("Image uploaded successfully!");
@@ -45,8 +52,11 @@ export function CloudinaryUploader({
           toast.error("Image upload failed. Check console for details.");
           if (onUploadError) onUploadError(error);
         }}
-        onOpen={() => {
+        onUploadAdded={() => {
           if (onUploadStart) onUploadStart();
+        }}
+        onClose={() => {
+          if (onUploadClose) onUploadClose();
         }}
       >
         {({ open, isLoading }) => (

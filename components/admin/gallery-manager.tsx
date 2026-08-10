@@ -52,7 +52,7 @@ export function GalleryManager() {
   const [title, setTitle] = useState('')
   const [albumDate, setAlbumDate] = useState('')
   const [coverImage, setCoverImage] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageUrls, setImageUrls] = useState<string[]>([])
   const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
   const [externalImageUrl, setExternalImageUrl] = useState('')
 
@@ -99,13 +99,13 @@ export function GalleryManager() {
         setCoverImage(item.cover_image || '')
       }
       if (type === 'image') {
-        setImageUrl(item.image_url || '')
+        setImageUrls(item.image_url ? [item.image_url] : [])
       }
     } else {
       setTitle('')
       setAlbumDate('')
       setCoverImage('')
-      setImageUrl('')
+      setImageUrls([])
     }
   }
 
@@ -154,21 +154,22 @@ export function GalleryManager() {
       }
       else if (modalType === 'image') {
         if (!currentAlbum) throw new Error('No album selected')
-        let finalImage = imageUrl
-        if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
-        if (!finalImage) throw new Error('Image is required')
+        let urlsToSave = imageUrls
+        if (imageInputType === 'url' && externalImageUrl) urlsToSave = [externalImageUrl]
+        if (urlsToSave.length === 0) throw new Error('Image is required')
 
-        const payload = { album_id: currentAlbum.id, title: title || null, image_url: finalImage }
         if (editingItem) {
+          const payload = { album_id: currentAlbum.id, title: title || null, image_url: urlsToSave[0] }
           const { error } = await supabase.from('gallery_images').update(payload).eq('id', editingItem.id)
           if (error) throw error
           setImages(images.map(i => i.id === editingItem.id ? { ...i, ...payload } : i))
           toast.success('Image updated')
         } else {
-          const { data, error } = await supabase.from('gallery_images').insert([payload]).select().single()
+          const payloads = urlsToSave.map(url => ({ album_id: currentAlbum.id, title: title || null, image_url: url }))
+          const { data, error } = await supabase.from('gallery_images').insert(payloads).select()
           if (error) throw error
-          setImages([data as GalleryImage, ...images])
-          toast.success('Image added')
+          setImages([...(data as GalleryImage[]), ...images])
+          toast.success('Images added')
         }
       }
 
@@ -381,13 +382,20 @@ export function GalleryManager() {
                   {imageInputType === 'upload' ? (
                     <div className="w-full">
                       <CloudinaryUploader 
+                        multiple={modalType === 'image'}
+                        resourceType={modalType === 'image' ? 'auto' : 'image'}
                         onUploadSuccess={(url) => { 
-                          if (modalType === 'album') setCoverImage(url)
-                          else setImageUrl(url)
-                          setIsUploading(false) 
+                          if (modalType === 'album') {
+                            setCoverImage(url);
+                            setIsUploading(false);
+                          } else {
+                            setImageUrls(prev => [...prev, url]);
+                            // Don't set isUploading to false here for multiple, rely on onClose or let user press Save
+                          }
                         }}
                         onUploadStart={() => setIsUploading(true)}
                         onUploadError={() => setIsUploading(false)}
+                        onUploadClose={() => setIsUploading(false)}
                         folder={modalType === 'album' ? "/uiujef/gallery/covers" : `/uiujef/gallery/albums/${currentAlbum?.id || 'unknown'}`}
                         className="w-full"
                       />
@@ -397,9 +405,22 @@ export function GalleryManager() {
                   )}
 
                   {/* Real-time Preview */}
-                  {(imageInputType === 'upload' && (modalType === 'album' ? coverImage : imageUrl)) && (
-                    <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                      <img src={modalType === 'album' ? coverImage : imageUrl} alt="Preview" className="object-cover w-full h-full" />
+                  {(imageInputType === 'upload') && (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {modalType === 'album' && coverImage && (
+                        <div className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                          <img src={coverImage} alt="Preview" className="object-cover w-full h-full" />
+                        </div>
+                      )}
+                      {modalType === 'image' && imageUrls.map((url, i) => (
+                        <div key={i} className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                          {url.includes('video') ? (
+                            <video src={url} className="object-cover w-full h-full" />
+                          ) : (
+                            <img src={url} alt="Preview" className="object-cover w-full h-full" />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                   {(imageInputType === 'url' && externalImageUrl) && (
