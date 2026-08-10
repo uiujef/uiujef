@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Clock, Loader2, Wallet, User, BookOpen,
   Mail, Phone, Droplet, Building2, Hash, Calendar, Camera, MessageSquare, Search,
-  X, Star, ListChecks
+  X, Star, ListChecks, Copy, Check
 } from 'lucide-react'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/brand-icons'
 import { socials } from '@/lib/site-data'
@@ -123,6 +123,23 @@ export default function JoinPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
+  const [copiedId, setCopiedId] = useState(false)
+  const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    setCopiedId(true)
+    toast.success('Application ID copied!')
+    setTimeout(() => setCopiedId(false), 2000)
+  }
+
+  const handleCopyNumber = (num: string) => {
+    navigator.clipboard.writeText(num)
+    setCopiedNumber(num)
+    toast.success('Number copied!')
+    setTimeout(() => setCopiedNumber(null), 2000)
+  }
 
   const [form, setForm] = useState<PendingMemberPayload>({
     full_name: '',
@@ -399,8 +416,17 @@ export default function JoinPage() {
             <p className="text-sm font-semibold uppercase tracking-widest text-[#F26522]/80 mb-2">
               Your Application ID
             </p>
-            <div className="font-mono text-3xl font-bold tracking-wider text-white">
-              {applicationId}
+            <div className="group flex items-center justify-center gap-3">
+              <div className="font-mono text-3xl font-bold tracking-wider text-white">
+                {applicationId}
+              </div>
+              <button
+                onClick={() => handleCopyId(applicationId)}
+                className="flex size-10 items-center justify-center rounded-full bg-white/5 text-white/50 transition-all hover:bg-white/10 hover:text-white"
+                title="Copy ID"
+              >
+                {copiedId ? <Check className="size-5 text-green-500" /> : <Copy className="size-5" />}
+              </button>
             </div>
             <div className="mt-4 flex flex-col items-start gap-2 text-left rounded-lg bg-red-500/10 p-4 border border-red-500/20">
               <div className="flex items-start gap-2">
@@ -705,19 +731,39 @@ export default function JoinPage() {
                   <div className="flex flex-col gap-3 w-full bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm max-w-sm mx-auto text-left">
                     <p className="text-white/90 font-medium text-center text-sm mb-2 border-b border-white/10 pb-2">Please send fee to any number below:</p>
                     {paymentMethods.map((pm, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                      <div key={idx} className="group flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
                         <span className="text-sm font-semibold text-white/80">
                           {pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method}
                         </span>
-                        <span className="font-mono text-sm font-bold text-[#F26522] tracking-wider">{pm.account_number}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-bold text-[#F26522] tracking-wider">{pm.account_number}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyNumber(pm.account_number)}
+                            className="flex size-7 items-center justify-center rounded-md text-white/40 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:text-white"
+                            title="Copy Number"
+                          >
+                            {copiedNumber === pm.account_number ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-2 items-center justify-center text-sm bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm max-w-sm mx-auto">
+                  <div className="group flex flex-col gap-2 items-center justify-center text-sm bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm max-w-sm mx-auto hover:border-white/10 transition-colors">
                     <p className="text-white/90 font-medium">Send money via bKash or Nagad</p>
-                    <p className="text-xl font-mono text-[#F26522] tracking-wider mt-1">01703208163</p>
-                    <p className="text-white/40 text-xs mt-1">(Personal)</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-mono text-[#F26522] tracking-wider">01703208163</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyNumber('01703208163')}
+                        className="flex size-7 items-center justify-center rounded-md text-white/40 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:text-white"
+                        title="Copy Number"
+                      >
+                        {copiedNumber === '01703208163' ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
+                      </button>
+                    </div>
+                    <p className="text-white/40 text-xs">(Personal)</p>
                   </div>
                 )}
               </div>
