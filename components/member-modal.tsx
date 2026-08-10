@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Image from 'next/image'
 import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2, Briefcase } from 'lucide-react'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import type { Member } from '@/types'
 
 interface MemberModalProps {
@@ -137,12 +138,13 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
 
             {/* About / Bio */}
             <div className="mt-5">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-navy/40">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-navy/40 mb-2">
                 Personal Quote / Bio
               </h3>
-              <p className={`mt-2 text-sm leading-relaxed text-navy/70 ${isDeveloper ? 'italic' : ''}`}>
-                {member.quote || "No quote provided."}
-              </p>
+              <MarkdownRenderer 
+                content={member.quote || "No quote provided."}
+                className={`text-sm leading-relaxed text-navy/70 ${isDeveloper ? 'italic' : ''}`}
+              />
             </div>
 
             {/* Additional Alumni/Advisor info */}
