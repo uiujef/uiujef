@@ -59,7 +59,7 @@ function CategoryCard({ cat, onClick }: { cat: GalleryCategory, onClick: () => v
               key={i}
               src={img} 
               alt={`${cat.name} ${i}`} 
-              className={`absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-all duration-[1500ms] ease-in-out ${i === activeIndex ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`} 
+              className={`absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-all duration-1000 ease-in-out ${i === activeIndex ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy" 
             />
           ))
