@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useId, useEffect } from 'react'
-import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet } from 'lucide-react'
+import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import emailjs from '@emailjs/browser'
 import { supabase } from '@/lib/supabase'
@@ -228,6 +228,23 @@ export function DynamicEventForm({
   const [applicationId, setApplicationId] = useState('')
   const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
 
+  const [copiedId, setCopiedId] = useState(false)
+  const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    setCopiedId(true)
+    toast.success('Application ID copied!')
+    setTimeout(() => setCopiedId(false), 2000)
+  }
+
+  const handleCopyNumber = (num: string) => {
+    navigator.clipboard.writeText(num)
+    setCopiedNumber(num)
+    toast.success('Number copied!')
+    setTimeout(() => setCopiedNumber(null), 2000)
+  }
+
   useEffect(() => {
     if (config.requiresPayment) {
       const loadPaymentMethods = async () => {
@@ -367,8 +384,17 @@ export function DynamicEventForm({
           <p className="text-xs font-semibold uppercase tracking-widest text-[#F26522]/80 mb-2">
             Application ID
           </p>
-          <div className="font-mono text-xl font-bold tracking-wider text-white">
-            {applicationId}
+          <div className="group flex items-center justify-center gap-3">
+            <div className="font-mono text-xl font-bold tracking-wider text-white">
+              {applicationId}
+            </div>
+            <button
+              onClick={() => handleCopyId(applicationId)}
+              className="flex size-8 items-center justify-center rounded-full bg-white/5 text-white/50 transition-all hover:bg-white/10 hover:text-white"
+              title="Copy ID"
+            >
+              {copiedId ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
+            </button>
           </div>
           <div className="mt-4 flex flex-col items-start gap-2 text-left rounded-lg bg-red-500/10 p-4 border border-red-500/20">
             <div className="flex items-start gap-2">
@@ -384,16 +410,7 @@ export function DynamicEventForm({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(applicationId)
-              toast.success('Application ID copied!')
-            }}
-            className="w-full sm:w-auto rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Copy ID
-          </button>
-          
+
           <button
             onClick={() => {
               // Only close the modal, no redirect
@@ -489,11 +506,21 @@ export function DynamicEventForm({
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {paymentMethods.map((pm, idx) => (
-                    <div key={idx} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 border border-white/5">
+                    <div key={idx} className="group flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 border border-white/5 hover:border-white/10 transition-colors">
                       <span className="text-sm font-semibold text-white/80">
                         {pm.method === 'Bank' && pm.bank_name ? `Bank (${pm.bank_name})` : pm.method}
                       </span>
-                      <span className="font-mono text-sm font-bold text-[#F26522]">{pm.account_number}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-bold text-[#F26522]">{pm.account_number}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyNumber(pm.account_number)}
+                          className="flex size-7 items-center justify-center rounded-md text-white/40 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:text-white"
+                          title="Copy Number"
+                        >
+                          {copiedNumber === pm.account_number ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
