@@ -71,6 +71,7 @@ export const viewport: Viewport = {
 }
 
 import { Toaster } from 'sonner'
+import { AIChatbot } from '@/components/AIChatbot'
 
 export default function RootLayout({
   children,
@@ -82,6 +83,7 @@ export default function RootLayout({
       <body className="flex min-h-svh flex-col font-sans antialiased">
         <div className="flex flex-1 flex-col">{children}</div>
         <CreditFooter />
+        <AIChatbot />
         <Toaster richColors position="top-right" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
