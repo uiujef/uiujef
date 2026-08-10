@@ -95,9 +95,20 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
           <div className="flex flex-col p-6 sm:p-8 md:w-[62%]">
             {/* Name, designation, responsibility */}
             <div>
-              <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">
-                {member.name}
-              </h2>
+              {isDeveloper ? (
+                <a
+                  href="https://shaikhjubair.me"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block font-serif text-2xl font-bold text-navy hover:text-orange-500 cursor-pointer transition-colors sm:text-3xl"
+                >
+                  {member.name}
+                </a>
+              ) : (
+                <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">
+                  {member.name}
+                </h2>
+              )}
               <p className="mt-1 text-base font-semibold text-[#F26522]">
                 {displayRole}
               </p>
@@ -129,7 +140,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-navy/40">
                 Personal Quote / Bio
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy/70">
+              <p className={`mt-2 text-sm leading-relaxed text-navy/70 ${isDeveloper ? 'italic' : ''}`}>
                 {member.quote || "No quote provided."}
               </p>
             </div>

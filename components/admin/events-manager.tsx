@@ -344,7 +344,7 @@ export function EventsManager() {
             
             return (
               <div key={event.id} className={`bg-white rounded-2xl border ${isPast ? 'border-border/50 opacity-80' : 'border-border'} shadow-sm overflow-hidden hover:shadow-lg transition-all group relative flex flex-col`}>
-                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                   <button onClick={() => openModal(event)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                     <Edit2 className="size-4" />
                   </button>

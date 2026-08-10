@@ -187,7 +187,7 @@ export function GalleryManager() {
                   </span>
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
                 <h4 className="text-white font-bold text-lg leading-tight mb-2">{image.title}</h4>
                 <div className="flex gap-2 justify-end">
                   <button onClick={() => togglePin(image)} className={`p-2 rounded-lg backdrop-blur-sm transition-colors ${image.is_pinned ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-white/20 text-white hover:bg-white/40'}`} title={image.is_pinned ? "Unpin" : "Pin to Top"}>
