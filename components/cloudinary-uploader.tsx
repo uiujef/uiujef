@@ -39,7 +39,8 @@ export function CloudinaryUploader({
           maxFiles: multiple ? 50 : 1,
           resourceType: resourceType,
           clientAllowedFormats: resourceType === "image" ? ["png", "jpeg", "jpg", "webp", "gif"] : undefined,
-          maxFileSize: 10 * 1024 * 1024,
+          maxFileSize: 104857600,
+          maxVideoFileSize: 104857600,
           showCompletedButton: true,
         }}
         onSuccess={(result: any) => {
