@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
-// We initialize with a dummy key so the build doesn't crash if the env var is missing.
-// The actual API call will fail if the key is invalid, which is expected until the key is provided.
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || 'dummy_key_waiting_for_approval',
-});
-
 const SYSTEM_PROMPT = `You are a helpful, enthusiastic, and knowledgeable AI assistant for UIUJEF (United International University Junior Economists' Forum).
 Your goal is to answer questions about the forum, its events, summits, membership, and general economics topics.
 Always be polite and keep your answers concise. If you don't know the answer, direct the user to contact the executive panel or visit the UIUJEF website.`;
 
 export async function POST(req: Request) {
   try {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey === 'dummy_key_waiting_for_approval') {
+      console.error("Groq API Error: Missing GROQ_API_KEY environment variable. Please add it to your .env.local");
+      return NextResponse.json({ error: 'Server configuration error', details: 'API key is missing' }, { status: 500 });
+    }
+
+    const groq = new Groq({
+      apiKey: apiKey,
+    });
+
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
