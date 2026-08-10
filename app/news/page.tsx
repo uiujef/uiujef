@@ -186,7 +186,7 @@ export default function NewsPage() {
                   {activeArticle.title}
                 </h2>
                 
-                <div className="prose prose-sm md:prose-base prose-slate max-w-none w-full dark:prose-invert">
+                <div className="prose prose-sm md:prose-base prose-slate max-w-none w-full text-slate-800">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {activeArticle.content ? activeArticle.content.replace(/\\n/g, '\n') : ""}
                   </ReactMarkdown>
