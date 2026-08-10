@@ -650,6 +650,10 @@ export default function JoinPage() {
                   <div className="text-right text-xs text-white/30">{form.bio.length}/30 min chars</div>
                 </Field>
 
+                <Field id="hobby" label="Hobby / Interest" icon={Star} error={errors.hobby}>
+                  <input id="hobby" name="hobby" type="text" value={form.hobby} onChange={handleChange} className={inputClass} placeholder="e.g. Reading, Coding..." />
+                </Field>
+
                 <SectionTitle label="Social Profiles (Recommended)" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <Field id="facebook_url" label="Facebook URL" icon={FacebookIcon}>

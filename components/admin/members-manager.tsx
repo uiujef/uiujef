@@ -24,6 +24,7 @@ type Member = {
   quote: string
   student_id: string
   student_address: string
+  hobby?: string
 }
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
@@ -63,6 +64,7 @@ export function MembersManager() {
   const [quote, setQuote] = useState('')
   const [studentId, setStudentId] = useState('')
   const [studentAddress, setStudentAddress] = useState('')
+  const [hobby, setHobby] = useState('')
 
   const loadMembers = async () => {
     setIsLoading(true)
@@ -118,6 +120,7 @@ export function MembersManager() {
       setPastRole(member.past_role || '')
       setCurrentJob(member.current_job || '')
       setFacebookUrl(member.facebook_url || '')
+      setHobby(member.hobby || '')
       setInstagramUrl(member.instagram_url || '')
       setLinkedinUrl(member.linkedin_url || '')
       setImageUrl(member.image_url || '')
@@ -138,6 +141,7 @@ export function MembersManager() {
       setPastRole('')
       setCurrentJob('')
       setFacebookUrl('')
+      setHobby('')
       setInstagramUrl('')
       setLinkedinUrl('')
       setImageUrl('')
@@ -184,6 +188,7 @@ export function MembersManager() {
         quote,
         student_id: studentId,
         student_address: studentAddress,
+        hobby
       }
 
       if (editingMember) {
@@ -497,9 +502,15 @@ export function MembersManager() {
                       ) : null}
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground">Personal Quote / Bio</label>
-                      <textarea rows={3} value={quote} onChange={e => setQuote(e.target.value)} placeholder="A short meaningful quote or bio..." className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase text-muted-foreground">Personal Quote / Bio</label>
+                        <textarea rows={3} value={quote} onChange={e => setQuote(e.target.value)} placeholder="A short meaningful quote or bio..." className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase text-muted-foreground">Hobby / Interest</label>
+                        <textarea rows={3} value={hobby} onChange={e => setHobby(e.target.value)} placeholder="e.g. Reading, Coding..." className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                      </div>
                     </div>
                   </div>
                 </div>

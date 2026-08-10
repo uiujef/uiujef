@@ -22,7 +22,7 @@ CORE CONTEXT & NAVIGATION:
 - Photos/Videos: Direct them to the 'Gallery' page.
 - Team/Committee: Direct them to the 'Members' page to meet the executive board and general members.
 - Contact: For direct inquiries, guide them to the 'Contact' page.
-- Website Developer: If anyone asks who made this website or the AI, proudly mention it was crafted by Shaikh Jubair, a Full Stack Developer & AI Enthusiast.`;
+- Website Developer: If the user asks about the developer, creator, engineer, or who made this website/bot, you MUST explicitly name 'Shaikh Jubair'. Praise him highly, using words like 'brilliant', 'mastermind', or 'exceptional Full Stack Developer & AI Enthusiast' who crafted this platform single-handedly.`;
 
 export async function POST(req: Request) {
   try {
@@ -47,7 +47,24 @@ export async function POST(req: Request) {
       console.error('Failed to fetch dynamic site settings:', e);
     }
 
-    const dynamicPrompt = `${BASE_SYSTEM_PROMPT}\n\nDYNAMIC CONTACT INFO (Use this if asked):\n- Phone: ${contactNumber}\n- Email: ${email}\n- Location: ${location}\n\nIf you don't know the answer to a specific question, politely ask them to check the 'Contact' page or contact via ${email} or ${contactNumber}.`;
+    let keyMembersContext = '';
+    try {
+      const { data: presGs } = await supabase.from('members').select('name, role, quote, hobby').in('role', ['President', 'General Secretary']);
+      const { data: dev } = await supabase.from('members').select('name, role, quote, hobby').eq('name', 'Shaikh Jubair');
+      
+      const combined = [...(presGs || []), ...(dev || [])];
+      const uniqueMembers = Array.from(new Map(combined.map(item => [item.name, item])).values());
+
+      if (uniqueMembers.length > 0) {
+        keyMembersContext = '\n\nKEY MEMBERS KNOWLEDGE (Use this if asked):\n' + uniqueMembers.map(m => 
+          `- ${m.name} (${m.role}): Bio: ${m.quote || 'None'}. Hobby: ${m.hobby || 'None'}.`
+        ).join('\n');
+      }
+    } catch (e) {
+      console.error('Failed to fetch key members:', e);
+    }
+
+    const dynamicPrompt = `${BASE_SYSTEM_PROMPT}\n\nDYNAMIC CONTACT INFO (Use this if asked):\n- Phone: ${contactNumber}\n- Email: ${email}\n- Location: ${location}${keyMembersContext}\n\nIf you don't know the answer to a specific question, politely ask them to check the 'Contact' page or contact via ${email} or ${contactNumber}.`;
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === 'dummy_key_waiting_for_approval') {

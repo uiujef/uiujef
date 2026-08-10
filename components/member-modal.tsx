@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Image from 'next/image'
-import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2, Briefcase } from 'lucide-react'
+import { X, Mail, Phone, Hash, Droplet, ShieldCheck, Building2, Briefcase, Star } from 'lucide-react'
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from '@/components/social-icons'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import type { Member } from '@/types'
@@ -169,90 +169,106 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-navy/8 pt-5">
               {/* Student ID */}
               {showSensitiveInfo && (
-                <div className="flex items-start gap-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
-                    <Hash className="size-4" />
+                <div className="flex items-start gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
+                    <Hash className="size-3.5" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
                       {isAdvisor ? 'Employee ID' : 'Student ID'}
                     </p>
-                    <p className="text-xs font-bold text-[#F26522]">
+                    <p className="text-[11px] font-bold text-[#F26522] truncate">
                       {member.student_id || 'N/A'}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Student Address */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-3 col-span-full">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <Building2 className="size-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                      Address
-                    </p>
-                    <p className="text-xs font-bold text-navy break-words whitespace-normal leading-relaxed">
-                      {member.student_address || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Blood Group */}
-              <div className="flex items-start gap-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
-                  <Droplet className="size-4" />
+              <div className="flex items-start gap-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
+                  <Droplet className="size-3.5" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
                     Blood Group
                   </p>
-                  <p className="text-xs font-bold text-navy">
+                  <p className="text-[11px] font-bold text-navy truncate">
                     {member.blood_group || 'N/A'}
                   </p>
                 </div>
               </div>
 
-              {/* Email */}
-              <div className="flex items-start gap-3 col-span-full">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                  <Mail className="size-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
-                    Email
-                  </p>
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="block break-all whitespace-normal text-xs font-bold text-navy transition-colors hover:text-[#F26522] leading-relaxed"
-                  >
-                    {member.email || 'N/A'}
-                  </a>
-                </div>
-              </div>
-
               {/* Phone */}
               {showSensitiveInfo && (
-                <div className="flex items-start gap-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                    <Phone className="size-4" />
+                <div className="flex items-start gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
+                    <Phone className="size-3.5" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-tight text-navy/40">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
                       Phone
                     </p>
                     <a
                       href={`tel:${member.phone}`}
-                      className="text-xs font-bold text-navy transition-colors hover:text-[#F26522]"
+                      className="block text-[11px] font-bold text-navy transition-colors hover:text-[#F26522] truncate"
                     >
                       {member.phone || 'N/A'}
                     </a>
                   </div>
                 </div>
               )}
+
+              {/* Hobby */}
+              <div className="flex items-start gap-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-yellow-50 text-yellow-600">
+                  <Star className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                    Hobby
+                  </p>
+                  <p className="text-[11px] font-bold text-navy truncate">
+                    {member.hobby || 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Student Address */}
+              {showSensitiveInfo && (
+                <div className="flex items-start gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <Building2 className="size-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                      Address
+                    </p>
+                    <p className="text-[11px] font-bold text-navy truncate" title={member.student_address}>
+                      {member.student_address || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Email */}
+              <div className="flex items-start gap-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <Mail className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                    Email
+                  </p>
+                  <a
+                    href={`mailto:${member.email}`}
+                    className="block text-[11px] font-bold text-navy transition-colors hover:text-[#F26522] truncate"
+                    title={member.email}
+                  >
+                    {member.email || 'N/A'}
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

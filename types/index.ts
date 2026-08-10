@@ -17,6 +17,7 @@ export type Member = {
   blood_group?: string
   email?: string
   phone?: string
+  hobby?: string
   socials?: {
     linkedin?: string
     github?: string
