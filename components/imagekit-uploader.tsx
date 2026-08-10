@@ -16,8 +16,11 @@ const authenticator = async () => {
       throw new Error(`Authentication error: ${response.statusText}`);
     }
     const data = await response.json();
-    const { signature, expire, token } = data;
-    return { signature, expire, token };
+    return { 
+      signature: data.signature, 
+      expire: data.expire, 
+      token: data.token 
+    };
   } catch (error: any) {
     throw new Error(`Authentication request failed: ${error.message}`);
   }
@@ -34,7 +37,7 @@ interface ImageKitUploaderProps {
 
 export function ImageKitUploader({
   onUploadSuccess,
-  onUploadStart: onUploadStartProp,
+  onUploadStart,
   onUploadError,
   folder = "/uiujef",
   className,
@@ -46,7 +49,8 @@ export function ImageKitUploader({
   const onError = (err: any) => {
     setIsUploading(false);
     setProgress(0);
-    toast.error("Image upload failed: " + (err?.message || "Unknown error"));
+    console.error("ImageKit Upload Error:", err);
+    toast.error("Image upload failed. Check console for details.");
     if (onUploadError) onUploadError(err);
   };
 
@@ -59,17 +63,21 @@ export function ImageKitUploader({
     }
   };
 
-  const onUploadStart = () => {
+  const handleUploadStart = () => {
     setIsUploading(true);
     setProgress(0);
-    if (onUploadStartProp) onUploadStartProp();
+    if (onUploadStart) onUploadStart();
   };
 
-  const onUploadProgress = (evt: any) => {
+  const handleUploadProgress = (evt: any) => {
     if (evt.lengthComputable) {
       setProgress(Math.round((evt.loaded / evt.total) * 100));
     }
   };
+
+  if (!urlEndpoint || !publicKey) {
+    return <div className="text-red-500 text-sm font-bold">ImageKit ENV vars missing!</div>;
+  }
 
   return (
     <ImageKitProvider
@@ -79,11 +87,11 @@ export function ImageKitUploader({
     >
       <div className={cn("relative group cursor-pointer inline-block", className)}>
         <IKUpload
-          fileName={`upload_${Date.now()}.png`}
+          fileName={`upload_${Date.now()}`}
           folder={folder}
           useUniqueFileName={true}
           validateFile={(file) => {
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            if (file.size > 5 * 1024 * 1024) {
               toast.error("File size must be less than 5MB");
               return false;
             }
@@ -95,8 +103,8 @@ export function ImageKitUploader({
           }}
           onError={onError}
           onSuccess={onSuccess}
-          onUploadStart={onUploadStart}
-          onUploadProgress={onUploadProgress}
+          onUploadStart={handleUploadStart}
+          onUploadProgress={handleUploadProgress}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           accept="image/*"
         />

@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { ImageKitUploader } from '@/components/imagekit-uploader'
 import { exportToCsv } from '@/lib/export-csv'
 
 type Event = {
@@ -153,23 +154,7 @@ export function EventsManager() {
     let finalImageUrl = image
 
     try {
-      if (imageInputType === 'upload' && imageFile) {
-        setIsUploading(true)
-        const fileExt = imageFile.name.split('.').pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('jef-images')
-          .upload(fileName, imageFile)
-
-        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('jef-images')
-          .getPublicUrl(fileName)
-
-        finalImageUrl = publicUrl
-      } else if (imageInputType === 'url' && externalImageUrl) {
+      if (imageInputType === 'url' && externalImageUrl) {
         finalImageUrl = externalImageUrl
       }
 
@@ -518,18 +503,23 @@ export function EventsManager() {
                       <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
                     </div>
                     {imageInputType === 'upload' ? (
-                      <input type="file" accept="image/*" onChange={e => {
-                        const file = e.target.files?.[0]
-                        if (file) setImageFile(file)
-                      }} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" />
+                      <div className="w-full">
+                        <ImageKitUploader 
+                          onUploadSuccess={(url) => { setImage(url); setIsUploading(false); }}
+                          onUploadStart={() => setIsUploading(true)}
+                          onUploadError={() => setIsUploading(false)}
+                          folder="/uiujef/events"
+                          className="w-full"
+                        />
+                      </div>
                     ) : (
                       <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
                     )}
 
                     {/* Preview logic */}
-                    {(imageInputType === 'upload' && imageFile) ? (
+                    {(imageInputType === 'upload' && image) ? (
                       <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                        <img src={URL.createObjectURL(imageFile)} alt="Preview" className="object-cover w-full h-full" />
+                        <img src={image} alt="Preview" className="object-cover w-full h-full" />
                       </div>
                     ) : (imageInputType === 'url' && externalImageUrl) ? (
                       <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
