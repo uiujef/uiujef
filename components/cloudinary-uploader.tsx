@@ -26,7 +26,7 @@ export function CloudinaryUploader({
   return (
     <div className={cn("relative group inline-block w-full", className)}>
       <CldUploadWidget
-        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "uiujef_preset"}
+        uploadPreset="uiujef_preset"
         options={{
           folder: folder,
           maxFiles: 1,
