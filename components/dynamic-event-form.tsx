@@ -88,7 +88,9 @@ function MemberBlock({
           <div className="flex size-7 items-center justify-center rounded-full bg-[#F26522]/15 text-xs font-bold text-[#F26522]">
             {index + 1}
           </div>
-          <span className="text-sm font-semibold text-white/70">Member {index + 1}</span>
+          <span className="text-sm font-semibold text-white/70">
+            {index === 0 ? 'Team Leader (Member 1)' : `Member ${index + 1}`}
+          </span>
         </div>
         {canRemove && (
           <button

@@ -87,13 +87,21 @@ export function HeroEventBanner({
         </div>
 
         {/* Right: CTA */}
-        <Link
-          href={registerHref}
-          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#F26522] px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-[#F26522]/30 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/50"
-        >
-          Register Now
-          <ArrowRight className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/events"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-bold text-white transition-all duration-200 hover:bg-white/10"
+          >
+            View Event
+          </Link>
+          <Link
+            href={registerHref}
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#F26522] px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-[#F26522]/30 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/50"
+          >
+            Register Now
+            <ArrowRight className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
+          </Link>
+        </div>
       </div>
     </div>
   )
