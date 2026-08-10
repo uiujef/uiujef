@@ -34,6 +34,7 @@ export function CloudinaryUploader({
       <CldUploadWidget
         uploadPreset="uiujef_preset"
         options={{
+          autoUpload: false,
           folder: folder,
           maxFiles: multiple ? 50 : 1,
           resourceType: resourceType,
