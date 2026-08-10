@@ -9,7 +9,7 @@ import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 
 type GalleryCategory = {
   id: string
-  title: string
+  name: string
   created_at: string
 }
 
@@ -93,7 +93,7 @@ export function GalleryManager() {
     setExternalImageUrl('')
     
     if (item) {
-      setTitle(item.title || '')
+      setTitle(item.title || item.name || '')
       if (type === 'album') {
         setAlbumDate(item.date || '')
         setCoverImage(item.cover_image || '')
@@ -120,7 +120,7 @@ export function GalleryManager() {
     setIsSaving(true)
     try {
       if (modalType === 'category') {
-        const payload = { title }
+        const payload = { name: title }
         if (editingItem) {
           const { error } = await supabase.from('gallery_categories').update(payload).eq('id', editingItem.id)
           if (error) throw error
@@ -216,7 +216,7 @@ export function GalleryManager() {
               <>
                 <ChevronRight className="size-4 mx-2 text-border shrink-0" />
                 <button onClick={() => setCurrentAlbum(null)} className={`hover:text-[#F26522] transition-colors whitespace-nowrap ${!currentAlbum ? 'text-navy' : ''}`}>
-                  {currentCategory.title}
+                  {currentCategory.name}
                 </button>
               </>
             )}
@@ -263,7 +263,7 @@ export function GalleryManager() {
                   <div className="size-16 rounded-2xl bg-secondary/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FolderOpen className="size-8 text-[#F26522]" />
                   </div>
-                  <h3 className="text-lg font-bold text-navy">{cat.title}</h3>
+                  <h3 className="text-lg font-bold text-navy">{cat.name}</h3>
                 </div>
                 <div className="p-4 border-t border-border flex justify-end gap-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => openModal('category', cat)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
