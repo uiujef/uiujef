@@ -25,7 +25,7 @@ type GalleryAlbum = {
 type GalleryImage = {
   id: string
   album_id: string
-  title: string | null
+  caption: string | null
   image_url: string
   created_at: string
 }
@@ -93,7 +93,7 @@ export function GalleryManager() {
     setExternalImageUrl('')
     
     if (item) {
-      setTitle(item.title || item.name || '')
+      setTitle(item.title || item.name || item.caption || '')
       if (type === 'album') {
         setAlbumDate(item.event_date || '')
         setCoverImage(item.cover_image || '')
@@ -159,13 +159,13 @@ export function GalleryManager() {
         if (urlsToSave.length === 0) throw new Error('Image is required')
 
         if (editingItem) {
-          const payload = { album_id: currentAlbum.id, title: title || null, image_url: urlsToSave[0] }
+          const payload = { album_id: currentAlbum.id, caption: title || null, image_url: urlsToSave[0] }
           const { error } = await supabase.from('gallery_images').update(payload).eq('id', editingItem.id)
           if (error) throw error
           setImages(images.map(i => i.id === editingItem.id ? { ...i, ...payload } : i))
           toast.success('Image updated')
         } else {
-          const payloads = urlsToSave.map(url => ({ album_id: currentAlbum.id, title: title || null, image_url: url }))
+          const payloads = urlsToSave.map(url => ({ album_id: currentAlbum.id, caption: title || null, image_url: url }))
           const { data, error } = await supabase.from('gallery_images').insert(payloads).select()
           if (error) throw error
           setImages([...(data as GalleryImage[]), ...images])
@@ -324,9 +324,9 @@ export function GalleryManager() {
           <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
             {images.map(image => (
               <div key={image.id} className="relative group break-inside-avoid rounded-2xl overflow-hidden bg-secondary shadow-sm hover:shadow-xl transition-all">
-                <img src={image.image_url} alt={image.title || 'Gallery image'} className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <img src={image.image_url} alt={image.caption || 'Gallery image'} className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
-                  {image.title && <h4 className="text-white font-bold text-sm leading-tight mb-2">{image.title}</h4>}
+                  {image.caption && <h4 className="text-white font-bold text-sm leading-tight mb-2">{image.caption}</h4>}
                   <div className="flex gap-2 justify-end mt-2">
                     <button onClick={() => openModal('image', image)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                       <Edit2 className="size-4" />
