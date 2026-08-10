@@ -93,6 +93,7 @@ export function GallerySection() {
 
   const [currentCategory, setCurrentCategory] = useState<GalleryCategory | null>(null)
   const [currentAlbum, setCurrentAlbum] = useState<GalleryAlbum | null>(null)
+  const [detailsAlbum, setDetailsAlbum] = useState<GalleryAlbum | null>(null)
 
   // Lightbox state
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -294,9 +295,17 @@ export function GallerySection() {
                           </p>
                         )}
                         {album.description && (
-                          <p className="text-white/70 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed">
-                            {album.description}
-                          </p>
+                          <div className="flex flex-col">
+                            <p className="text-white/70 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed mb-3">
+                              {album.description}
+                            </p>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setDetailsAlbum(album); }}
+                              className="text-[#F26522] text-xs font-bold uppercase tracking-wider hover:text-white transition-colors self-start"
+                            >
+                              Learn More →
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -402,6 +411,44 @@ export function GallerySection() {
             )}
             <div className="absolute bottom-8 right-8 text-white/30 font-medium text-sm">
               {lightboxIndex + 1} / {images.length}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Album Details Modal */}
+      {detailsAlbum && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-navy-deep/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">
+            <button
+              onClick={() => setDetailsAlbum(null)}
+              className="absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-black/10 hover:text-navy"
+            >
+              ✕
+            </button>
+            <div className="overflow-y-auto overscroll-contain flex flex-col p-6 sm:p-8">
+              <h2 className="font-serif text-3xl font-bold text-navy pr-10 mb-2">{detailsAlbum.title}</h2>
+              {detailsAlbum.event_date && (
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1 text-xs font-semibold text-navy/70 mb-6">
+                  <CalendarDays className="size-3.5" />
+                  {new Date(detailsAlbum.event_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+              )}
+              <div className="prose max-w-none prose-navy text-navy/80">
+                <p className="whitespace-pre-wrap leading-relaxed">{detailsAlbum.description}</p>
+              </div>
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={() => {
+                    setDetailsAlbum(null);
+                    setCurrentAlbum(detailsAlbum);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#F26522] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#F26522]/30 transition-all hover:bg-[#FF7A3D]"
+                >
+                  <ImageIcon className="size-4" />
+                  View Photos
+                </button>
+              </div>
             </div>
           </div>
         </div>

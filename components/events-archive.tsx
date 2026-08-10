@@ -77,7 +77,7 @@ function EventCard({
           {event.title}
         </h3>
         <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
-          {event.description}
+          {event.description?.replace(/[#*_`>\n\[\]]/g, ' ')}
         </p>
 
         {/* Registration deadline */}
@@ -108,14 +108,12 @@ function EventCard({
             )
           )}
           
-          {event.extendedDetails && (
-            <button
-              onClick={() => onLearnMore(event)}
-              className="inline-flex items-center gap-2 rounded-full border border-navy/20 bg-transparent px-5 py-2.5 text-sm font-bold text-navy transition-all hover:bg-navy/5"
-            >
-              Learn More
-            </button>
-          )}
+          <button
+            onClick={() => onLearnMore(event)}
+            className="inline-flex items-center gap-2 rounded-full border border-navy/20 bg-transparent px-5 py-2.5 text-sm font-bold text-navy transition-all hover:bg-navy/5"
+          >
+            Read More
+          </button>
         </div>
       </div>
     </article>

@@ -35,9 +35,13 @@ export async function POST(req: Request) {
       const { data: settings } = await supabase.from('site_settings').select('official_contact_number, official_email, location').limit(1).maybeSingle();
       if (settings) {
         if (settings.official_contact_number) contactNumber = settings.official_contact_number;
-        // if your schema uses different names for email/location you can adjust here. Fallbacks are reliable.
         if (settings.official_email) email = settings.official_email;
         if (settings.location) location = settings.location;
+      }
+      
+      if (!settings?.official_contact_number) {
+        const { data: pres } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle();
+        if (pres?.phone) contactNumber = pres.phone;
       }
     } catch (e) {
       console.error('Failed to fetch dynamic site settings:', e);
