@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Loader2, UserCircle, Users, GraduationCap, Shield, Star, Briefcase, Award } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
-import { ImageKitUploader } from '@/components/imagekit-uploader'
+import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 import { toast } from 'sonner'
 
 type Member = {
@@ -472,7 +472,7 @@ export function MembersManager() {
                       
                       {imageInputType === 'upload' ? (
                         <div className="w-full">
-                          <ImageKitUploader 
+                          <CloudinaryUploader 
                             onUploadSuccess={(url) => { setImageUrl(url); setIsUploading(false); }}
                             onUploadStart={() => setIsUploading(true)}
                             onUploadError={() => setIsUploading(false)}

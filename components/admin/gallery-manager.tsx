@@ -1,165 +1,245 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Plus, Trash2, Edit2, Loader2, Image as ImageIcon, Folder, FolderOpen, ChevronRight, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { CloudinaryUploader } from '@/components/cloudinary-uploader'
+
+type GalleryCategory = {
+  id: string
+  title: string
+  created_at: string
+}
+
+type GalleryAlbum = {
+  id: string
+  category_id: string
+  title: string
+  date: string | null
+  cover_image: string
+  created_at: string
+}
 
 type GalleryImage = {
   id: string
-  title: string
+  album_id: string
+  title: string | null
   image_url: string
   created_at: string
-  is_pinned: boolean
-  pinned_at: string | null
 }
 
 export function GalleryManager() {
+  const [categories, setCategories] = useState<GalleryCategory[]>([])
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([])
   const [images, setImages] = useState<GalleryImage[]>([])
+
+  const [currentCategory, setCurrentCategory] = useState<GalleryCategory | null>(null)
+  const [currentAlbum, setCurrentAlbum] = useState<GalleryAlbum | null>(null)
+
   const [isLoading, setIsLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  
+  // Modal states
+  const [modalType, setModalType] = useState<'category' | 'album' | 'image' | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null)
-  
+  const [itemToDelete, setItemToDelete] = useState<{type: 'category'|'album'|'image', id: string} | null>(null)
+  const [editingItem, setEditingItem] = useState<any>(null)
+
+  // Form states
   const [title, setTitle] = useState('')
+  const [albumDate, setAlbumDate] = useState('')
+  const [coverImage, setCoverImage] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
   const [externalImageUrl, setExternalImageUrl] = useState('')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [isPinned, setIsPinned] = useState(false)
 
-  const loadImages = async () => {
+  useEffect(() => {
+    loadData()
+  }, [currentCategory, currentAlbum])
+
+  const loadData = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      if (data) setImages(data as GalleryImage[])
+      if (!currentCategory) {
+        // Load Categories
+        const { data, error } = await supabase.from('gallery_categories').select('*').order('created_at', { ascending: false })
+        if (error) throw error
+        setCategories(data as GalleryCategory[])
+      } else if (!currentAlbum) {
+        // Load Albums for Category
+        const { data, error } = await supabase.from('gallery_albums').select('*').eq('category_id', currentCategory.id).order('created_at', { ascending: false })
+        if (error) throw error
+        setAlbums(data as GalleryAlbum[])
+      } else {
+        // Load Images for Album
+        const { data, error } = await supabase.from('gallery_images').select('*').eq('album_id', currentAlbum.id).order('created_at', { ascending: false })
+        if (error) throw error
+        setImages(data as GalleryImage[])
+      }
     } catch (err: any) {
-      toast.error('Database Error (Load Gallery): ' + err.message)
+      toast.error('Database Error: ' + err.message)
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    loadImages()
-  }, [])
-
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (imageInputType === 'upload' && !imageFile) {
-      toast.error('Please select an image first.')
-      return
-    }
-    if (imageInputType === 'url' && !externalImageUrl) {
-      toast.error('Please provide an image URL.')
-      return
-    }
-
-    setIsUploading(true)
-    try {
-      let finalImageUrl = ''
-
-      if (imageInputType === 'upload' && imageFile) {
-        const fileExt = imageFile.name.split('.').pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('jef-images')
-          .upload(`gallery/${fileName}`, imageFile)
-
-        if (uploadError) throw new Error('Image Upload Failed: ' + uploadError.message)
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('jef-images')
-          .getPublicUrl(`gallery/${fileName}`)
-          
-        finalImageUrl = publicUrl
-      } else {
-        finalImageUrl = externalImageUrl
+  const openModal = (type: 'category' | 'album' | 'image', item?: any) => {
+    setModalType(type)
+    setEditingItem(item || null)
+    setImageInputType('upload')
+    setExternalImageUrl('')
+    
+    if (item) {
+      setTitle(item.title || '')
+      if (type === 'album') {
+        setAlbumDate(item.date || '')
+        setCoverImage(item.cover_image || '')
       }
-
-      const { data, error } = await supabase.from('gallery').insert([{
-        title,
-        image_url: finalImageUrl,
-        is_pinned: isPinned,
-        pinned_at: isPinned ? new Date().toISOString() : null
-      }]).select().single()
-
-      if (error) throw error
-      
-      toast.success('Image uploaded to gallery successfully!')
-      setImages([data as GalleryImage, ...images])
-      setIsModalOpen(false)
+      if (type === 'image') {
+        setImageUrl(item.image_url || '')
+      }
+    } else {
       setTitle('')
-      setImageFile(null)
-      setExternalImageUrl('')
-      setIsPinned(false)
-      setIsPinned(false)
-    } catch (err: any) {
-      toast.error('Upload Error: ' + err.message)
-    } finally {
-      setIsUploading(false)
+      setAlbumDate('')
+      setCoverImage('')
+      setImageUrl('')
     }
   }
 
-  const confirmDelete = (image: GalleryImage) => {
-    setImageToDelete(image)
-    setIsConfirmOpen(true)
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (isUploading) {
+      toast.error('Please wait for the image to finish uploading.')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      if (modalType === 'category') {
+        const payload = { title }
+        if (editingItem) {
+          const { error } = await supabase.from('gallery_categories').update(payload).eq('id', editingItem.id)
+          if (error) throw error
+          setCategories(categories.map(c => c.id === editingItem.id ? { ...c, ...payload } : c))
+          toast.success('Category updated')
+        } else {
+          const { data, error } = await supabase.from('gallery_categories').insert([payload]).select().single()
+          if (error) throw error
+          setCategories([data as GalleryCategory, ...categories])
+          toast.success('Category created')
+        }
+      } 
+      else if (modalType === 'album') {
+        if (!currentCategory) throw new Error('No category selected')
+        let finalImage = coverImage
+        if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
+        if (!finalImage) throw new Error('Cover image is required')
+
+        const payload = { category_id: currentCategory.id, title, date: albumDate || null, cover_image: finalImage }
+        if (editingItem) {
+          const { error } = await supabase.from('gallery_albums').update(payload).eq('id', editingItem.id)
+          if (error) throw error
+          setAlbums(albums.map(a => a.id === editingItem.id ? { ...a, ...payload } : a))
+          toast.success('Album updated')
+        } else {
+          const { data, error } = await supabase.from('gallery_albums').insert([payload]).select().single()
+          if (error) throw error
+          setAlbums([data as GalleryAlbum, ...albums])
+          toast.success('Album created')
+        }
+      }
+      else if (modalType === 'image') {
+        if (!currentAlbum) throw new Error('No album selected')
+        let finalImage = imageUrl
+        if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
+        if (!finalImage) throw new Error('Image is required')
+
+        const payload = { album_id: currentAlbum.id, title: title || null, image_url: finalImage }
+        if (editingItem) {
+          const { error } = await supabase.from('gallery_images').update(payload).eq('id', editingItem.id)
+          if (error) throw error
+          setImages(images.map(i => i.id === editingItem.id ? { ...i, ...payload } : i))
+          toast.success('Image updated')
+        } else {
+          const { data, error } = await supabase.from('gallery_images').insert([payload]).select().single()
+          if (error) throw error
+          setImages([data as GalleryImage, ...images])
+          toast.success('Image added')
+        }
+      }
+
+      setModalType(null)
+    } catch (err: any) {
+      toast.error('Error: ' + err.message)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleDelete = async () => {
-    if (!imageToDelete) return
-
+    if (!itemToDelete) return
+    setIsSaving(true)
     try {
-      const filePath = imageToDelete.image_url.split('/jef-images/')[1]
-      if (filePath) {
-        await supabase.storage.from('jef-images').remove([filePath])
-      }
-
-      const { error } = await supabase.from('gallery').delete().eq('id', imageToDelete.id)
+      const table = itemToDelete.type === 'category' ? 'gallery_categories' : itemToDelete.type === 'album' ? 'gallery_albums' : 'gallery_images'
+      const { error } = await supabase.from(table).delete().eq('id', itemToDelete.id)
       if (error) throw error
-      
-      toast.success('Image deleted successfully.')
-      setImages(images.filter(img => img.id !== imageToDelete.id))
+
+      if (itemToDelete.type === 'category') setCategories(categories.filter(c => c.id !== itemToDelete.id))
+      else if (itemToDelete.type === 'album') setAlbums(albums.filter(a => a.id !== itemToDelete.id))
+      else if (itemToDelete.type === 'image') setImages(images.filter(i => i.id !== itemToDelete.id))
+
+      toast.success('Deleted successfully.')
     } catch (err: any) {
-      toast.error('Database Error (Delete Image): ' + err.message)
+      toast.error('Delete Error: ' + err.message)
     } finally {
+      setIsSaving(false)
       setIsConfirmOpen(false)
-      setImageToDelete(null)
-    }
-  }
-  const togglePin = async (image: GalleryImage) => {
-    try {
-      const newPinnedState = !image.is_pinned
-      const payload = {
-        is_pinned: newPinnedState,
-        pinned_at: newPinnedState ? new Date().toISOString() : null
-      }
-      
-      const { error } = await supabase.from('gallery').update(payload).eq('id', image.id)
-      if (error) throw error
-      
-      setImages(images.map(img => img.id === image.id ? { ...img, ...payload } : img))
-      toast.success(newPinnedState ? 'Image pinned to top!' : 'Image unpinned.')
-    } catch (err: any) {
-      toast.error('Failed to update pin status: ' + err.message)
+      setItemToDelete(null)
     }
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header & Breadcrumbs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-navy tracking-tight">Gallery Manager</h2>
-          <p className="text-muted-foreground mt-1">Upload and manage images for the UIUJEF gallery.</p>
+          <div className="flex items-center text-sm font-semibold text-muted-foreground mt-2 overflow-x-auto pb-2 sm:pb-0">
+            <button onClick={() => { setCurrentCategory(null); setCurrentAlbum(null) }} className={`hover:text-[#F26522] transition-colors whitespace-nowrap ${!currentCategory ? 'text-navy' : ''}`}>
+              Categories
+            </button>
+            {currentCategory && (
+              <>
+                <ChevronRight className="size-4 mx-2 text-border shrink-0" />
+                <button onClick={() => setCurrentAlbum(null)} className={`hover:text-[#F26522] transition-colors whitespace-nowrap ${!currentAlbum ? 'text-navy' : ''}`}>
+                  {currentCategory.title}
+                </button>
+              </>
+            )}
+            {currentAlbum && (
+              <>
+                <ChevronRight className="size-4 mx-2 text-border shrink-0" />
+                <span className="text-navy truncate max-w-[200px] whitespace-nowrap">{currentAlbum.title}</span>
+              </>
+            )}
+          </div>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
-          <Plus className="size-5" />
-          Upload Image
-        </button>
+        <div className="flex gap-2 shrink-0">
+          {(currentCategory || currentAlbum) && (
+            <button onClick={() => { if (currentAlbum) setCurrentAlbum(null); else setCurrentCategory(null) }} className="flex items-center gap-2 bg-secondary text-navy px-4 py-2 rounded-xl font-bold hover:bg-secondary/80 transition-all">
+              <ArrowLeft className="size-4" />
+              Back
+            </button>
+          )}
+          <button onClick={() => openModal(!currentCategory ? 'category' : !currentAlbum ? 'album' : 'image')} className="flex items-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <Plus className="size-5" />
+            {!currentCategory ? 'New Category' : !currentAlbum ? 'New Album' : 'Add Image'}
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -167,117 +247,176 @@ export function GalleryManager() {
           <Loader2 className="size-10 animate-spin mx-auto text-[#F26522] mb-4" />
           <p className="text-lg font-semibold text-navy">Loading gallery...</p>
         </div>
-      ) : images.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm">
-          <div className="mx-auto size-20 bg-secondary rounded-2xl flex items-center justify-center mb-6 transform rotate-3">
-            <ImageIcon className="size-10 text-muted-foreground" />
+      ) : !currentCategory ? (
+        /* LEVEL 1: CATEGORIES */
+        categories.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm">
+            <Folder className="size-10 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-navy mb-2">No Categories</h3>
+            <p className="text-muted-foreground">Create a main category to organize your albums.</p>
           </div>
-          <h3 className="text-2xl font-bold text-navy mb-3">Gallery is Empty</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">Upload some images to showcase the beautiful moments of UIUJEF.</p>
-        </div>
-      ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-          {images.map(image => (
-            <div key={image.id} className="relative group break-inside-avoid rounded-2xl overflow-hidden bg-secondary shadow-sm hover:shadow-xl transition-all">
-              <img src={image.image_url} alt={image.title} className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-              <div className="absolute top-2 left-2 flex gap-2">
-                {image.is_pinned && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-yellow-500/90 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
-                    Pinned
-                  </span>
-                )}
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
-                <h4 className="text-white font-bold text-lg leading-tight mb-2">{image.title}</h4>
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => togglePin(image)} className={`p-2 rounded-lg backdrop-blur-sm transition-colors ${image.is_pinned ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-white/20 text-white hover:bg-white/40'}`} title={image.is_pinned ? "Unpin" : "Pin to Top"}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            {categories.map(cat => (
+              <div key={cat.id} className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" onClick={() => setCurrentCategory(cat)}>
+                <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="size-16 rounded-2xl bg-secondary/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <FolderOpen className="size-8 text-[#F26522]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-navy">{cat.title}</h3>
+                </div>
+                <div className="p-4 border-t border-border flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => openModal('category', cat)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                    <Edit2 className="size-4" />
                   </button>
-                  <button onClick={() => confirmDelete(image)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
+                  <button onClick={() => { setItemToDelete({type: 'category', id: cat.id}); setIsConfirmOpen(true) }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                     <Trash2 className="size-4" />
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
+      ) : !currentAlbum ? (
+        /* LEVEL 2: ALBUMS */
+        albums.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm">
+            <ImageIcon className="size-10 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-navy mb-2">No Albums</h3>
+            <p className="text-muted-foreground">Create an album inside this category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {albums.map(album => (
+              <div key={album.id} className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-lg transition-all group overflow-hidden cursor-pointer flex flex-col" onClick={() => setCurrentAlbum(album)}>
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-secondary">
+                  <img src={album.cover_image} alt={album.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white font-bold px-4 py-2 bg-white/20 backdrop-blur rounded-xl">View Album</span>
+                  </div>
+                </div>
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-navy leading-tight line-clamp-2">{album.title}</h3>
+                  {album.date && <p className="text-sm font-semibold text-muted-foreground mt-1">{new Date(album.date).toLocaleDateString()}</p>}
+                </div>
+                <div className="px-4 py-3 border-t border-border flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => openModal('album', album)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                    <Edit2 className="size-4" />
+                  </button>
+                  <button onClick={() => { setItemToDelete({type: 'album', id: album.id}); setIsConfirmOpen(true) }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : (
+        /* LEVEL 3: IMAGES */
+        images.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-border p-12 text-center shadow-sm">
+            <ImageIcon className="size-10 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-navy mb-2">No Images</h3>
+            <p className="text-muted-foreground">Upload images to this album.</p>
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+            {images.map(image => (
+              <div key={image.id} className="relative group break-inside-avoid rounded-2xl overflow-hidden bg-secondary shadow-sm hover:shadow-xl transition-all">
+                <img src={image.image_url} alt={image.title || 'Gallery image'} className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
+                  {image.title && <h4 className="text-white font-bold text-sm leading-tight mb-2">{image.title}</h4>}
+                  <div className="flex gap-2 justify-end mt-2">
+                    <button onClick={() => openModal('image', image)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
+                      <Edit2 className="size-4" />
+                    </button>
+                    <button onClick={() => { setItemToDelete({type: 'image', id: image.id}); setIsConfirmOpen(true) }} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       )}
 
-      {/* Upload Modal */}
-      {isModalOpen && (
+      {/* Dynamic Modal */}
+      {modalType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+          <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => !isUploading && setModalType(null)} />
           <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-border flex items-center justify-between bg-transparent">
-              <h3 className="text-2xl font-bold text-navy tracking-tight">Upload New Image</h3>
-              <button onClick={() => setIsModalOpen(false)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors">✕</button>
+              <h3 className="text-2xl font-bold text-navy tracking-tight">
+                {editingItem ? 'Edit' : 'Create'} {modalType === 'category' ? 'Category' : modalType === 'album' ? 'Album' : 'Image'}
+              </h3>
+              <button disabled={isUploading} onClick={() => setModalType(null)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors disabled:opacity-50">✕</button>
             </div>
             
-            <form onSubmit={handleUpload} className="p-6 sm:p-8 space-y-6">
+            <form onSubmit={handleSave} className="p-6 sm:p-8 space-y-6">
+              
+              {/* Common Title Field */}
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Image Title / Description *</label>
-                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Code Samurai 2024 Winners" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <label className="text-xs font-bold uppercase text-muted-foreground">{modalType === 'image' ? 'Image Caption (Optional)' : 'Title *'}</label>
+                <input required={modalType !== 'image'} type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter title" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Image Source *</label>
-                <div className="flex bg-secondary/50 p-1 rounded-xl w-fit mb-4 border border-border">
-                  <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Upload File</button>
-                  <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
+              {/* Album Specific Fields */}
+              {modalType === 'album' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-muted-foreground">Date (Optional)</label>
+                  <input type="date" value={albumDate} onChange={e => setAlbumDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                 </div>
+              )}
 
-                {imageInputType === 'upload' ? (
-                  <div className="relative border-2 border-dashed border-border rounded-2xl p-8 hover:border-[#F26522] hover:bg-[#F26522]/5 transition-all text-center group cursor-pointer overflow-hidden">
-                    <input required type="file" accept="image/*" onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) setImageFile(file)
-                    }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                    <div className="relative z-0">
-                      <ImageIcon className="size-10 text-muted-foreground mx-auto mb-3 group-hover:text-[#F26522] transition-colors" />
-                      {imageFile ? (
-                        <p className="text-sm font-bold text-[#F26522] truncate px-4">{imageFile.name}</p>
-                      ) : (
-                        <p className="text-sm font-medium text-muted-foreground">Drag and drop or click to browse</p>
-                      )}
+              {/* ImageKit Uploader for Album Cover OR Image */}
+              {(modalType === 'album' || modalType === 'image') && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-muted-foreground">{modalType === 'album' ? 'Cover Image *' : 'Image File *'}</label>
+                  <div className="flex bg-secondary/50 p-1 rounded-xl w-fit mb-4 border border-border">
+                    <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Upload File</button>
+                    <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
+                  </div>
+
+                  {imageInputType === 'upload' ? (
+                    <div className="w-full">
+                      <CloudinaryUploader 
+                        onUploadSuccess={(url) => { 
+                          if (modalType === 'album') setCoverImage(url)
+                          else setImageUrl(url)
+                          setIsUploading(false) 
+                        }}
+                        onUploadStart={() => setIsUploading(true)}
+                        onUploadError={() => setIsUploading(false)}
+                        folder={modalType === 'album' ? "/uiujef/gallery/covers" : `/uiujef/gallery/albums/${currentAlbum?.id || 'unknown'}`}
+                        className="w-full"
+                      />
                     </div>
-                  </div>
-                ) : (
-                  <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
-                )}
+                  ) : (
+                    <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
+                  )}
 
-                {/* Real-time Preview */}
-                {(imageInputType === 'upload' && imageFile) && (
-                  <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="object-cover w-full h-full" />
-                  </div>
-                )}
-                {(imageInputType === 'url' && externalImageUrl) && (
-                  <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                    <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
-                  </div>
-                )}
-              </div>
+                  {/* Real-time Preview */}
+                  {(imageInputType === 'upload' && (modalType === 'album' ? coverImage : imageUrl)) && (
+                    <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                      <img src={modalType === 'album' ? coverImage : imageUrl} alt="Preview" className="object-cover w-full h-full" />
+                    </div>
+                  )}
+                  {(imageInputType === 'url' && externalImageUrl) && (
+                    <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                      <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
+                    </div>
+                  )}
+                </div>
+              )}
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input type="checkbox" checked={isPinned} onChange={e => setIsPinned(e.target.checked)} className="peer sr-only" />
-                    <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-navy group-hover:text-yellow-600 transition-colors">Pin to Top</span>
-                    <p className="text-xs text-muted-foreground">Always show this image at the top of the gallery.</p>
-                  </div>
-                </label>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
+              <div className="pt-4 flex justify-end gap-3 border-t border-border">
+                <button type="button" disabled={isUploading} onClick={() => setModalType(null)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit" disabled={isUploading || (imageInputType === 'upload' && !imageFile) || (imageInputType === 'url' && !externalImageUrl)} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
-                  {isUploading && <Loader2 className="size-5 animate-spin" />}
-                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                <button type="submit" disabled={isUploading || isSaving} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
+                  {(isUploading || isSaving) && <Loader2 className="size-5 animate-spin" />}
+                  {isUploading ? 'Waiting for upload...' : isSaving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>
@@ -287,12 +426,12 @@ export function GalleryManager() {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Image"
-        message="Are you sure you want to delete this image from the gallery? This action cannot be undone."
+        title={`Delete ${itemToDelete?.type}`}
+        message={`Are you sure you want to delete this ${itemToDelete?.type}? This action cannot be undone.`}
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)
-          setImageToDelete(null)
+          setItemToDelete(null)
         }}
       />
     </div>

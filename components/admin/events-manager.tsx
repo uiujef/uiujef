@@ -5,7 +5,7 @@ import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
-import { ImageKitUploader } from '@/components/imagekit-uploader'
+import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 import { exportToCsv } from '@/lib/export-csv'
 
 type Event = {
@@ -504,7 +504,7 @@ export function EventsManager() {
                     </div>
                     {imageInputType === 'upload' ? (
                       <div className="w-full">
-                        <ImageKitUploader 
+                        <CloudinaryUploader 
                           onUploadSuccess={(url) => { setImage(url); setIsUploading(false); }}
                           onUploadStart={() => setIsUploading(true)}
                           onUploadError={() => setIsUploading(false)}

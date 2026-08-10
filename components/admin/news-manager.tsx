@@ -5,7 +5,7 @@ import { Plus, Edit2, Trash2, Loader2, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
-import { ImageKitUploader } from '@/components/imagekit-uploader'
+import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 
 type NewsArticle = {
   id: string
@@ -244,7 +244,7 @@ export function NewsManager() {
                 </div>
                 {imageInputType === 'upload' ? (
                   <div className="w-full">
-                    <ImageKitUploader 
+                    <CloudinaryUploader 
                       onUploadSuccess={(url) => { setCoverImage(url); setIsUploading(false); }}
                       onUploadStart={() => setIsUploading(true)}
                       onUploadError={() => setIsUploading(false)}
