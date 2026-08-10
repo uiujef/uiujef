@@ -30,12 +30,25 @@ export function ApplicationsManager() {
   const [appToDelete, setAppToDelete] = useState<string | null>(null)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
 
-  const loadApplications = async () => {
+  const loadApplications = async (tab: 'Member' | 'Event') => {
     setIsLoading(true)
+    setApplications([])
     try {
-      const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false })
+      let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
+      
+      if (tab === 'Member') {
+        query = query.in('type', ['Member', 'Membership'])
+      } else {
+        query = query.not('type', 'in', '("Member","Membership")')
+      }
+
+      const { data, error } = await query
       if (error) throw error
-      if (data) setApplications(data as Application[])
+      if (data) {
+        setApplications(data as Application[])
+      } else {
+        setApplications([])
+      }
     } catch (err: any) {
       const errorMsg = err.message === 'Failed to fetch' 
         ? 'Network error: Supabase could not be reached. Please check your internet or ad-blocker.'
@@ -47,8 +60,8 @@ export function ApplicationsManager() {
   }
 
   useEffect(() => {
-    loadApplications()
-  }, [])
+    loadApplications(activeTab)
+  }, [activeTab])
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
     const app = applications.find(a => a.application_id === appId)
@@ -120,7 +133,7 @@ export function ApplicationsManager() {
       toast.success(`Updated application ${appId} to ${newStatus}`)
     } catch (err: any) {
       toast.error('Database Error: ' + err.message)
-      loadApplications() // Revert UI
+      loadApplications(activeTab) // Revert UI
     }
   }
 
@@ -145,12 +158,7 @@ export function ApplicationsManager() {
     }
   }
 
-  const tabFilteredApps = applications.filter(app => {
-    if (activeTab === 'Member') return isMemberApp(app.type)
-    return app.type.startsWith('Event')
-  })
-
-  const filteredApps = tabFilteredApps.filter(app => 
+  const filteredApps = applications.filter(app => 
     (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
     (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
