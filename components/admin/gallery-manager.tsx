@@ -17,7 +17,7 @@ type GalleryAlbum = {
   id: string
   category_id: string
   title: string
-  date: string | null
+  event_date: string | null
   cover_image: string
   created_at: string
 }
@@ -95,7 +95,7 @@ export function GalleryManager() {
     if (item) {
       setTitle(item.title || item.name || '')
       if (type === 'album') {
-        setAlbumDate(item.date || '')
+        setAlbumDate(item.event_date || '')
         setCoverImage(item.cover_image || '')
       }
       if (type === 'image') {
@@ -139,7 +139,7 @@ export function GalleryManager() {
         if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
         if (!finalImage) throw new Error('Cover image is required')
 
-        const payload = { category_id: currentCategory.id, title, date: albumDate || null, cover_image: finalImage }
+        const payload = { category_id: currentCategory.id, title, event_date: albumDate || null, cover_image: finalImage }
         if (editingItem) {
           const { error } = await supabase.from('gallery_albums').update(payload).eq('id', editingItem.id)
           if (error) throw error
@@ -298,7 +298,7 @@ export function GalleryManager() {
                 </div>
                 <div className="p-5 flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-navy leading-tight line-clamp-2">{album.title}</h3>
-                  {album.date && <p className="text-sm font-semibold text-muted-foreground mt-1">{new Date(album.date).toLocaleDateString()}</p>}
+                  {album.event_date && <p className="text-sm font-semibold text-muted-foreground mt-1">{new Date(album.event_date).toLocaleDateString()}</p>}
                 </div>
                 <div className="px-4 py-3 border-t border-border flex justify-end gap-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => openModal('album', album)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
