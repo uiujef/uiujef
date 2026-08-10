@@ -442,10 +442,7 @@ export function EventsManager() {
                     <label className="text-xs font-bold uppercase text-muted-foreground">Event Date & Time *</label>
                     <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline {requiresRegistration && '*'}</label>
-                    <input required={requiresRegistration} type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
-                  </div>
+
                 </div>
               </div>
 
@@ -552,6 +549,11 @@ export function EventsManager() {
                   
                   {requiresRegistration && (
                     <div className="pl-14 space-y-4 animate-in fade-in slide-in-from-top-2">
+                      <div className="space-y-2 max-w-[300px]">
+                        <label className="text-xs font-bold uppercase text-muted-foreground">Registration Deadline *</label>
+                        <input required type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      </div>
+
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <div className="relative flex items-center">
                           <input type="checkbox" checked={isRegistrationOpen} onChange={e => setIsRegistrationOpen(e.target.checked)} className="peer sr-only" />

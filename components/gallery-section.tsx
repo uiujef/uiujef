@@ -20,6 +20,7 @@ type GalleryAlbum = {
   category_id: string
   title: string
   event_date: string | null
+  description: string | null
   cover_image: string
   created_at: string
 }
@@ -288,8 +289,13 @@ export function GallerySection() {
                       <div className="absolute inset-0 p-6 flex flex-col justify-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                         <h3 className="text-2xl font-bold text-white leading-tight mb-2">{album.title}</h3>
                         {album.event_date && (
-                          <p className="text-white/80 text-sm font-medium flex items-center gap-2">
+                          <p className="text-white/90 text-sm font-semibold flex items-center gap-2 mb-1">
                             {new Date(album.event_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        )}
+                        {album.description && (
+                          <p className="text-white/70 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed">
+                            {album.description}
                           </p>
                         )}
                       </div>

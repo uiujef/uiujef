@@ -11,6 +11,8 @@ import { CountdownTimer } from '@/components/countdown-timer'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { MediaBackground } from '@/components/media-background'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 // ─── Category filter ──────────────────────────────────────────────────────────
 
@@ -74,7 +76,7 @@ function EventCard({
         <h3 className="mt-2 font-serif text-xl font-bold leading-snug text-navy group-hover:text-[#F26522] transition-colors">
           {event.title}
         </h3>
-        <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
           {event.description}
         </p>
 
@@ -433,7 +435,9 @@ export default function EventsArchive() {
                 {/* Description */}
                 <div>
                   <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-navy/40">About the Event</h3>
-                  <p className="text-base leading-relaxed text-navy/80">{detailsEvent.description}</p>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose max-w-none prose-navy prose-a:text-[#F26522] prose-headings:text-navy text-navy/80">
+                    {detailsEvent.description}
+                  </ReactMarkdown>
                 </div>
 
                 {/* Extended Details */}

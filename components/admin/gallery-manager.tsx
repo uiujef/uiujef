@@ -18,6 +18,7 @@ type GalleryAlbum = {
   category_id: string
   title: string
   event_date: string | null
+  description: string | null
   cover_image: string
   created_at: string
 }
@@ -51,6 +52,7 @@ export function GalleryManager() {
   // Form states
   const [title, setTitle] = useState('')
   const [albumDate, setAlbumDate] = useState('')
+  const [description, setDescription] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
@@ -96,6 +98,7 @@ export function GalleryManager() {
       setTitle(item.title || item.name || item.caption || '')
       if (type === 'album') {
         setAlbumDate(item.event_date || '')
+        setDescription(item.description || '')
         setCoverImage(item.cover_image || '')
       }
       if (type === 'image') {
@@ -104,6 +107,7 @@ export function GalleryManager() {
     } else {
       setTitle('')
       setAlbumDate('')
+      setDescription('')
       setCoverImage('')
       setImageUrls([])
     }
@@ -139,7 +143,7 @@ export function GalleryManager() {
         if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
         if (!finalImage) throw new Error('Cover image is required')
 
-        const payload = { category_id: currentCategory.id, title, event_date: albumDate || null, cover_image: finalImage }
+        const payload = { category_id: currentCategory.id, title, event_date: albumDate || null, description: description || null, cover_image: finalImage }
         if (editingItem) {
           const { error } = await supabase.from('gallery_albums').update(payload).eq('id', editingItem.id)
           if (error) throw error
@@ -364,10 +368,16 @@ export function GalleryManager() {
 
               {/* Album Specific Fields */}
               {modalType === 'album' && (
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Date (Optional)</label>
-                  <input type="date" value={albumDate} onChange={e => setAlbumDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Description (Optional)</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter a short description..." rows={3} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all resize-none" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Date (Optional)</label>
+                    <input type="date" value={albumDate} onChange={e => setAlbumDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                  </div>
+                </>
               )}
 
               {/* ImageKit Uploader for Album Cover OR Image */}
