@@ -11,7 +11,7 @@ type GalleryCategory = {
   name: string
   created_at: string
   // Dynamically populated
-  cover_image?: string
+  cover_images?: string[]
   album_count?: number
 }
 
@@ -30,6 +30,59 @@ type GalleryImage = {
   caption: string | null
   image_url: string
   created_at: string
+}
+
+function CategoryCard({ cat, onClick }: { cat: GalleryCategory, onClick: () => void }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  
+  useEffect(() => {
+    if (!cat.cover_images || cat.cover_images.length <= 1) return
+    
+    const interval = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % cat.cover_images!.length)
+    }, 2500)
+    
+    return () => clearInterval(interval)
+  }, [cat.cover_images])
+
+  const images = cat.cover_images && cat.cover_images.length > 0 ? cat.cover_images : []
+
+  return (
+    <div 
+      onClick={onClick}
+      className="group relative flex flex-col rounded-[2rem] overflow-hidden cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#F26522]/20 transition-all duration-500 bg-card border border-border/50"
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-[#F26522]/10 to-transparent">
+        {images.length > 0 ? (
+          images.map((img, i) => (
+            <img 
+              key={i}
+              src={img} 
+              alt={`${cat.name} ${i}`} 
+              className={`absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-all duration-[1500ms] ease-in-out ${i === activeIndex ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`} 
+              loading="lazy" 
+            />
+          ))
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center opacity-30">
+            <Images className="size-24 text-[#F26522]" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500 z-10" />
+        
+        <div className="absolute inset-0 p-8 flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 z-20">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md px-3 py-1 text-xs font-medium tracking-wide text-white w-fit mb-3 border border-white/20">
+            <Images className="size-3" />
+            {cat.album_count || 0} {(cat.album_count === 1) ? 'Album' : 'Albums'}
+          </span>
+          <h3 className="text-3xl font-bold text-white mb-2 leading-tight">{cat.name}</h3>
+          <p className="text-white/70 text-sm flex items-center gap-1 font-medium">
+            Explore Collection <ChevronRight className="size-4 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-500" />
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function GallerySection() {
@@ -94,7 +147,7 @@ export function GallerySection() {
           return {
             ...cat,
             album_count: catAlbums.length,
-            cover_image: catAlbums.length > 0 ? catAlbums[0].cover_image : undefined
+            cover_images: catAlbums.map(a => a.cover_image).filter(Boolean)
           }
         })
         setCategories(enrichedCats)
@@ -209,33 +262,7 @@ export function GallerySection() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
                 {categories.map(cat => (
-                  <div 
-                    key={cat.id} 
-                    onClick={() => setCurrentCategory(cat)}
-                    className="group relative flex flex-col rounded-[2rem] overflow-hidden cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#F26522]/20 transition-all duration-500 bg-card border border-border/50"
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-[#F26522]/10 to-transparent">
-                      {cat.cover_image ? (
-                        <img src={cat.cover_image} alt={cat.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                          <Images className="size-24 text-[#F26522]" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                      
-                      <div className="absolute inset-0 p-8 flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md px-3 py-1 text-xs font-medium tracking-wide text-white w-fit mb-3 border border-white/20">
-                          <Images className="size-3" />
-                          {cat.album_count || 0} {(cat.album_count === 1) ? 'Album' : 'Albums'}
-                        </span>
-                        <h3 className="text-3xl font-bold text-white mb-2 leading-tight">{cat.name}</h3>
-                        <p className="text-white/70 text-sm flex items-center gap-1 font-medium">
-                          Explore Collection <ChevronRight className="size-4 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-500" />
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <CategoryCard key={cat.id} cat={cat} onClick={() => setCurrentCategory(cat)} />
                 ))}
               </div>
             )
