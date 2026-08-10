@@ -433,9 +433,11 @@ export default function EventsArchive() {
                 {/* Description */}
                 <div>
                   <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-navy/40">About the Event</h3>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose max-w-none prose-navy prose-a:text-[#F26522] prose-headings:text-navy text-navy/80">
-                    {detailsEvent.description}
-                  </ReactMarkdown>
+                  <div className="prose prose-sm md:prose-base prose-slate max-w-none w-full dark:prose-invert">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {detailsEvent.description ? detailsEvent.description.replace(/\\n/g, '\n') : ""}
+                    </ReactMarkdown>
+                  </div>
                 </div>
 
                 {/* Extended Details */}

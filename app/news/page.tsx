@@ -9,6 +9,8 @@ import { type NewsArticle } from '@/types'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { MediaBackground } from '@/components/media-background'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export default function NewsPage() {
   const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null)
@@ -184,26 +186,10 @@ export default function NewsPage() {
                   {activeArticle.title}
                 </h2>
                 
-                <div className="prose prose-navy max-w-none prose-p:text-navy/80 prose-headings:text-navy prose-strong:text-navy prose-li:text-navy/80">
-                  {activeArticle.content.split('\n\n').map((paragraph, i) => {
-                    if (paragraph.startsWith('- ')) {
-                      return (
-                        <ul key={i} className="list-disc pl-5 mb-4">
-                          {paragraph.split('\n').map((item, j) => {
-                            const text = item.replace(/^- /, '')
-                            // Simple bold parsing for "Team Alpha" etc
-                            const parts = text.split(/\*\*(.*?)\*\*/)
-                            return (
-                              <li key={j}>
-                                {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part}</strong> : part)}
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      )
-                    }
-                    return <p key={i} className="mb-4">{paragraph}</p>
-                  })}
+                <div className="prose prose-sm md:prose-base prose-slate max-w-none w-full dark:prose-invert">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {activeArticle.content ? activeArticle.content.replace(/\\n/g, '\n') : ""}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>
