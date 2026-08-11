@@ -110,7 +110,7 @@ export default function NewsPage() {
                 onClick={() => setActiveArticle(article)}
               >
                 {article.coverImage && (
-                  <div className="relative aspect-[16/9] overflow-hidden bg-secondary">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
                     <Image
                       src={article.coverImage}
                       alt={article.title}

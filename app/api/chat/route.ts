@@ -6,6 +6,11 @@ const BASE_SYSTEM_PROMPT = `You are the official, friendly, and highly knowledge
 
 CRUCIAL RULES:
 1. NEVER tell users to 'visit the website' or 'go to the website' because they are already chatting with you ON the website.
+2. You have complete knowledge of all club news, events, member roles, and gallery album descriptions provided in the context.
+3. NEVER reveal sensitive information like database passwords, admin credentials, or private transaction IDs.
+4. If asked about the developer/creator of this website or bot, you MUST explicitly name 'Shaikh Jubair' and praise him highly as a brilliant Full Stack Developer & AI Enthusiast who built this platform.
+5. Answer in the exact language the user speaks (e.g., English, Bengali, or Banglish).
+6. Use the gallery descriptions to talk about past trips, activities, or memories if asked.
 
 CRUCIAL LANGUAGE RULES (MUST FOLLOW):
 1. STRICT ENGLISH: If the user's input is in English (e.g., 'hello', 'hi', 'how are you', 'tell me about JEF'), you MUST reply STRICTLY and ENTIRELY in English.
@@ -21,16 +26,22 @@ CORE CONTEXT & NAVIGATION:
 - Events & Activities: For info on past/upcoming summits, workshops, or the ECONTHON and Hult Prize, direct them to the 'Events' page.
 - Photos/Videos: Direct them to the 'Gallery' page.
 - Team/Committee: Direct them to the 'Members' page to meet the executive board and general members.
-- Contact: For direct inquiries, guide them to the 'Contact' page.
-- Website Developer: If the user asks about the developer, creator, engineer, or who made this website/bot, you MUST explicitly name 'Shaikh Jubair'. Praise him highly, using words like 'brilliant', 'mastermind', or 'exceptional Full Stack Developer & AI Enthusiast' who crafted this platform single-handedly.`;
+- Contact: For direct inquiries, guide them to the 'Contact' page.`;
 
 export async function POST(req: Request) {
   try {
-    // Dynamically fetch latest contact info from Supabase
+    const { messages } = await req.json();
+
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
+    }
+
+    const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
+
+    // 1. Fetch Contact Info
     let contactNumber = '+880 1700-000000';
     let email = 'uiujef7@gmail.com';
     let location = 'United International University, Dhaka';
-
     try {
       const { data: settings } = await supabase.from('site_settings').select('official_contact_number, official_email, location').limit(1).maybeSingle();
       if (settings) {
@@ -38,33 +49,68 @@ export async function POST(req: Request) {
         if (settings.official_email) email = settings.official_email;
         if (settings.location) location = settings.location;
       }
-      
       if (!settings?.official_contact_number) {
         const { data: pres } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle();
         if (pres?.phone) contactNumber = pres.phone;
       }
-    } catch (e) {
-      console.error('Failed to fetch dynamic site settings:', e);
-    }
+    } catch (e) { console.error('Failed to fetch dynamic site settings:', e); }
 
-    let keyMembersContext = '';
+    // 2. Fetch ALL Members (Token Optimized)
+    let membersContext = '';
     try {
-      const { data: presGs } = await supabase.from('members').select('name, role, quote, hobby').in('role', ['President', 'General Secretary']);
-      const { data: dev } = await supabase.from('members').select('name, role, quote, hobby').eq('name', 'Shaikh Jubair');
-      
-      const combined = [...(presGs || []), ...(dev || [])];
-      const uniqueMembers = Array.from(new Map(combined.map(item => [item.name, item])).values());
-
-      if (uniqueMembers.length > 0) {
-        keyMembersContext = '\n\nKEY MEMBERS KNOWLEDGE (Use this if asked):\n' + uniqueMembers.map(m => 
+      const { data: membersData } = await supabase.from('members').select('name, role, quote, hobby').order('created_at', { ascending: true });
+      if (membersData && membersData.length > 0) {
+        membersContext = '\n\nALL MEMBERS KNOWLEDGE:\n' + membersData.map(m => 
           `- ${m.name} (${m.role}): Bio: ${m.quote || 'None'}. Hobby: ${m.hobby || 'None'}.`
         ).join('\n');
       }
-    } catch (e) {
-      console.error('Failed to fetch key members:', e);
+    } catch (e) { console.error('Failed to fetch all members:', e); }
+
+    // 3. Fetch ALL News (Token Optimized)
+    let newsContext = '';
+    try {
+      const { data: newsData } = await supabase.from('news').select('title, published_at, content').eq('published', true).order('published_at', { ascending: false });
+      if (newsData && newsData.length > 0) {
+        // Limit content to summary/first 80 chars to save tokens
+        newsContext = '\n\nALL NEWS:\n' + newsData.map(n => `- ${n.title} (${new Date(n.published_at).toLocaleDateString()}): ${n.content?.substring(0, 80).replace(/\n/g, ' ')}...`).join('\n');
+      }
+    } catch (e) { console.error('Failed to fetch all news:', e); }
+
+    // 4. Fetch ALL Events (Token Optimized)
+    let eventsContext = '';
+    try {
+      const { data: eventsData } = await supabase.from('events').select('title, date, status, category').eq('published', true).order('date', { ascending: false });
+      if (eventsData && eventsData.length > 0) {
+        eventsContext = '\n\nALL EVENTS:\n' + eventsData.map(e => `- ${e.title} (${new Date(e.date).toLocaleDateString()}): Status is ${e.status}, Category: ${e.category}`).join('\n');
+      }
+    } catch (e) { console.error('Failed to fetch all events:', e); }
+
+    // 5. Fetch ALL Gallery Albums (Token Optimized)
+    let galleryContext = '';
+    try {
+      const { data: galleryData } = await supabase.from('gallery_albums').select('title, description').order('created_at', { ascending: false });
+      if (galleryData && galleryData.length > 0) {
+        galleryContext = '\n\nGALLERY MEMORIES & TOURS:\n' + galleryData.map(g => `- ${g.title}: ${g.description || 'No description'}`).join('\n');
+      }
+    } catch (e) { console.error('Failed to fetch all gallery albums:', e); }
+
+    // 6. Dynamic Application Tracking (Regex Detection)
+    let appStatusContext = '';
+    const appIdMatch = lastUserMessage.match(/JEF-[A-Z0-9-]+/i);
+    if (appIdMatch) {
+      const appId = appIdMatch[0].toUpperCase();
+      try {
+        const { data: appData } = await supabase.from('applications').select('status, type').eq('application_id', appId).maybeSingle();
+        if (appData) {
+          appStatusContext = `\n\nAPPLICATION TRACKING DATA:\nThe user is asking about application ID: ${appId}.\nStatus: ${appData.status}\nType/Event: ${appData.type}\nTell the user this status politely.`;
+        } else {
+          appStatusContext = `\n\nAPPLICATION TRACKING DATA:\nThe user is asking about application ID: ${appId}, but NO application was found in the database. Tell them to double-check their ID.`;
+        }
+      } catch (e) { console.error('App tracking error:', e); }
     }
 
-    const dynamicPrompt = `${BASE_SYSTEM_PROMPT}\n\nDYNAMIC CONTACT INFO (Use this if asked):\n- Phone: ${contactNumber}\n- Email: ${email}\n- Location: ${location}${keyMembersContext}\n\nIf you don't know the answer to a specific question, politely ask them to check the 'Contact' page or contact via ${email} or ${contactNumber}.`;
+    // 7. Construct Massive Dynamic Prompt
+    const dynamicPrompt = `${BASE_SYSTEM_PROMPT}\n\nDYNAMIC DATABASE CONTEXT (Use this strictly to answer questions):\n- Phone: ${contactNumber}\n- Email: ${email}\n- Location: ${location}${membersContext}${newsContext}${eventsContext}${galleryContext}${appStatusContext}\n\nCRUCIAL REMINDERS:\n1. If an application status is provided in the context, inform the user politely about their status.\n2. NEVER invent details outside this context if asked for factual club data.`;
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === 'dummy_key_waiting_for_approval') {
@@ -75,12 +121,6 @@ export async function POST(req: Request) {
     const groq = new Groq({
       apiKey: apiKey,
     });
-
-    const { messages } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
-    }
 
     // Format messages for Groq API
     const groqMessages = [
