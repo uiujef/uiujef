@@ -86,7 +86,9 @@ export function AIChatbot() {
               </div>
               <div>
                 <h3 className="font-bold text-white text-sm">UIUJEF Assistant</h3>
-                <p className="text-white/80 text-xs">Powered by AI</p>
+                <p className="text-white/80 text-xs">
+                  Created by <a href="https://shaikhjubair.me" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white transition-colors font-medium">Jubair</a>
+                </p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white transition-colors">
