@@ -625,8 +625,8 @@ export function EventsManager() {
                   )}
                 </div>
               </div>
-
-              <div className="mt-10 pt-6 flex justify-end gap-3 border-t border-border sticky bottom-0 bg-white">
+            </div>
+              <div className="p-6 sm:px-8 border-t border-border bg-white flex justify-end gap-3 shrink-0">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
