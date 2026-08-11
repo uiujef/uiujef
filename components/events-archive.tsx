@@ -406,7 +406,7 @@ export default function EventsArchive() {
             className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm"
             onClick={() => setDetailsEvent(null)}
           />
-          <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative w-full max-w-4xl max-h-[90vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">
             {/* Sticky Close Button in Fixed Container */}
             <button
               onClick={() => setDetailsEvent(null)}
@@ -417,13 +417,13 @@ export default function EventsArchive() {
             </button>
             
             {/* Scrollable Content */}
-            <div className="max-h-[75vh] overflow-y-auto overscroll-contain flex flex-col w-full">
+            <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col w-full">
               {detailsEvent.image && (
-                <div className="relative w-full shrink-0 bg-slate-50 mb-6">
+                <div className="relative w-full shrink-0 bg-slate-50 border-b border-slate-100 mb-6 flex justify-center items-center bg-navy-deep/5">
                   <img
                     src={detailsEvent.image}
                     alt={detailsEvent.title}
-                    className="w-full h-auto object-contain"
+                    className="w-full max-h-[45vh] object-contain"
                   />
                 </div>
               )}
