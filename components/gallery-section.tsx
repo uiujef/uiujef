@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Camera, Image as ImageIcon, Loader2, ChevronRight, ArrowLeft, X, ChevronLeft, ChevronRight as ChevronRightIcon, Images } from 'lucide-react'
+import { Camera, Image as ImageIcon, Loader2, ChevronRight, ArrowLeft, X, ChevronLeft, ChevronRight as ChevronRightIcon, Images, CalendarDays } from 'lucide-react'
 import { org } from '@/lib/site-data'
 import { supabase } from '@/lib/supabase'
 import { MediaBackground } from '@/components/media-background'
@@ -288,25 +288,23 @@ export function GallerySection() {
                       <img src={album.cover_image} alt={album.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
                       <div className="absolute inset-0 p-6 flex flex-col justify-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                        <h3 className="text-2xl font-bold text-white leading-tight mb-2">{album.title}</h3>
-                        {album.event_date && (
+                        <h3 className="text-2xl font-bold text-white leading-tight mb-2">{album?.title || 'Untitled Album'}</h3>
+                        {album?.event_date && (
                           <p className="text-white/90 text-sm font-semibold flex items-center gap-2 mb-1">
                             {new Date(album.event_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                           </p>
                         )}
-                        {album.description && (
-                          <div className="flex flex-col">
-                            <p className="text-white/70 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed mb-3">
-                              {album.description}
-                            </p>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setDetailsAlbum(album); }}
-                              className="text-[#F26522] text-xs font-bold uppercase tracking-wider hover:text-white transition-colors self-start"
-                            >
-                              Learn More →
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex flex-col">
+                          <p className="text-white/70 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed mb-3">
+                            {album?.description || 'No description available'}
+                          </p>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setDetailsAlbum(album); }}
+                            className="text-[#F26522] text-xs font-bold uppercase tracking-wider hover:text-white transition-colors self-start"
+                          >
+                            Learn More →
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -422,20 +420,30 @@ export function GallerySection() {
           <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">
             <button
               onClick={() => setDetailsAlbum(null)}
-              className="absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-black/10 hover:text-navy"
+              className="absolute right-3 top-3 z-50 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-orange-50 hover:text-orange-500"
             >
               ✕
             </button>
-            <div className="overflow-y-auto overscroll-contain flex flex-col p-6 sm:p-8">
-              <h2 className="font-serif text-3xl font-bold text-navy pr-10 mb-2">{detailsAlbum.title}</h2>
-              {detailsAlbum.event_date && (
+            <div className="max-h-[75vh] overflow-y-auto overscroll-contain flex flex-col w-full">
+              {detailsAlbum?.cover_image && (
+                <div className="relative w-full shrink-0 bg-slate-50 mb-6">
+                  <img
+                    src={detailsAlbum.cover_image}
+                    alt={detailsAlbum.title}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex flex-col p-6 sm:p-8 pt-0 sm:pt-0">
+                <h2 className="font-serif text-3xl font-bold text-navy pr-10 mb-2">{detailsAlbum?.title || 'Untitled Album'}</h2>
+              {detailsAlbum?.event_date && (
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1 text-xs font-semibold text-navy/70 mb-6">
                   <CalendarDays className="size-3.5" />
                   {new Date(detailsAlbum.event_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                 </span>
               )}
               <div className="prose max-w-none prose-navy text-navy/80">
-                <p className="whitespace-pre-wrap leading-relaxed">{detailsAlbum.description}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">{detailsAlbum?.description || 'No description available.'}</p>
               </div>
               <div className="mt-8 flex justify-end">
                 <button
@@ -448,6 +456,7 @@ export function GallerySection() {
                   <ImageIcon className="size-4" />
                   View Photos
                 </button>
+              </div>
               </div>
             </div>
           </div>

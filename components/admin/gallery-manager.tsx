@@ -513,6 +513,7 @@ export function GalleryManager() {
         isOpen={isConfirmOpen}
         title={`Delete ${itemToDelete?.type}`}
         message={`Are you sure you want to delete this ${itemToDelete?.type}? This action cannot be undone.`}
+        requireText="delete"
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

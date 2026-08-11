@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface ConfirmModalProps {
   onConfirm: () => void
   onCancel: () => void
   isDestructive?: boolean
+  requireText?: string
 }
 
 export function ConfirmModal({
@@ -22,8 +24,19 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
   isDestructive = true,
+  requireText,
 }: ConfirmModalProps) {
+  const [inputValue, setInputValue] = useState('')
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputValue('')
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
+
+  const isConfirmDisabled = requireText ? inputValue.toLowerCase() !== requireText.toLowerCase() : false
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -46,15 +59,31 @@ export function ConfirmModal({
           <p className="text-sm leading-relaxed text-slate-400">{message}</p>
         </div>
         
+        {requireText && (
+          <div className="px-6 pb-2">
+            <label className="block text-sm text-slate-400 mb-2 font-medium">
+              Type <span className="text-white font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 select-none">"{requireText}"</span> to confirm.
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] transition-colors placeholder-slate-600"
+              placeholder={`Type "${requireText}"`}
+            />
+          </div>
+        )}
+        
         <div className="flex flex-col gap-3 p-6 pt-0">
           <button
+            disabled={isConfirmDisabled}
             onClick={() => {
               onConfirm()
             }}
-            className={`w-full rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+            className={`w-full rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
               isDestructive 
-                ? 'bg-transparent border border-red-900/60 text-red-500 hover:bg-red-950/40 hover:border-red-800 hover:text-red-400' 
-                : 'bg-[#F26522] text-white hover:bg-[#F26522]/90 border border-[#F26522]/50'
+                ? 'bg-transparent border border-red-900/60 text-red-500 hover:not-disabled:bg-red-950/40 hover:not-disabled:border-red-800 hover:not-disabled:text-red-400' 
+                : 'bg-[#F26522] text-white hover:not-disabled:bg-[#F26522]/90 border border-[#F26522]/50'
             }`}
           >
             {confirmText}

@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { Save, Loader2, Phone, CalendarClock, RefreshCw, MonitorPlay, X, Wallet } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 export function SettingsManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [settingsId, setSettingsId] = useState<string | null>(null)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
   // Settings State
   const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false)
@@ -77,8 +79,8 @@ export function SettingsManager() {
     loadSettings()
   }, [])
 
-  const handleSave = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
+  const handleSave = async () => {
+    setIsConfirmOpen(false)
     setIsSaving(true)
 
     try {
@@ -183,7 +185,7 @@ export function SettingsManager() {
         <p className="text-muted-foreground mt-1">Configure global platform configurations like recruitments and contacts.</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={(e) => { e.preventDefault(); setIsConfirmOpen(true); }} className="space-y-8">
         
         {/* Recruitment Timer Settings */}
         <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
@@ -463,6 +465,17 @@ export function SettingsManager() {
           </button>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Save Settings"
+        message="Are you sure you want to save these global configurations? Changes will take effect immediately across the website."
+        confirmText="Save Changes"
+        requireText="save"
+        isDestructive={false}
+        onConfirm={handleSave}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   )
 }

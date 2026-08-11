@@ -157,22 +157,20 @@ export default function NewsPage() {
             {/* Sticky Close Button in Fixed Container */}
             <button
               onClick={() => setActiveArticle(null)}
-              className="absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-black/10 hover:text-navy"
+              className="absolute right-3 top-3 z-50 flex size-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-navy shadow-sm transition-colors hover:bg-orange-50 hover:text-orange-500"
               aria-label="Close article"
             >
               ✕
             </button>
             
             {/* Scrollable Content */}
-            <div className="overflow-y-auto overscroll-contain flex flex-col">
+            <div className="max-h-[75vh] overflow-y-auto overscroll-contain flex flex-col w-full">
               {activeArticle.coverImage && (
-                <div className="relative w-full h-48 sm:h-64 shrink-0">
-                  <Image
+                <div className="relative w-full shrink-0 bg-slate-50 mb-6">
+                  <img
                     src={activeArticle.coverImage}
                     alt={activeArticle.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 768px"
+                    className="w-full h-auto object-contain"
                   />
                 </div>
               )}

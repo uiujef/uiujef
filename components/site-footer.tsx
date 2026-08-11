@@ -22,6 +22,61 @@ const socialIcons = {
   instagram: InstagramIcon,
 }
 
+function SponsorLogo({ sponsor }: { sponsor: Sponsor }) {
+  const [imgError, setImgError] = useState(false)
+  
+  const hasLogoUrl = sponsor.logo_url && sponsor.logo_url.trim() !== ''
+  const hasWebsiteUrl = sponsor.website_url && sponsor.website_url.trim() !== ''
+  
+  let imgSrc = ''
+  if (!imgError && hasLogoUrl) {
+    imgSrc = sponsor.logo_url
+  } else if (!imgError && hasWebsiteUrl) {
+    try {
+      const url = new URL(sponsor.website_url!)
+      imgSrc = `https://s2.googleusercontent.com/s2/favicons?domain=${url.hostname}&sz=128`
+    } catch {
+      imgSrc = `https://s2.googleusercontent.com/s2/favicons?domain=${sponsor.website_url}&sz=128`
+    }
+  }
+
+  const imageClass = "h-12 md:h-16 w-auto object-contain brightness-0 invert opacity-70 group-hover:opacity-100 transition-opacity"
+
+  const renderContent = () => {
+    if (imgSrc && !imgError) {
+      return (
+        <img 
+          src={imgSrc} 
+          alt={sponsor.name} 
+          className={imageClass}
+          onError={() => setImgError(true)} 
+        />
+      )
+    }
+    return (
+      <div className="h-12 md:h-16 flex items-center justify-center">
+        <span className="text-xl md:text-2xl font-serif font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          {sponsor.name}
+        </span>
+      </div>
+    )
+  }
+
+  if (hasWebsiteUrl) {
+    return (
+      <a href={sponsor.website_url} target="_blank" rel="noopener noreferrer" className="block transition-transform duration-300 hover:scale-105">
+        {renderContent()}
+      </a>
+    )
+  }
+
+  return (
+    <div className="block">
+      {renderContent()}
+    </div>
+  )
+}
+
 export function SiteFooter() {
   const pathname = usePathname()
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
@@ -90,13 +145,7 @@ export function SiteFooter() {
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
               {sponsors.map((sponsor) => (
                 <div key={sponsor.id} className="relative group">
-                  {sponsor.website_url ? (
-                    <a href={sponsor.website_url} target="_blank" rel="noopener noreferrer" className="block transition-transform duration-300 hover:scale-105">
-                      <img src={sponsor.logo_url} alt={sponsor.name} className="h-12 md:h-16 w-auto object-contain brightness-0 invert opacity-70 group-hover:opacity-100 transition-opacity" />
-                    </a>
-                  ) : (
-                    <img src={sponsor.logo_url} alt={sponsor.name} className="h-12 md:h-16 w-auto object-contain brightness-0 invert opacity-70" />
-                  )}
+                  <SponsorLogo sponsor={sponsor} />
                 </div>
               ))}
             </div>

@@ -458,6 +458,7 @@ export function ApplicationsManager() {
         isOpen={isConfirmOpen}
         title="Delete Application"
         message="Are you sure you want to delete this application permanently? This action cannot be undone."
+        requireText="delete"
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

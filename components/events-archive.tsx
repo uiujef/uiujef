@@ -358,7 +358,7 @@ export default function EventsArchive() {
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-3xl bg-navy-deep shadow-2xl">
             <button
               onClick={() => setRegisterEvent(null)}
-              className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+              className="absolute right-3 top-3 z-50 flex size-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-orange-50 hover:text-orange-500"
               aria-label="Close registration form"
             >
               ✕
@@ -410,15 +410,25 @@ export default function EventsArchive() {
             {/* Sticky Close Button in Fixed Container */}
             <button
               onClick={() => setDetailsEvent(null)}
-              className="absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-black/10 hover:text-navy"
+              className="absolute right-3 top-3 z-50 flex size-9 items-center justify-center rounded-full bg-black/5 text-navy/60 transition-colors hover:bg-orange-50 hover:text-orange-500"
               aria-label="Close details"
             >
               ✕
             </button>
             
             {/* Scrollable Content */}
-            <div className="overflow-y-auto overscroll-contain flex flex-col p-6 sm:p-8">
-              <h2 className="font-serif text-3xl font-bold text-navy pr-10">{detailsEvent.title}</h2>
+            <div className="max-h-[75vh] overflow-y-auto overscroll-contain flex flex-col w-full">
+              {detailsEvent.image && (
+                <div className="relative w-full shrink-0 bg-slate-50 mb-6">
+                  <img
+                    src={detailsEvent.image}
+                    alt={detailsEvent.title}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex flex-col p-6 sm:p-8 pt-0 sm:pt-0">
+                <h2 className="font-serif text-3xl font-bold text-navy pr-10">{detailsEvent.title}</h2>
               <div className="mt-2 mb-8 flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1 text-xs font-semibold text-navy/70">
                   <CalendarDays className="size-3.5" />
@@ -535,6 +545,7 @@ export default function EventsArchive() {
                   </button>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
