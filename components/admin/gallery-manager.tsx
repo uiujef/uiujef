@@ -5,7 +5,6 @@ import { Plus, Trash2, Edit2, Loader2, Image as ImageIcon, Folder, FolderOpen, C
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
-import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 
 type GalleryCategory = {
   id: string
@@ -57,6 +56,7 @@ export function GalleryManager() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
   const [externalImageUrl, setExternalImageUrl] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   useEffect(() => {
     loadData()
@@ -93,6 +93,7 @@ export function GalleryManager() {
     setEditingItem(item || null)
     setImageInputType('upload')
     setExternalImageUrl('')
+    setSelectedFiles([])
     
     if (item) {
       setTitle(item.title || item.name || item.caption || '')
@@ -113,15 +114,29 @@ export function GalleryManager() {
     }
   }
 
+  const uploadToCloudinary = async (file: File, folder: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'uiujef_preset')
+    formData.append('folder', folder)
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'k6fxncwo'
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+    
+    if (!res.ok) throw new Error('Failed to upload image')
+    const data = await res.json()
+    return data.secure_url
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (isUploading) {
-      toast.error('Please wait for the image to finish uploading.')
-      return
-    }
-
     setIsSaving(true)
+    setIsUploading(true)
+    
     try {
       if (modalType === 'category') {
         const payload = { name: title }
@@ -139,8 +154,14 @@ export function GalleryManager() {
       } 
       else if (modalType === 'album') {
         if (!currentCategory) throw new Error('No category selected')
+        
         let finalImage = coverImage
-        if (imageInputType === 'url' && externalImageUrl) finalImage = externalImageUrl
+        if (imageInputType === 'url' && externalImageUrl) {
+          finalImage = externalImageUrl
+        } else if (imageInputType === 'upload' && selectedFiles.length > 0) {
+          finalImage = await uploadToCloudinary(selectedFiles[0], '/uiujef/gallery/covers')
+        }
+        
         if (!finalImage) throw new Error('Cover image is required')
 
         const payload = { category_id: currentCategory.id, title, event_date: albumDate || null, description: description || null, cover_image: finalImage }
@@ -158,8 +179,17 @@ export function GalleryManager() {
       }
       else if (modalType === 'image') {
         if (!currentAlbum) throw new Error('No album selected')
+        
         let urlsToSave = imageUrls
-        if (imageInputType === 'url' && externalImageUrl) urlsToSave = [externalImageUrl]
+        if (imageInputType === 'url' && externalImageUrl) {
+          urlsToSave = [externalImageUrl]
+        } else if (imageInputType === 'upload' && selectedFiles.length > 0) {
+          const folder = `/uiujef/gallery/albums/${currentAlbum.id}`
+          const uploadPromises = selectedFiles.map(file => uploadToCloudinary(file, folder))
+          const newUrls = await Promise.all(uploadPromises)
+          urlsToSave = editingItem ? [newUrls[0]] : newUrls
+        }
+        
         if (urlsToSave.length === 0) throw new Error('Image is required')
 
         if (editingItem) {
@@ -182,6 +212,7 @@ export function GalleryManager() {
       toast.error('Error: ' + err.message)
     } finally {
       setIsSaving(false)
+      setIsUploading(false)
     }
   }
 
@@ -391,65 +422,86 @@ export function GalleryManager() {
                   </div>
 
                   {imageInputType === 'upload' ? (
-                    <div className="w-full">
-                      <CloudinaryUploader 
-                        multiple={modalType === 'image'}
-                        resourceType={modalType === 'image' ? 'auto' : 'image'}
-                        onUploadSuccess={(url) => { 
-                          if (modalType === 'album') {
-                            setCoverImage(url);
-                            setIsUploading(false);
-                          } else {
-                            setImageUrls(prev => [...prev, url]);
-                            // Don't set isUploading to false here for multiple, rely on onClose or let user press Save
-                          }
-                        }}
-                        onUploadStart={() => setIsUploading(true)}
-                        onUploadError={() => setIsUploading(false)}
-                        onUploadClose={() => setIsUploading(false)}
-                        folder={modalType === 'album' ? "/uiujef/gallery/covers" : `/uiujef/gallery/albums/${currentAlbum?.id || 'unknown'}`}
-                        className="w-full"
-                      />
+                    <div className="w-full space-y-4">
+                      <div className="relative border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-secondary/50 transition-colors">
+                        <input
+                          type="file"
+                          multiple={modalType === 'image'}
+                          accept={modalType === 'image' ? "image/*,video/*" : "image/*"}
+                          onChange={(e) => {
+                            if (e.target.files) {
+                              const files = Array.from(e.target.files)
+                              if (modalType === 'album') {
+                                setSelectedFiles(files.slice(0, 1))
+                              } else {
+                                setSelectedFiles((prev) => [...prev, ...files])
+                              }
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                          <Plus className="size-8 text-muted-foreground" />
+                          <p className="text-sm font-semibold text-navy">Click or drag {modalType === 'image' ? 'files' : 'a file'} here to upload</p>
+                        </div>
+                      </div>
+
+                      {/* Local Preview Grid */}
+                      {selectedFiles.length > 0 && (
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                          {selectedFiles.map((file, i) => (
+                            <div key={i} className="group aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                              {file.type.startsWith('video/') ? (
+                                <video src={URL.createObjectURL(file)} className="object-cover w-full h-full" />
+                              ) : (
+                                <img src={URL.createObjectURL(file)} alt="Preview" className="object-cover w-full h-full" />
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFiles(files => files.filter((_, index) => index !== i))}
+                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                              >
+                                <Trash2 className="size-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Existing Edited Preview */}
+                      {selectedFiles.length === 0 && editingItem && (
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                          {modalType === 'album' && coverImage && (
+                            <div className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                              <img src={coverImage} alt="Preview" className="object-cover w-full h-full" />
+                            </div>
+                          )}
+                          {modalType === 'image' && imageUrls.map((url, i) => (
+                            <div key={i} className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                              {url.includes('video') ? (
+                                <video src={url} className="object-cover w-full h-full" />
+                              ) : (
+                                <img src={url} alt="Preview" className="object-cover w-full h-full" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
-                  )}
-
-                  {/* Real-time Preview */}
-                  {(imageInputType === 'upload') && (
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {modalType === 'album' && coverImage && (
-                        <div className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                          <img src={coverImage} alt="Preview" className="object-cover w-full h-full" />
-                        </div>
-                      )}
-                      {modalType === 'image' && imageUrls.map((url, i) => (
-                        <div key={i} className="aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                          {url.includes('video') ? (
-                            <video src={url} className="object-cover w-full h-full" />
-                          ) : (
-                            <img src={url} alt="Preview" className="object-cover w-full h-full" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {(imageInputType === 'url' && externalImageUrl) && (
-                    <div className="mt-4 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
-                      <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
-                    </div>
                   )}
                 </div>
               )}
               </div>
 
               <div className="p-4 sm:px-8 sm:py-5 bg-white/95 flex justify-end gap-3 border-t border-border shrink-0 sticky bottom-0 z-10">
-                <button type="button" disabled={isUploading} onClick={() => setModalType(null)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50">
+                <button type="button" disabled={isUploading || isSaving} onClick={() => setModalType(null)} className="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50">
                   Cancel
                 </button>
                 <button type="submit" disabled={isUploading || isSaving} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
                   {(isUploading || isSaving) && <Loader2 className="size-5 animate-spin" />}
-                  {isUploading ? 'Waiting for upload...' : isSaving ? 'Saving...' : 'Save'}
+                  {(isUploading || isSaving) ? 'Uploading & Saving...' : 'Upload & Save'}
                 </button>
               </div>
             </form>
