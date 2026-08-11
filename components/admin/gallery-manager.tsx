@@ -381,16 +381,16 @@ export function GalleryManager() {
       {modalType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => !isUploading && setModalType(null)} />
-          <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+          <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-border flex items-center justify-between bg-transparent shrink-0">
               <h3 className="text-2xl font-bold text-navy tracking-tight">
                 {editingItem ? 'Edit' : 'Create'} {modalType === 'category' ? 'Category' : modalType === 'album' ? 'Album' : 'Image'}
               </h3>
-              <button disabled={isUploading} onClick={() => setModalType(null)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors disabled:opacity-50">✕</button>
+              <button type="button" disabled={isUploading} onClick={() => setModalType(null)} className="size-10 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground transition-colors disabled:opacity-50">✕</button>
             </div>
             
-            <form onSubmit={handleSave} className="flex flex-col overflow-hidden">
-              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto max-h-[65vh]">
+            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
               
               {/* Common Title Field */}
               <div className="space-y-2">
