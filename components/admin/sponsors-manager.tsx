@@ -224,7 +224,7 @@ export function SponsorsManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Logo Image *</label>
+                <label className="text-xs font-bold uppercase text-muted-foreground">Logo Image {websiteUrl ? '(Optional)' : '*'}</label>
                 <input 
                   type="file" 
                   accept="image/*"
@@ -244,7 +244,7 @@ export function SponsorsManager() {
 
             <div className="p-6 border-t border-border bg-secondary/30 flex justify-end gap-3 mt-auto">
               <button type="button" onClick={resetForm} className="px-6 py-3 rounded-xl font-bold text-navy hover:bg-black/5 transition-colors">Cancel</button>
-              <button onClick={handleSave} disabled={isSaving || (!logoUrl && !logoFile)} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#F26522]/90 transition-all shadow-lg shadow-[#F26522]/20 disabled:opacity-50">
+              <button type="submit" onClick={handleSave} disabled={isSaving || (!logoUrl && !logoFile && !websiteUrl)} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#F26522]/90 transition-all shadow-lg shadow-[#F26522]/20 disabled:opacity-50">
                 {isSaving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
                 {isSaving ? 'Saving...' : 'Save Sponsor'}
               </button>
