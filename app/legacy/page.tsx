@@ -11,13 +11,32 @@ import Image from 'next/image'
 import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { Quote } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Our Legacy - The Makers of UIUJEF Digital',
   description: 'Honoring the foundational creators of the UIUJEF digital platform.',
 }
 
-export default function LegacyPage() {
+export default async function LegacyPage() {
+  let mustafizurTitle = "Ex-President & Founding Leader"
+
+  try {
+    // NOTE TO DEVELOPER: Update the table name ('members') and column names if your actual schema differs.
+    const { data } = await supabase
+      .from('members')
+      .select('name')
+      .eq('role', 'President')
+      .single()
+
+    if (data?.name?.trim().toLowerCase() === 'mustafizur rahman') {
+      mustafizurTitle = "President"
+    }
+  } catch (error) {
+    // Fail-safe: silently fallback to Ex-President if DB fetch fails or schema changes
+    console.error("Legacy Page: Failed to fetch current president", error)
+  }
+
   return (
     <div className="relative bg-slate-50 min-h-screen selection:bg-[#F26522] selection:text-white">
       <SiteNav />
@@ -56,7 +75,7 @@ export default function LegacyPage() {
             <div className="w-full lg:w-7/12 flex flex-col justify-center relative">
               <Quote className="absolute -top-10 -left-6 size-24 text-gold/10 -z-10 rotate-180" />
               <span className="text-gold font-bold tracking-widest uppercase text-sm mb-4 block">
-                President (Founding Era of the Digital Platform)
+                {mustafizurTitle}
               </span>
               <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy mb-8">
                 Mustafizur Rahman
