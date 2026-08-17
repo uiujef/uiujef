@@ -45,6 +45,10 @@ export function SiteNav() {
           {link.label}
         </Link>
       ))}
+      {/* HARDCODED LEGACY PAGE LINK */}
+      <Link href="/legacy" className={getLinkClass(pathname === '/legacy')} onClick={onNavigate}>
+        Legacy
+      </Link>
     </>
   )
 
