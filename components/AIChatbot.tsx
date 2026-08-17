@@ -52,11 +52,13 @@ export function AIChatbot() {
       if (response.ok && data.message) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
       } else {
-        throw new Error(data.error || 'Failed to get response')
+        // Use data.details if available (where our API route stores the actual Groq error), fallback to data.error
+        throw new Error(data.details || data.error || `HTTP ${response.status}: Failed to get response`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error)
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I am having trouble connecting right now. Please try again later.' }])
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setMessages(prev => [...prev, { role: 'assistant', content: `API Error: ${errorMessage}` }])
     } finally {
       setIsLoading(false)
     }
