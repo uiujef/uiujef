@@ -22,14 +22,14 @@ export default async function LegacyPage() {
   let mustafizurTitle = "Ex-President & Founding Leader"
 
   try {
-    // NOTE TO DEVELOPER: Update the table name ('members') and column names if your actual schema differs.
+    // NOTE TO DEVELOPER: Update the table name ('members') and column names (e.g. 'email', 'role') if your actual schema differs.
     const { data } = await supabase
       .from('members')
-      .select('name')
+      .select('email')
       .eq('role', 'President')
       .single()
 
-    if (data?.name?.trim().toLowerCase() === 'mustafizur rahman') {
+    if (data?.email?.trim().toLowerCase() === 'mrahman212001@bseco.uiu.ac.bd') {
       mustafizurTitle = "President"
     }
   } catch (error) {
@@ -88,7 +88,7 @@ export default async function LegacyPage() {
                   Beyond leadership, he carried the immense burden of managing the strategic shift. From personally handling the struggle to purchase the domain name to bypassing bureaucratic challenges, he laid the absolute foundation for this platform. 
                 </p>
                 <p>
-                  His support for the development was tireless—he was always available, even answering crisis calls at 4:00 AM to ensure the project kept moving forward. Without his unwavering belief and relentless push, this digital home simply would not exist.
+                  His support for the development team was tireless—providing critical guidance, resolving organizational roadblocks, and dedicating countless late-night hours to ensure the project never lost momentum. Without his unwavering belief and relentless push, this digital home simply would not exist.
                 </p>
               </div>
             </div>
