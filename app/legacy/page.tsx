@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: 'Honoring the foundational creators of the UIUJEF digital platform.',
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function LegacyPage() {
   let mustafizurTitle = "Ex-President & Founding Leader"
 
