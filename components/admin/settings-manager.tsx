@@ -173,7 +173,7 @@ export function SettingsManager() {
     return (
       <div className="py-24 text-center">
         <Loader2 className="size-10 animate-spin mx-auto text-[#F26522] mb-4" />
-        <p className="text-lg font-semibold text-navy">Loading configurations...</p>
+        <p className="text-lg font-semibold text-slate-800">Loading configurations...</p>
       </div>
     )
   }
@@ -181,21 +181,21 @@ export function SettingsManager() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl">
       <div>
-        <h2 className="text-3xl font-bold text-navy tracking-tight">Site Settings</h2>
-        <p className="text-muted-foreground mt-1">Configure global platform configurations like recruitments and contacts.</p>
+        <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Site Settings</h2>
+        <p className="text-slate-500 mt-1">Configure global platform configurations like recruitments and contacts.</p>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); setIsConfirmOpen(true); }} className="space-y-8">
         
         {/* Recruitment Timer Settings */}
-        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 text-blue-600 rounded-xl">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
+          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 text-blue-600 rounded-2xl">
               <CalendarClock className="size-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-navy">Member Recruitment Timer</h3>
-              <p className="text-sm text-muted-foreground">Control when people can apply to join the club.</p>
+              <h3 className="text-xl font-bold text-slate-800">Member Recruitment Timer</h3>
+              <p className="text-sm text-slate-500">Control when people can apply to join the club.</p>
             </div>
           </div>
           
@@ -203,74 +203,74 @@ export function SettingsManager() {
             <label className="flex items-start gap-4 cursor-pointer group">
               <div className="relative flex items-center mt-1">
                 <input type="checkbox" checked={isRecruitmentOpen} onChange={e => setIsRecruitmentOpen(e.target.checked)} className="peer sr-only" />
-                <div className="w-14 h-7 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                <div className="w-14 h-7 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/60 backdrop-blur-xl after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
               </div>
               <div>
-                <span className="text-lg font-bold text-navy group-hover:text-green-600 transition-colors">Recruitment is Open</span>
-                <p className="text-sm text-muted-foreground mt-1">When turned on, the recruitment form will be accessible to visitors. When off, the form is hidden or disabled.</p>
+                <span className="text-lg font-bold text-slate-800 group-hover:text-green-600 transition-colors">Recruitment is Open</span>
+                <p className="text-sm text-slate-500 mt-1">When turned on, the recruitment form will be accessible to visitors. When off, the form is hidden or disabled.</p>
               </div>
             </label>
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 transition-opacity duration-300 ${isRecruitmentOpen ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Start Date & Time</label>
-                <input type="datetime-local" value={recruitmentStart} onChange={e => setRecruitmentStart(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-secondary" />
+                <label className="text-xs font-bold uppercase text-slate-500">Start Date & Time</label>
+                <input type="datetime-local" value={recruitmentStart} onChange={e => setRecruitmentStart(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">End Date & Time</label>
-                <input type="datetime-local" value={recruitmentEnd} onChange={e => setRecruitmentEnd(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-secondary" />
+                <label className="text-xs font-bold uppercase text-slate-500">End Date & Time</label>
+                <input type="datetime-local" value={recruitmentEnd} onChange={e => setRecruitmentEnd(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Membership Fee (BDT)</label>
-                <input type="number" min="0" value={membershipFee} onChange={e => setMembershipFee(Number(e.target.value))} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-secondary" />
+                <label className="text-xs font-bold uppercase text-slate-500">Membership Fee (BDT)</label>
+                <input type="number" min="0" value={membershipFee} onChange={e => setMembershipFee(Number(e.target.value))} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Global Contact Info */}
-        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
-            <div className="p-2 bg-orange-500/10 text-orange-600 rounded-xl">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
+          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+            <div className="p-2 bg-orange-500/10 text-orange-600 rounded-2xl">
               <Phone className="size-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-navy">Official Contact Information</h3>
-              <p className="text-sm text-muted-foreground">The primary phone number shown on the website footer and contact pages.</p>
+              <h3 className="text-xl font-bold text-slate-800">Official Contact Information</h3>
+              <p className="text-sm text-slate-500">The primary phone number shown on the website footer and contact pages.</p>
             </div>
           </div>
 
           <div className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-muted-foreground">Official Contact Number</label>
+              <label className="text-xs font-bold uppercase text-slate-500">Official Contact Number</label>
               <div className="flex flex-col sm:flex-row gap-4">
-                <input type="tel" value={officialContact} onChange={e => setOfficialContact(e.target.value)} placeholder="+880 1..." className="flex-1 px-4 py-3 rounded-xl border border-border focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
-                <button type="button" onClick={syncPresidentNumber} disabled={isSyncing} className="flex items-center justify-center gap-2 bg-secondary text-navy px-6 py-3 rounded-xl font-bold hover:bg-secondary/70 transition-colors disabled:opacity-50">
+                <input type="tel" value={officialContact} onChange={e => setOfficialContact(e.target.value)} placeholder="+880 1..." className="flex-1 px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <button type="button" onClick={syncPresidentNumber} disabled={isSyncing} className="flex items-center justify-center gap-2 bg-white/40 text-slate-800 px-6 py-3 rounded-2xl font-bold hover:bg-white/70 transition-colors disabled:opacity-50">
                   <RefreshCw className={`size-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   Sync with President
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">This number is public. Clicking sync will find the current President in the member directory and copy their number.</p>
+              <p className="text-xs text-slate-500">This number is public. Clicking sync will find the current President in the member directory and copy their number.</p>
             </div>
           </div>
         </div>
 
         {/* Payment Methods */}
-        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-secondary/30 flex items-center justify-between">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
+          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 text-green-600 rounded-xl">
+              <div className="p-2 bg-green-500/10 text-green-600 rounded-2xl">
                 <Wallet className="size-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-navy">Payment Methods</h3>
-                <p className="text-sm text-muted-foreground">Manage numbers for bKash, Nagad, etc.</p>
+                <h3 className="text-xl font-bold text-slate-800">Payment Methods</h3>
+                <p className="text-sm text-slate-500">Manage numbers for bKash, Nagad, etc.</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setPaymentMethods([...paymentMethods, { method: 'bKash', account_number: '' }])}
-              className="bg-[#F26522]/10 text-[#F26522] px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#F26522]/20 transition-colors"
+              className="bg-[#F26522]/10 text-[#F26522] px-4 py-2 rounded-2xl text-sm font-bold hover:bg-[#F26522]/20 transition-colors"
             >
               + Add Number
             </button>
@@ -278,10 +278,10 @@ export function SettingsManager() {
           
           <div className="p-8 space-y-4">
             {paymentMethods.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">No payment methods configured.</p>
+              <p className="text-sm text-slate-500 italic">No payment methods configured.</p>
             ) : (
               paymentMethods.map((pm, idx) => (
-                <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-secondary/30 p-4 rounded-xl border border-border">
+                <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-white/30 p-4 rounded-2xl border border-white/60">
                   <div className="w-full sm:w-1/3">
                     <select
                       value={pm.method}
@@ -290,7 +290,7 @@ export function SettingsManager() {
                         newMethods[idx].method = e.target.value;
                         setPaymentMethods(newMethods);
                       }}
-                      className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                      className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none"
                     >
                       <option value="bKash">bKash</option>
                       <option value="Nagad">Nagad</option>
@@ -309,7 +309,7 @@ export function SettingsManager() {
                           newMethods[idx].bank_name = e.target.value;
                           setPaymentMethods(newMethods);
                         }}
-                        className="w-full sm:w-1/2 px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none"
+                        className="w-full sm:w-1/2 px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none"
                       />
                     )}
                     <input
@@ -321,13 +321,13 @@ export function SettingsManager() {
                         newMethods[idx].account_number = e.target.value;
                         setPaymentMethods(newMethods);
                       }}
-                      className={`w-full ${pm.method === 'Bank' ? 'sm:w-1/2' : 'flex-1'} px-4 py-3 rounded-xl border border-border focus:border-[#F26522] outline-none`}
+                      className={`w-full ${pm.method === 'Bank' ? 'sm:w-1/2' : 'flex-1'} px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none`}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setPaymentMethods(paymentMethods.filter((_, i) => i !== idx))}
-                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
                   >
                     <X className="size-5" />
                   </button>
@@ -338,14 +338,14 @@ export function SettingsManager() {
         </div>
 
         {/* Global Background Media */}
-        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 text-purple-600 rounded-xl">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
+          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+            <div className="p-2 bg-purple-500/10 text-purple-600 rounded-2xl">
               <MonitorPlay className="size-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-navy">Page Background Media</h3>
-              <p className="text-sm text-muted-foreground">Upload images or videos (mp4/webm) for the headers of different pages.</p>
+              <h3 className="text-xl font-bold text-slate-800">Page Background Media</h3>
+              <p className="text-sm text-slate-500">Upload images or videos (mp4/webm) for the headers of different pages.</p>
             </div>
           </div>
 
@@ -359,15 +359,15 @@ export function SettingsManager() {
                 { label: 'Members Page Header', key: 'members', prefix: 'bg_members', state: bgMembers, setBg: setBgMembers },
                 { label: 'About Page Header', key: 'about', prefix: 'bg_about_header', state: bgAboutHeader, setBg: setBgAboutHeader },
               ].map(item => (
-                <div key={item.key} className="space-y-2 border border-border rounded-xl p-4 bg-secondary/20 relative">
-                  <label className="text-xs font-bold uppercase text-navy">{item.label}</label>
+                <div key={item.key} className="space-y-2 border border-white/60 rounded-2xl p-4 bg-white/20 relative">
+                  <label className="text-xs font-bold uppercase text-slate-800">{item.label}</label>
                   
                   {uploadingMedia[item.key] ? (
                     <div className="text-xs text-blue-500 font-semibold break-words flex items-center gap-2"><Loader2 className="size-3 animate-spin" /> Uploading...</div>
                   ) : item.state ? (
                     <div className="text-xs text-green-600 font-semibold break-all truncate">Current: {item.state.split('/').pop()}</div>
                   ) : (
-                    <div className="text-xs text-muted-foreground">No media set</div>
+                    <div className="text-xs text-slate-500">No media set</div>
                   )}
 
                   <input 
@@ -398,14 +398,14 @@ export function SettingsManager() {
         </div>
 
         {/* About Page Media */}
-        <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
-            <div className="p-2 bg-indigo-500/10 text-indigo-600 rounded-xl">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
+          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/10 text-indigo-600 rounded-2xl">
               <MonitorPlay className="size-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-navy">About Page Media</h3>
-              <p className="text-sm text-muted-foreground">Upload images for Mission, Vision, and Journey cards.</p>
+              <h3 className="text-xl font-bold text-slate-800">About Page Media</h3>
+              <p className="text-sm text-slate-500">Upload images for Mission, Vision, and Journey cards.</p>
             </div>
           </div>
 
@@ -420,15 +420,15 @@ export function SettingsManager() {
                 { label: 'Journey Image 4', key: 'journey4', prefix: 'bg_journey_4', state: bgJourney4, setBg: setBgJourney4 },
                 { label: 'Journey Image 5', key: 'journey5', prefix: 'bg_journey_5', state: bgJourney5, setBg: setBgJourney5 },
               ].map(item => (
-                <div key={item.key} className="space-y-2 border border-border rounded-xl p-4 bg-secondary/20 relative">
-                  <label className="text-xs font-bold uppercase text-navy">{item.label}</label>
+                <div key={item.key} className="space-y-2 border border-white/60 rounded-2xl p-4 bg-white/20 relative">
+                  <label className="text-xs font-bold uppercase text-slate-800">{item.label}</label>
                   
                   {uploadingMedia[item.key] ? (
                     <div className="text-xs text-blue-500 font-semibold break-words flex items-center gap-2"><Loader2 className="size-3 animate-spin" /> Uploading...</div>
                   ) : item.state ? (
                     <div className="text-xs text-green-600 font-semibold break-all truncate">Current: {item.state.split('/').pop()}</div>
                   ) : (
-                    <div className="text-xs text-muted-foreground">No media set</div>
+                    <div className="text-xs text-slate-500">No media set</div>
                   )}
 
                   <input 
@@ -459,7 +459,7 @@ export function SettingsManager() {
         </div>
 
         <div className="flex justify-end pt-4">
-          <button type="submit" disabled={isSaving || Object.values(uploadingMedia).some(Boolean)} className="flex items-center gap-2 px-10 py-4 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-[#F26522]/20">
+          <button type="submit" disabled={isSaving || Object.values(uploadingMedia).some(Boolean)} className="flex items-center gap-2 px-10 py-4 rounded-2xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-[#F26522]/20">
             {isSaving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
             {isSaving ? 'Saving Configurations...' : 'Save All Settings'}
           </button>

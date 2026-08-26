@@ -212,95 +212,107 @@ export function ApplicationsManager() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-navy">Applications & Members</h2>
-          <p className="text-muted-foreground mt-1">Review registrations and manage members.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Applications</h2>
+          <p className="text-sm text-slate-500 mt-1">Review registrations and manage incoming members.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search..." 
+              placeholder="Search applications..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none text-sm w-full sm:w-64"
+              className="pl-9 pr-4 py-2.5 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none text-sm w-full bg-white/40 backdrop-blur-md transition-all placeholder:text-slate-400"
             />
           </div>
           {activeTab === 'Member' && (
-            <>
-              <button onClick={() => handleExport(false)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-secondary text-navy hover:bg-secondary/80 border border-border transition-colors">
-                Export All (CSV)
+            <div className="hidden sm:flex items-center gap-2">
+              <button onClick={() => handleExport(false)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
+                Export All
               </button>
-              <button onClick={() => handleExport(true)} className="px-4 py-2 text-sm font-semibold rounded-xl bg-[#F26522]/10 text-[#F26522] hover:bg-[#F26522]/20 border border-[#F26522]/30 transition-colors">
-                Export Approved Only
+              <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-xl shadow-slate-200/40 shadow-[#F26522]/20 transition-all whitespace-nowrap">
+                Export Approved
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-border pb-2">
+      <div className="flex items-center gap-1 border-b border-white/60 pb-px">
         <button
           onClick={() => setActiveTab('Member')}
           className={cn(
-            "px-6 py-2.5 text-sm font-bold rounded-full transition-colors",
-            activeTab === 'Member' ? "bg-[#F26522] text-white shadow-lg shadow-[#F26522]/20" : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-navy"
+            "px-5 py-3 text-sm font-semibold transition-all border-b-2",
+            activeTab === 'Member' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
           )}
         >
-          Member Applications
+          Member Registrations
         </button>
         <button
           onClick={() => setActiveTab('Event')}
           className={cn(
-            "px-6 py-2.5 text-sm font-bold rounded-full transition-colors",
-            activeTab === 'Event' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-navy"
+            "px-5 py-3 text-sm font-semibold transition-all border-b-2",
+            activeTab === 'Event' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
           )}
         >
           Event Applications
         </button>
       </div>
+      
+      {/* Mobile Export Buttons */}
+      {activeTab === 'Member' && (
+        <div className="flex sm:hidden items-center gap-2 w-full">
+          <button onClick={() => handleExport(false)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+            Export All
+          </button>
+          <button onClick={() => handleExport(true)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-xl shadow-slate-200/40 transition-all">
+            Export Approved
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
-        <div className="py-24 text-center">
+        <div className="py-32 text-center">
           <Loader2 className="size-8 animate-spin mx-auto text-[#F26522] mb-4" />
-          <p className="text-lg font-semibold text-navy">Loading applications...</p>
+          <p className="text-sm font-medium text-slate-500">Loading applications...</p>
         </div>
       ) : applications.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
-          <div className="mx-auto size-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-            <Users className="size-8 text-muted-foreground" />
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
+          <div className="mx-auto size-16 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center mb-4 border border-slate-100">
+            <Users className="size-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-bold text-navy mb-2">No Applications Found</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">There are currently no member applications or event registrations in the system.</p>
+          <h3 className="text-lg font-bold text-slate-800 mb-1">No Applications Found</h3>
+          <p className="text-sm text-slate-500 max-w-sm mx-auto">There are currently no applications matching your criteria.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-secondary/80 text-muted-foreground border-b border-border">
+              <thead className="bg-white/40 backdrop-blur-md text-slate-500 border-b border-white/60">
                 <tr>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Tracking ID & Date</th>
-                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Event Name</th>}
-                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Team Name</th>}
-                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Members</th>}
+                  <th className="px-5 py-4 font-semibold text-xs tracking-wide">Tracking ID & Date</th>
+                  {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Event Name</th>}
+                  {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Team Name</th>}
+                  {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Members</th>}
                   
-                  {activeTab === 'Member' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Name & Contact</th>}
-                  {activeTab === 'Member' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Role / Bio</th>}
+                  {activeTab === 'Member' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Name & Contact</th>}
+                  {activeTab === 'Member' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Role / Bio</th>}
                   
-                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Contact Person</th>}
+                  {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Contact Person</th>}
                   
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">University</th>
-                  {activeTab === 'Event' && <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">TrxID</th>}
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
-                  <th className="px-4 py-3 font-bold uppercase tracking-wider text-[10px] text-right">Action</th>
+                  <th className="px-5 py-4 font-semibold text-xs tracking-wide">University</th>
+                  {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">TrxID</th>}
+                  <th className="px-5 py-4 font-semibold text-xs tracking-wide">Status</th>
+                  <th className="px-5 py-4 font-semibold text-xs tracking-wide text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {filteredApps.map((app) => {
+              <tbody className="divide-y divide-slate-100 bg-white/60 backdrop-blur-xl">
+                {filteredApps.map((app, index) => {
                   const memberCount = app.team_members ? app.team_members.length : 1
                   const leadMember = app.team_members && app.team_members.length > 0 ? app.team_members[0] : null
                   const teamName = leadMember && app.team_members && app.team_members.length > 1 ? (app as any).team_name || 'Team' : '-'
@@ -308,11 +320,11 @@ export function ApplicationsManager() {
                   const contactPhone = leadMember?.phone || '-'
 
                   return (
-                    <tr key={app.application_id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="font-mono text-xs font-semibold text-navy">{app.application_id}</div>
+                    <tr key={`${app.application_id}-${index}`} className="hover:bg-white/40 backdrop-blur-md/80 transition-colors group">
+                      <td className="px-5 py-4">
+                        <div className="font-mono text-xs font-medium text-slate-700">{app.application_id}</div>
                         {app.created_at && (
-                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                          <div className="text-[11px] text-slate-400 mt-1">
                             {new Date(app.created_at).toLocaleString('en-US', {
                               month: 'short',
                               day: 'numeric',
@@ -324,81 +336,81 @@ export function ApplicationsManager() {
                           </div>
                         )}
                         {app.transaction_id && activeTab === 'Member' && (
-                          <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                          <div className="text-[11px] text-slate-400 mt-1 font-mono">
                             TrxID: {app.transaction_id}
                           </div>
                         )}
                       </td>
                       
                       {activeTab === 'Event' && (
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border bg-purple-500/10 text-purple-700 border-purple-500/20">
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-100">
                             {app.type.replace('Event: ', '')}
                           </span>
                         </td>
                       )}
                       
-                      {activeTab === 'Event' && <td className="px-4 py-3 font-semibold text-navy text-xs">{teamName}</td>}
+                      {activeTab === 'Event' && <td className="px-5 py-4 font-medium text-slate-700 text-sm">{teamName}</td>}
                       
                       {activeTab === 'Event' && (
-                        <td className="px-4 py-3 text-xs">
-                          <span className="inline-flex items-center justify-center bg-secondary text-muted-foreground font-bold px-2 py-0.5 rounded-full min-w-[24px]">
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center justify-center bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-full text-xs min-w-[28px]">
                             {memberCount}
                           </span>
                         </td>
                       )}
                       
                       {activeTab === 'Member' && (
-                        <td className="px-4 py-3">
-                          <div className="font-bold text-navy text-xs">{app.name}</div>
-                          <div className="text-muted-foreground text-[10px]">{app.email}</div>
-                          <div className="text-muted-foreground text-[10px]">{contactPhone !== '-' ? contactPhone : ''}</div>
+                        <td className="px-5 py-4">
+                          <div className="font-semibold text-slate-900 text-sm">{app.name}</div>
+                          <div className="text-slate-500 text-xs mt-0.5">{app.email}</div>
+                          {contactPhone !== '-' && <div className="text-slate-500 text-xs">{contactPhone}</div>}
                         </td>
                       )}
 
                       {activeTab === 'Member' && (
-                        <td className="px-4 py-3 text-xs max-w-[200px] truncate">
-                          <div className="font-semibold text-[#F26522]">{leadMember?.interested_role || '-'}</div>
-                          <div className="text-muted-foreground text-[10px] truncate" title={leadMember?.bio}>{leadMember?.bio || '-'}</div>
+                        <td className="px-5 py-4 text-xs max-w-[200px] truncate">
+                          <div className="font-medium text-[#F26522]">{leadMember?.interested_role || '-'}</div>
+                          <div className="text-slate-400 text-xs truncate mt-0.5" title={leadMember?.bio}>{leadMember?.bio || '-'}</div>
                         </td>
                       )}
 
                       {activeTab === 'Event' && (
-                        <td className="px-4 py-3">
-                          <div className="font-bold text-navy text-xs">{app.name}</div>
-                          <div className="text-muted-foreground text-[10px]">{app.email}</div>
-                          {contactPhone !== '-' && <div className="text-muted-foreground text-[10px]">{contactPhone}</div>}
+                        <td className="px-5 py-4">
+                          <div className="font-medium text-slate-900 text-sm">{app.name}</div>
+                          <div className="text-slate-500 text-xs mt-0.5">{app.email}</div>
+                          {contactPhone !== '-' && <div className="text-slate-500 text-xs">{contactPhone}</div>}
                         </td>
                       )}
                       
-                      <td className="px-4 py-3 text-xs text-muted-foreground truncate max-w-[150px]" title={university}>{university}</td>
+                      <td className="px-5 py-4 text-sm text-slate-600 truncate max-w-[150px]" title={university}>{university}</td>
                       
                       {activeTab === 'Event' && (
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-4">
                           {app.transaction_id ? (
-                            <span className="font-mono text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded border border-gray-200">
+                            <span className="font-mono text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded border border-white/60">
                               {app.transaction_id}
                             </span>
                           ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
+                            <span className="text-slate-400 text-sm">-</span>
                           )}
                         </td>
                       )}
                       
-                      <td className="px-4 py-3">
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
-                          app.status === 'Approved' ? "bg-green-500/10 text-green-700 border-green-500/20" :
-                          app.status === 'Rejected' ? "bg-red-500/10 text-red-700 border-red-500/20" :
-                          "bg-[#F26522]/10 text-[#F26522] border-[#F26522]/20"
+                      <td className="px-5 py-4">
+                        <span className={cn("inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide border",
+                          app.status === 'Approved' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          app.status === 'Rejected' ? "bg-red-50 text-red-700 border-red-200" :
+                          "bg-amber-50 text-amber-700 border-amber-200"
                         )}>
                           {app.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button 
                             onClick={() => setSelectedApp(app)}
-                            className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg shadow-sm transition-colors" 
+                            className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors border border-white/60 hover:border-blue-200" 
                             title="View Details"
                           >
                             <Eye className="size-4" />
@@ -407,14 +419,14 @@ export function ApplicationsManager() {
                             <>
                               <button 
                                 onClick={() => handleStatusChange(app.application_id, 'Approved')}
-                                className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg shadow-sm transition-colors" 
+                                className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors border border-white/60 hover:border-emerald-200" 
                                 title="Approve"
                               >
                                 <CheckCircle className="size-4" />
                               </button>
                               <button 
                                 onClick={() => handleStatusChange(app.application_id, 'Rejected')}
-                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg shadow-sm transition-colors" 
+                                className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-white/60 hover:border-red-200" 
                                 title="Reject"
                               >
                                 <XCircle className="size-4" />
@@ -424,7 +436,7 @@ export function ApplicationsManager() {
                           {(app.status === 'Rejected' || app.status === 'Approved') && (
                             <button 
                               onClick={() => handleStatusChange(app.application_id, 'Pending')}
-                              className="p-1.5 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 rounded-lg shadow-sm transition-colors" 
+                              className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-colors border border-white/60 hover:border-amber-200" 
                               title="Reset to Pending"
                             >
                               <Undo2 className="size-4" />
@@ -432,7 +444,7 @@ export function ApplicationsManager() {
                           )}
                           <button 
                             onClick={() => confirmDelete(app.application_id)}
-                            className="p-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-lg shadow-sm transition-colors ml-2" 
+                            className="p-1.5 bg-white/40 backdrop-blur-md text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-white/60 hover:border-red-200 ml-1" 
                             title="Delete Permanently"
                           >
                             <Trash2 className="size-4" />
@@ -446,7 +458,7 @@ export function ApplicationsManager() {
             </table>
             
             {filteredApps.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">
+              <div className="p-12 text-center text-slate-500 text-sm">
                 No applications match your search query.
               </div>
             )}
@@ -479,15 +491,15 @@ export function ApplicationsManager() {
             }
           `}</style>
           <div className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm no-print" onClick={() => setSelectedApp(null)} />
-          <div id="printable-modal" className="relative bg-white border border-border rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
+          <div id="printable-modal" className="relative bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="sticky top-0 bg-white/95 backdrop-blur-md p-6 border-b border-border flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md p-6 border-b border-white/60 flex items-center justify-between z-10">
               <div>
-                <h3 className="text-2xl font-bold text-navy">Application Details</h3>
-                <p className="text-sm font-mono text-muted-foreground mt-1">{selectedApp.application_id}</p>
+                <h3 className="text-2xl font-bold text-slate-800">Application Details</h3>
+                <p className="text-sm font-mono text-slate-500 mt-1">{selectedApp.application_id}</p>
                 {selectedApp.created_at && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    <span className="font-semibold text-navy">Applied on:</span> {new Date(selectedApp.created_at).toLocaleString('en-US', {
+                  <p className="text-sm text-slate-500 mt-1">
+                    <span className="font-semibold text-slate-800">Applied on:</span> {new Date(selectedApp.created_at).toLocaleString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -498,13 +510,13 @@ export function ApplicationsManager() {
                   </p>
                 )}
                 {selectedApp.transaction_id && (
-                  <p className="text-sm font-mono text-muted-foreground mt-1">
-                    <span className="font-semibold text-navy font-sans">TrxID:</span> {selectedApp.transaction_id}
+                  <p className="text-sm font-mono text-slate-500 mt-1">
+                    <span className="font-semibold text-slate-800 font-sans">TrxID:</span> {selectedApp.transaction_id}
                   </p>
                 )}
               </div>
               <div className="flex items-center gap-3 no-print">
-                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-secondary text-navy font-bold rounded-xl hover:bg-secondary/80 transition-colors">
+                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-white/40 text-slate-800 font-bold rounded-2xl hover:bg-white/40 backdrop-blur-md transition-colors">
                   <Printer className="size-4" />
                   Download PDF
                 </button>
@@ -517,15 +529,15 @@ export function ApplicationsManager() {
             {/* Content */}
             <div className="p-8 space-y-8">
               {selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
-                <div key={index} className="space-y-6 pb-8 border-b border-border last:border-0 print-break-inside-avoid">
+                <div key={index} className="space-y-6 pb-8 border-b border-white/60 last:border-0 print-break-inside-avoid">
                   <div className="flex items-start gap-4 mb-8">
                     <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
                       {index + 1}
                     </div>
                     <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                       <div>
-                        <h4 className="text-xl font-bold text-navy">{member.full_name || member.name}</h4>
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{selectedApp.type}</span>
+                        <h4 className="text-xl font-bold text-slate-800">{member.full_name || member.name}</h4>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{selectedApp.type}</span>
                       </div>
                     </div>
                   </div>
@@ -533,23 +545,23 @@ export function ApplicationsManager() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Identity & Contact */}
                     <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Identity & Contact</h5>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Identity & Contact</h5>
                       
                       {member.photo_url && (
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-secondary/30 p-4 rounded-2xl border border-border mb-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-white/30 p-4 rounded-3xl border border-white/60 mb-6">
                           <img 
                             src={member.photo_url} 
                             alt={`${member.full_name || member.name}'s profile photo`} 
-                            className="w-24 h-24 object-cover rounded-xl shadow-md border-2 border-white" 
+                            className="w-24 h-24 object-cover rounded-2xl shadow-md border-2 border-white" 
                           />
                           <div className="flex flex-col justify-center sm:h-24">
-                            <h6 className="font-bold text-navy text-sm mb-2 text-center sm:text-left">Applicant Photo</h6>
+                            <h6 className="font-bold text-slate-800 text-sm mb-2 text-center sm:text-left">Applicant Photo</h6>
                             <a
                               href={member.photo_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               download={`Applicant_${member.full_name || member.name}_Photo`}
-                              className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-sm no-print"
+                              className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-200/40 no-print"
                             >
                               <Printer className="size-4" />
                               Download
@@ -558,34 +570,34 @@ export function ApplicationsManager() {
                         </div>
                       )}
                       <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Email</dt><dd className="font-medium text-navy break-all">{member.email || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Phone</dt><dd className="font-medium text-navy">{member.phone || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-navy">{member.student_id || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">University / Department</dt><dd className="font-medium text-navy">{member.university || member.department || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Blood Group</dt><dd className="font-medium text-navy">{member.blood_group || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Date of Birth</dt><dd className="font-medium text-navy">{member.date_of_birth || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Address</dt><dd className="font-medium text-navy break-words">{member.address || member.student_address || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Parents</dt><dd className="font-medium text-navy">Father: {member.father_name || '-'} <br/> Mother: {member.mother_name || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Email</dt><dd className="font-medium text-slate-800 break-all">{member.email || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Phone</dt><dd className="font-medium text-slate-800">{member.phone || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{member.student_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">University / Department</dt><dd className="font-medium text-slate-800">{member.university || member.department || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Blood Group</dt><dd className="font-medium text-slate-800">{member.blood_group || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Date of Birth</dt><dd className="font-medium text-slate-800">{member.date_of_birth || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Address</dt><dd className="font-medium text-slate-800 break-words">{member.address || member.student_address || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Parents</dt><dd className="font-medium text-slate-800">Father: {member.father_name || '-'} <br/> Mother: {member.mother_name || '-'}</dd></div>
                       </dl>
                     </div>
 
                     {/* Socials & Roles */}
                     <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Socials & Roles</h5>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Socials & Roles</h5>
                       <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-navy">{member.interested_roles || member.interested_role || '-'}</dd></div>
-                        {member.other_role && <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-navy">{member.other_role}</dd></div>}
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-navy">{member.payment_method || (selectedApp.transaction_id ? 'Paid' : '-')}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-navy font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-navy">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-slate-800">{member.interested_roles || member.interested_role || '-'}</dd></div>
+                        {member.other_role && <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-slate-800">{member.other_role}</dd></div>}
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-slate-800">{member.payment_method || (selectedApp.transaction_id ? 'Paid' : '-')}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-slate-800">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
                         
                         <div className="pt-3 flex flex-col gap-2">
-                          <dt className="text-muted-foreground text-xs uppercase font-bold">Social Links</dt>
+                          <dt className="text-slate-500 text-xs uppercase font-bold">Social Links</dt>
                           <dd className="space-y-1">
                             {member.facebook_url && <a href={member.facebook_url} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline break-all">FB: {member.facebook_url}</a>}
                             {member.instagram_url && <a href={member.instagram_url} target="_blank" rel="noreferrer" className="block text-pink-600 hover:underline break-all">IG: {member.instagram_url}</a>}
                             {member.linkedin_url && <a href={member.linkedin_url} target="_blank" rel="noreferrer" className="block text-blue-800 hover:underline break-all">IN: {member.linkedin_url}</a>}
-                            {(!member.facebook_url && !member.instagram_url && !member.linkedin_url) && <span className="text-muted-foreground">No links provided</span>}
+                            {(!member.facebook_url && !member.instagram_url && !member.linkedin_url) && <span className="text-slate-500">No links provided</span>}
                           </dd>
                         </div>
                       </dl>
@@ -594,14 +606,14 @@ export function ApplicationsManager() {
 
                   {/* Story & Bio (Full Width) */}
                   <div className="mt-8">
-                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-border pb-2">Biography & Experience</h5>
+                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Biography & Experience</h5>
                     <dl className="space-y-6 text-sm">
-                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-navy whitespace-pre-wrap">{member.bio || '-'}</dd></div>
-                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-navy whitespace-pre-wrap">{member.why_join || '-'}</dd></div>
-                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Expectations from JEF</dt><dd className="text-navy whitespace-pre-wrap">{member.expect_from_jef || '-'}</dd></div>
-                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">Extracurricular Activities</dt><dd className="text-navy whitespace-pre-wrap">{member.extracurricular || '-'}</dd></div>
-                      <div className="flex flex-col bg-secondary/30 p-4 rounded-xl"><dt className="text-navy text-xs uppercase font-bold mb-2">What do you know about JEF?</dt><dd className="text-navy whitespace-pre-wrap">{member.know_about_jef || '-'}</dd></div>
-                      <div className="flex flex-col"><dt className="text-muted-foreground text-xs uppercase font-bold">Heard about us from</dt><dd className="font-medium text-navy">{member.heard_about || '-'}</dd></div>
+                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.bio || '-'}</dd></div>
+                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.why_join || '-'}</dd></div>
+                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Expectations from JEF</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.expect_from_jef || '-'}</dd></div>
+                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Extracurricular Activities</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.extracurricular || '-'}</dd></div>
+                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">What do you know about JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.know_about_jef || '-'}</dd></div>
+                      <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Heard about us from</dt><dd className="font-medium text-slate-800">{member.heard_about || '-'}</dd></div>
                     </dl>
                   </div>
                 </div>

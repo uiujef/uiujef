@@ -137,7 +137,7 @@ export async function POST(req: Request) {
 
     const completion = await groq.chat.completions.create({
       messages: groqMessages,
-      model: 'llama3-8b-8192', // Highly stable baseline Groq model
+      model: process.env.GROQ_MODEL_ID || 'openai/gpt-oss-20b', // Dynamic model ID with fallback
       temperature: 0.7,
       max_tokens: 1024,
     });

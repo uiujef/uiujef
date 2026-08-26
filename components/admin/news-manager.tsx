@@ -146,10 +146,10 @@ export function NewsManager() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-navy">Manage News</h2>
-          <p className="text-muted-foreground mt-1">Publish and manage news articles.</p>
+          <h2 className="text-2xl font-bold text-slate-800">Manage News</h2>
+          <p className="text-slate-500 mt-1">Publish and manage news articles.</p>
         </div>
-        <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#F26522] text-white px-4 py-2 rounded-xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 transition-all">
+        <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#F26522] text-white px-4 py-2 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 transition-all">
           <Plus className="size-4" />
           Write Article
         </button>
@@ -158,21 +158,21 @@ export function NewsManager() {
       {isLoading ? (
         <div className="py-24 text-center">
           <Loader2 className="size-8 animate-spin mx-auto text-[#F26522] mb-4" />
-          <p className="text-lg font-semibold text-navy">Loading news...</p>
+          <p className="text-lg font-semibold text-slate-800">Loading news...</p>
         </div>
       ) : news.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
-          <div className="mx-auto size-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-            <FileText className="size-8 text-muted-foreground" />
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-8 text-center shadow-xl shadow-slate-200/40">
+          <div className="mx-auto size-16 bg-white/40 rounded-full flex items-center justify-center mb-4">
+            <FileText className="size-8 text-slate-500" />
           </div>
-          <h3 className="text-lg font-bold text-navy mb-2">No News Found</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">There are currently no news articles. Start writing to keep your members informed!</p>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">No News Found</h3>
+          <p className="text-slate-500 max-w-sm mx-auto">There are currently no news articles. Start writing to keep your members informed!</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-secondary/50 text-muted-foreground">
+              <thead className="bg-white/50 text-slate-500">
                 <tr>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Title</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Published Date</th>
@@ -182,16 +182,16 @@ export function NewsManager() {
               </thead>
               <tbody className="divide-y divide-border">
                 {news.map((article) => (
-                  <tr key={article.id} className="hover:bg-secondary/20 transition-colors">
-                    <td className="px-6 py-4 font-medium text-navy">{article.title}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'N/A'}</td>
+                  <tr key={article.id} className="hover:bg-white/20 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-800">{article.title}</td>
+                    <td className="px-6 py-4 text-slate-500">{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'N/A'}</td>
                     <td className="px-6 py-4">
                       {article.published ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-500/10 text-green-700 text-[10px] font-bold uppercase tracking-wider">
                           Published
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/40 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                           Draft
                         </span>
                       )}
@@ -219,28 +219,28 @@ export function NewsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-6 sm:px-8 sm:py-6 border-b border-border flex items-center justify-between sticky top-0 bg-transparent z-10 shrink-0">
-              <h3 className="text-xl font-bold text-navy">{editingNews ? 'Edit Article' : 'Write New Article'}</h3>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground">✕</button>
+            <div className="p-6 sm:px-8 sm:py-6 border-b border-white/60 flex items-center justify-between sticky top-0 bg-transparent z-10 shrink-0">
+              <h3 className="text-xl font-bold text-slate-800">{editingNews ? 'Edit Article' : 'Write New Article'}</h3>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-white/40 text-slate-500">✕</button>
             </div>
             
             <form onSubmit={handleSave} className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Article Title</label>
-                  <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
+                  <label className="text-xs font-bold uppercase text-slate-800">Article Title</label>
+                  <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-navy">Publish Date</label>
-                  <input required type="date" value={publishedAt.split('T')[0] || ''} onChange={e => setPublishedAt(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
+                  <label className="text-xs font-bold uppercase text-slate-800">Publish Date</label>
+                  <input required type="date" value={publishedAt.split('T')[0] || ''} onChange={e => setPublishedAt(e.target.value)} className="w-full px-4 py-2.5 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Cover Image Source *</label>
-                <div className="flex bg-secondary/50 p-1 rounded-xl w-fit mb-2 border border-border">
-                  <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Upload File</button>
-                  <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>Paste URL</button>
+                <label className="text-xs font-bold uppercase text-slate-800">Cover Image Source *</label>
+                <div className="flex bg-white/50 p-1 rounded-2xl w-fit mb-2 border border-white/60">
+                  <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Upload File</button>
+                  <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Paste URL</button>
                 </div>
                 {imageInputType === 'upload' ? (
                   <div className="w-full">
@@ -253,20 +253,20 @@ export function NewsManager() {
                     />
                   </div>
                 ) : (
-                  <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-2 rounded-xl border border-border focus:border-[#F26522] outline-none font-mono text-sm" />
+                  <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-2 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none font-mono text-sm" />
                 )}
                 
                 {/* Preview */}
                 {(imageInputType === 'upload' && coverImage) ? (
-                  <div className="mt-3 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                  <div className="mt-3 aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50">
                     <img src={coverImage} alt="Preview" className="object-cover w-full h-full" />
                   </div>
                 ) : (imageInputType === 'url' && externalImageUrl) ? (
-                  <div className="mt-3 aspect-video relative rounded-xl overflow-hidden border border-border bg-secondary/50">
+                  <div className="mt-3 aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50">
                     <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL')} />
                   </div>
                 ) : (coverImage && !imageFile && !externalImageUrl) ? (
-                  <div className="mt-3 flex items-center gap-3 bg-secondary/50 p-2 rounded-xl border border-border w-max">
+                  <div className="mt-3 flex items-center gap-3 bg-white/50 p-2 rounded-2xl border border-white/60 w-max">
                     <img src={coverImage} alt="Current" className="w-16 h-10 rounded-lg object-cover" />
                     <a href={coverImage} target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:underline pr-4">View Current</a>
                   </div>
@@ -274,22 +274,22 @@ export function NewsManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-navy">Content (Markdown/Text)</label>
-                <textarea required rows={8} value={content} onChange={e => setContent(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-border focus:border-[#F26522] outline-none" />
+                <label className="text-xs font-bold uppercase text-slate-800">Content (Markdown/Text)</label>
+                <textarea required rows={8} value={content} onChange={e => setContent(e.target.value)} className="w-full px-4 py-2.5 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none" />
               </div>
 
-              <div className="flex flex-wrap gap-6 pt-4 border-t border-border">
+              <div className="flex flex-wrap gap-6 pt-4 border-t border-white/60">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={published} onChange={e => setPublished(e.target.checked)} className="size-4 accent-[#F26522]" />
-                  <span className="text-sm font-semibold text-navy">Publish immediately</span>
+                  <span className="text-sm font-semibold text-slate-800">Publish immediately</span>
                 </label>
               </div>
 
               <div className="pt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-secondary transition-colors">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-2xl font-bold text-slate-500 hover:bg-white/40 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={isSaving || isUploading} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-colors disabled:opacity-50">
                   {(isSaving || isUploading) && <Loader2 className="size-4 animate-spin" />}
                   {isUploading ? 'Uploading Image...' : isSaving ? 'Saving...' : 'Save Article'}
                 </button>

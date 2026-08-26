@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings } from 'lucide-react'
+import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings, ShieldCheck } from 'lucide-react'
 import { EventsManager } from '@/components/admin/events-manager'
 import { NewsManager } from '@/components/admin/news-manager'
 import { ApplicationsManager } from '@/components/admin/applications-manager'
@@ -74,61 +74,70 @@ export default function DashboardPage() {
       case 'overview':
       default:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-bold text-navy">Dashboard Overview</h2>
-              <p className="text-muted-foreground mt-1">Welcome to the UIUJEF Administrative Terminal.</p>
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h2>
+              <p className="text-slate-500">Welcome back to the UIUJEF Administrative Terminal.</p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {/* Stat Cards */}
-              <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
-                <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <Calendar className="size-6 text-blue-500" />
+              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-500">Total Events</p>
+                  <div className="size-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <Calendar className="size-5 text-blue-600" />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Total Events</p>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.events}</p>
-                    <p className="text-xs text-muted-foreground font-medium">events tracking</p>
-                  </div>
+                  <p className="text-3xl font-bold text-slate-900 tracking-tight">{isLoadingStats ? '-' : stats.events}</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
-                <div className="size-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <FileText className="size-6 text-green-500" />
+              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-500">News Published</p>
+                  <div className="size-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                    <FileText className="size-5 text-emerald-600" />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">News Published</p>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.news}</p>
-                    <p className="text-xs text-muted-foreground font-medium">news pipeline</p>
-                  </div>
+                  <p className="text-3xl font-bold text-slate-900 tracking-tight">{isLoadingStats ? '-' : stats.news}</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
-                <div className="size-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <Users className="size-6 text-orange-500" />
+              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-500">Total Members</p>
+                  <div className="size-10 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center">
+                    <Users className="size-5 text-orange-600" />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Community Size</p>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <p className="text-2xl text-navy font-black">{isLoadingStats ? '-' : stats.members}</p>
-                    <p className="text-xs text-[#F26522] font-bold bg-[#F26522]/10 px-2 py-0.5 rounded-md">{isLoadingStats ? '-' : stats.applications} Pending</p>
+                  <p className="text-3xl font-bold text-slate-900 tracking-tight">{isLoadingStats ? '-' : stats.members}</p>
+                </div>
+              </div>
+
+              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-500">Pending Apps</p>
+                  <div className="size-10 rounded-full bg-[#F26522]/10 border border-[#F26522]/20 flex items-center justify-center">
+                    <ShieldCheck className="size-5 text-[#F26522]" />
                   </div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-slate-900 tracking-tight">{isLoadingStats ? '-' : stats.applications}</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
-              <div className="mx-auto size-16 bg-[#F26522]/10 rounded-full flex items-center justify-center mb-4">
-                <LayoutDashboard className="size-8 text-[#F26522]" />
+            <div className="mt-8 bg-gradient-to-r from-slate-50 to-white rounded-3xl border border-white/60 p-8 flex flex-col items-center justify-center text-center shadow-xl shadow-slate-200/40">
+              <div className="mx-auto size-14 bg-[#F26522]/10 rounded-3xl flex items-center justify-center mb-5 rotate-3">
+                <LayoutDashboard className="size-7 text-[#F26522]" />
               </div>
-              <h3 className="text-xl font-bold text-navy mb-2">Systems Online</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                All CRUD operations and real-time Supabase integrations are successfully deployed. Use the sidebar to manage your database securely.
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Systems Operational</h3>
+              <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
+                Database integrations are fully active. Use the navigation sidebar to securely manage your members, events, and applications.
               </p>
             </div>
           </div>
