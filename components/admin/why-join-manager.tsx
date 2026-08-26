@@ -145,7 +145,7 @@ export function WhyJoinManager() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">"Why Join" Content</h2>
           <p className="text-slate-500 mt-1">Manage the sections explaining the benefits of joining UIUJEF.</p>
@@ -158,7 +158,7 @@ export function WhyJoinManager() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map(item => (
-          <div key={item.id} className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40 hover:shadow-md transition-shadow group flex flex-col">
+          <div key={item.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col">
             {item.image_url && (
               <div className="aspect-video w-full relative bg-white/40 overflow-hidden">
                 <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -184,7 +184,7 @@ export function WhyJoinManager() {
               </h3>
               <p className="text-sm text-slate-500 flex-1 line-clamp-3 mb-4">{item.description}</p>
               
-              <div className="flex gap-2 justify-end mt-auto pt-4 border-t border-white/60">
+              <div className="flex gap-2 justify-end mt-auto pt-4 border-t border-slate-200">
                 <button onClick={() => openEdit(item)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                   <Pencil className="size-4" />
                 </button>
@@ -196,7 +196,7 @@ export function WhyJoinManager() {
           </div>
         ))}
         {items.length === 0 && (
-          <div className="col-span-full py-20 text-center bg-white/60 backdrop-blur-xl rounded-3xl border border-dashed border-white/60">
+          <div className="col-span-full py-20 text-center bg-white rounded-xl border border-dashed border-slate-200">
             <p className="text-slate-500">No content items found. Add some to display on the "Why Join" section!</p>
           </div>
         )}
@@ -204,13 +204,13 @@ export function WhyJoinManager() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-deep/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-white/60 bg-white/30">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white/30">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 {editId ? <Pencil className="size-5 text-[#F26522]" /> : <Plus className="size-5 text-[#F26522]" />}
                 {editId ? 'Edit Content' : 'Add Content'}
               </h3>
-              <button onClick={resetForm} className="text-slate-500 hover:text-slate-800 transition-colors bg-white/60 backdrop-blur-xl p-2 rounded-2xl border border-white/60 shadow-xl shadow-slate-200/40 hover:shadow-md">
+              <button onClick={resetForm} className="text-slate-500 hover:text-slate-800 transition-colors bg-white p-2 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md">
                 <X className="size-5" />
               </button>
             </div>
@@ -218,17 +218,17 @@ export function WhyJoinManager() {
             <form onSubmit={handleSave} className="overflow-y-auto p-6 space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">Title *</label>
-                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">Description *</label>
-                <textarea required rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all resize-none" />
+                <textarea required rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all resize-none" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">Icon *</label>
-                <select value={icon} onChange={e => setIcon(e.target.value)} required className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all bg-white/60 backdrop-blur-xl appearance-none">
+                <select value={icon} onChange={e => setIcon(e.target.value)} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all bg-white appearance-none">
                   <option value="" disabled>Select an icon...</option>
                   <option value="Star">Star (Default)</option>
                   <option value="Lightbulb">Lightbulb</option>
@@ -256,10 +256,10 @@ export function WhyJoinManager() {
                   onChange={e => {
                     if (e.target.files && e.target.files.length > 0) setImageFile(e.target.files[0])
                   }} 
-                  className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-2xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" 
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none file:mr-4 file:py-2 file:px-5 file:rounded-2xl file:border-0 file:text-sm file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer transition-all" 
                 />
                 {imageUrl && !imageFile && (
-                  <div className="mt-3 flex items-center gap-3 bg-white/50 p-2 rounded-2xl border border-white/60 w-max">
+                  <div className="mt-3 flex items-center gap-3 bg-white/50 p-2 rounded-2xl border border-slate-200 w-max">
                     <img src={imageUrl} alt="Current" className="w-16 h-10 rounded-lg object-cover" />
                     <a href={imageUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline pr-4">View Current Image</a>
                   </div>
@@ -267,7 +267,7 @@ export function WhyJoinManager() {
               </div>
             </form>
 
-            <div className="p-6 border-t border-white/60 bg-white/30 flex justify-end gap-3 mt-auto">
+            <div className="p-6 border-t border-slate-200 bg-white/30 flex justify-end gap-3 mt-auto">
               <button type="button" onClick={resetForm} className="px-6 py-3 rounded-2xl font-bold text-slate-800 hover:bg-black/5 transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={isSaving} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-8 py-3 rounded-2xl font-bold hover:bg-[#F26522]/90 transition-all shadow-lg shadow-[#F26522]/20 disabled:opacity-50">
                 {isSaving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}

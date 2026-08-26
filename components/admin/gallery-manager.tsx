@@ -266,7 +266,7 @@ export function GalleryManager() {
         </div>
         <div className="flex gap-2 shrink-0">
           {(currentCategory || currentAlbum) && (
-            <button onClick={() => { if (currentAlbum) setCurrentAlbum(null); else setCurrentCategory(null) }} className="flex items-center gap-2 bg-white/40 text-slate-800 px-4 py-2 rounded-2xl font-bold hover:bg-white/40 backdrop-blur-md transition-all">
+            <button onClick={() => { if (currentAlbum) setCurrentAlbum(null); else setCurrentCategory(null) }} className="flex items-center gap-2 bg-white/40 text-slate-800 px-4 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all">
               <ArrowLeft className="size-4" />
               Back
             </button>
@@ -286,7 +286,7 @@ export function GalleryManager() {
       ) : !currentCategory ? (
         /* LEVEL 1: CATEGORIES */
         categories.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
             <Folder className="size-10 text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-800 mb-2">No Categories</h3>
             <p className="text-slate-500">Create a main category to organize your albums.</p>
@@ -294,14 +294,14 @@ export function GalleryManager() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
             {categories.map(cat => (
-              <div key={cat.id} className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 hover:shadow-lg transition-all group flex flex-col cursor-pointer" onClick={() => setCurrentCategory(cat)}>
+              <div key={cat.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" onClick={() => setCurrentCategory(cat)}>
                 <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="size-16 rounded-3xl bg-white/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="size-16 rounded-xl bg-white/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FolderOpen className="size-8 text-[#F26522]" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-800">{cat.name}</h3>
                 </div>
-                <div className="p-4 border-t border-white/60 flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                <div className="p-4 border-t border-slate-200 flex justify-end gap-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => openModal('category', cat)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                     <Edit2 className="size-4" />
                   </button>
@@ -316,7 +316,7 @@ export function GalleryManager() {
       ) : !currentAlbum ? (
         /* LEVEL 2: ALBUMS */
         albums.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
             <ImageIcon className="size-10 text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-800 mb-2">No Albums</h3>
             <p className="text-slate-500">Create an album inside this category.</p>
@@ -324,7 +324,7 @@ export function GalleryManager() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {albums.map(album => (
-              <div key={album.id} className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 hover:shadow-lg transition-all group overflow-hidden cursor-pointer flex flex-col" onClick={() => setCurrentAlbum(album)}>
+              <div key={album.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all group overflow-hidden cursor-pointer flex flex-col" onClick={() => setCurrentAlbum(album)}>
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/40">
                   <img src={album.cover_image} alt={album.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -335,7 +335,7 @@ export function GalleryManager() {
                   <h3 className="text-lg font-bold text-slate-800 leading-tight line-clamp-2">{album.title}</h3>
                   {album.event_date && <p className="text-sm font-semibold text-slate-500 mt-1">{new Date(album.event_date).toLocaleDateString()}</p>}
                 </div>
-                <div className="px-4 py-3 border-t border-white/60 flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                <div className="px-4 py-3 border-t border-slate-200 flex justify-end gap-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => openModal('album', album)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                     <Edit2 className="size-4" />
                   </button>
@@ -350,7 +350,7 @@ export function GalleryManager() {
       ) : (
         /* LEVEL 3: IMAGES */
         images.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
             <ImageIcon className="size-10 text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-800 mb-2">No Images</h3>
             <p className="text-slate-500">Upload images to this album.</p>
@@ -358,15 +358,15 @@ export function GalleryManager() {
         ) : (
           <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
             {images.map(image => (
-              <div key={image.id} className="relative group break-inside-avoid rounded-3xl overflow-hidden bg-white/40 shadow-xl shadow-slate-200/40 hover:shadow-xl transition-all">
+              <div key={image.id} className="relative group break-inside-avoid rounded-xl overflow-hidden bg-white/40 shadow-sm hover:shadow-xl transition-all">
                 <img src={image.image_url} alt={image.caption || 'Gallery image'} className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
                   {image.caption && <h4 className="text-white font-bold text-sm leading-tight mb-2">{image.caption}</h4>}
                   <div className="flex gap-2 justify-end mt-2">
-                    <button onClick={() => openModal('image', image)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-xl shadow-slate-200/40 transition-colors" title="Edit">
+                    <button onClick={() => openModal('image', image)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                       <Edit2 className="size-4" />
                     </button>
-                    <button onClick={() => { setItemToDelete({type: 'image', id: image.id}); setIsConfirmOpen(true) }} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-xl shadow-slate-200/40 transition-colors" title="Delete">
+                    <button onClick={() => { setItemToDelete({type: 'image', id: image.id}); setIsConfirmOpen(true) }} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                       <Trash2 className="size-4" />
                     </button>
                   </div>
@@ -382,7 +382,7 @@ export function GalleryManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => !isUploading && setModalType(null)} />
           <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-white/60 flex items-center justify-between bg-transparent shrink-0">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-transparent shrink-0">
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
                 {editingItem ? 'Edit' : 'Create'} {modalType === 'category' ? 'Category' : modalType === 'album' ? 'Album' : 'Image'}
               </h3>
@@ -395,7 +395,7 @@ export function GalleryManager() {
               {/* Common Title Field */}
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">{modalType === 'image' ? 'Image Caption (Optional)' : 'Title *'}</label>
-                <input required={modalType !== 'image'} type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter title" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <input required={modalType !== 'image'} type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter title" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
               </div>
 
               {/* Album Specific Fields */}
@@ -403,11 +403,11 @@ export function GalleryManager() {
                 <>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Description (Optional)</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter a short description..." rows={3} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all resize-none" />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter a short description..." rows={3} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all resize-none" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Date (Optional)</label>
-                    <input type="date" value={albumDate} onChange={e => setAlbumDate(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                    <input type="date" value={albumDate} onChange={e => setAlbumDate(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                   </div>
                 </>
               )}
@@ -416,14 +416,14 @@ export function GalleryManager() {
               {(modalType === 'album' || modalType === 'image') && (
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-slate-500">{modalType === 'album' ? 'Cover Image *' : 'Image File *'}</label>
-                  <div className="flex bg-white/50 p-1 rounded-2xl w-fit mb-4 border border-white/60">
-                    <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Upload File</button>
-                    <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Paste URL</button>
+                  <div className="flex bg-white/50 p-1 rounded-2xl w-fit mb-4 border border-slate-200">
+                    <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Upload File</button>
+                    <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Paste URL</button>
                   </div>
 
                   {imageInputType === 'upload' ? (
                     <div className="w-full space-y-4">
-                      <div className="relative border-2 border-dashed border-white/60 rounded-2xl p-8 text-center hover:bg-white/50 transition-colors">
+                      <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:bg-white/50 transition-colors">
                         <input
                           type="file"
                           multiple={modalType === 'image'}
@@ -450,7 +450,7 @@ export function GalleryManager() {
                       {selectedFiles.length > 0 && (
                         <div className="grid grid-cols-2 gap-3 mt-4">
                           {selectedFiles.map((file, i) => (
-                            <div key={i} className="group aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50">
+                            <div key={i} className="group aspect-video relative rounded-2xl overflow-hidden border border-slate-200 bg-white/50">
                               {file.type.startsWith('video/') ? (
                                 <video src={URL.createObjectURL(file)} className="object-cover w-full h-full" />
                               ) : (
@@ -459,7 +459,7 @@ export function GalleryManager() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedFiles(files => files.filter((_, index) => index !== i))}
-                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-xl shadow-slate-200/40 hover:bg-red-600"
+                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
                               >
                                 <Trash2 className="size-3" />
                               </button>
@@ -472,12 +472,12 @@ export function GalleryManager() {
                       {selectedFiles.length === 0 && editingItem && (
                         <div className="grid grid-cols-2 gap-3 mt-4">
                           {modalType === 'album' && coverImage && (
-                            <div className="aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50">
+                            <div className="aspect-video relative rounded-2xl overflow-hidden border border-slate-200 bg-white/50">
                               <img src={coverImage} alt="Preview" className="object-cover w-full h-full" />
                             </div>
                           )}
                           {modalType === 'image' && imageUrls.map((url, i) => (
-                            <div key={i} className="aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50">
+                            <div key={i} className="aspect-video relative rounded-2xl overflow-hidden border border-slate-200 bg-white/50">
                               {url.includes('video') ? (
                                 <video src={url} className="object-cover w-full h-full" />
                               ) : (
@@ -489,13 +489,13 @@ export function GalleryManager() {
                       )}
                     </div>
                   ) : (
-                    <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
+                    <input required type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
                   )}
                 </div>
               )}
               </div>
 
-              <div className="p-4 sm:px-8 sm:py-5 bg-white/95 flex justify-end gap-3 border-t border-white/60 shrink-0 sticky bottom-0 z-10">
+              <div className="p-4 sm:px-8 sm:py-5 bg-white/95 flex justify-end gap-3 border-t border-slate-200 shrink-0 sticky bottom-0 z-10">
                 <button type="button" disabled={isUploading || isSaving} onClick={() => setModalType(null)} className="px-6 py-3 rounded-2xl font-bold text-slate-500 hover:bg-white/40 transition-colors disabled:opacity-50">
                   Cancel
                 </button>

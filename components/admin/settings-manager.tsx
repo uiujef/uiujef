@@ -188,8 +188,8 @@ export function SettingsManager() {
       <form onSubmit={(e) => { e.preventDefault(); setIsConfirmOpen(true); }} className="space-y-8">
         
         {/* Recruitment Timer Settings */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
-          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 bg-white/30 flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 text-blue-600 rounded-2xl">
               <CalendarClock className="size-6" />
             </div>
@@ -203,7 +203,7 @@ export function SettingsManager() {
             <label className="flex items-start gap-4 cursor-pointer group">
               <div className="relative flex items-center mt-1">
                 <input type="checkbox" checked={isRecruitmentOpen} onChange={e => setIsRecruitmentOpen(e.target.checked)} className="peer sr-only" />
-                <div className="w-14 h-7 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/60 backdrop-blur-xl after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                <div className="w-14 h-7 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
               </div>
               <div>
                 <span className="text-lg font-bold text-slate-800 group-hover:text-green-600 transition-colors">Recruitment is Open</span>
@@ -214,23 +214,23 @@ export function SettingsManager() {
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 transition-opacity duration-300 ${isRecruitmentOpen ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">Start Date & Time</label>
-                <input type="datetime-local" value={recruitmentStart} onChange={e => setRecruitmentStart(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
+                <input type="datetime-local" value={recruitmentStart} onChange={e => setRecruitmentStart(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">End Date & Time</label>
-                <input type="datetime-local" value={recruitmentEnd} onChange={e => setRecruitmentEnd(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
+                <input type="datetime-local" value={recruitmentEnd} onChange={e => setRecruitmentEnd(e.target.value)} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">Membership Fee (BDT)</label>
-                <input type="number" min="0" value={membershipFee} onChange={e => setMembershipFee(Number(e.target.value))} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
+                <input type="number" min="0" value={membershipFee} onChange={e => setMembershipFee(Number(e.target.value))} disabled={!isRecruitmentOpen} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:bg-white/40" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Global Contact Info */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
-          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 bg-white/30 flex items-center gap-3">
             <div className="p-2 bg-orange-500/10 text-orange-600 rounded-2xl">
               <Phone className="size-6" />
             </div>
@@ -244,7 +244,7 @@ export function SettingsManager() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase text-slate-500">Official Contact Number</label>
               <div className="flex flex-col sm:flex-row gap-4">
-                <input type="tel" value={officialContact} onChange={e => setOfficialContact(e.target.value)} placeholder="+880 1..." className="flex-1 px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                <input type="tel" value={officialContact} onChange={e => setOfficialContact(e.target.value)} placeholder="+880 1..." className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                 <button type="button" onClick={syncPresidentNumber} disabled={isSyncing} className="flex items-center justify-center gap-2 bg-white/40 text-slate-800 px-6 py-3 rounded-2xl font-bold hover:bg-white/70 transition-colors disabled:opacity-50">
                   <RefreshCw className={`size-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   Sync with President
@@ -256,8 +256,8 @@ export function SettingsManager() {
         </div>
 
         {/* Payment Methods */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
-          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center justify-between">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 bg-white/30 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/10 text-green-600 rounded-2xl">
                 <Wallet className="size-6" />
@@ -281,7 +281,7 @@ export function SettingsManager() {
               <p className="text-sm text-slate-500 italic">No payment methods configured.</p>
             ) : (
               paymentMethods.map((pm, idx) => (
-                <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-white/30 p-4 rounded-2xl border border-white/60">
+                <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-white/30 p-4 rounded-2xl border border-slate-200">
                   <div className="w-full sm:w-1/3">
                     <select
                       value={pm.method}
@@ -290,7 +290,7 @@ export function SettingsManager() {
                         newMethods[idx].method = e.target.value;
                         setPaymentMethods(newMethods);
                       }}
-                      className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none"
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] outline-none"
                     >
                       <option value="bKash">bKash</option>
                       <option value="Nagad">Nagad</option>
@@ -309,7 +309,7 @@ export function SettingsManager() {
                           newMethods[idx].bank_name = e.target.value;
                           setPaymentMethods(newMethods);
                         }}
-                        className="w-full sm:w-1/2 px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none"
+                        className="w-full sm:w-1/2 px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] outline-none"
                       />
                     )}
                     <input
@@ -321,7 +321,7 @@ export function SettingsManager() {
                         newMethods[idx].account_number = e.target.value;
                         setPaymentMethods(newMethods);
                       }}
-                      className={`w-full ${pm.method === 'Bank' ? 'sm:w-1/2' : 'flex-1'} px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] outline-none`}
+                      className={`w-full ${pm.method === 'Bank' ? 'sm:w-1/2' : 'flex-1'} px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] outline-none`}
                     />
                   </div>
                   <button
@@ -338,8 +338,8 @@ export function SettingsManager() {
         </div>
 
         {/* Global Background Media */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
-          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 bg-white/30 flex items-center gap-3">
             <div className="p-2 bg-purple-500/10 text-purple-600 rounded-2xl">
               <MonitorPlay className="size-6" />
             </div>
@@ -359,7 +359,7 @@ export function SettingsManager() {
                 { label: 'Members Page Header', key: 'members', prefix: 'bg_members', state: bgMembers, setBg: setBgMembers },
                 { label: 'About Page Header', key: 'about', prefix: 'bg_about_header', state: bgAboutHeader, setBg: setBgAboutHeader },
               ].map(item => (
-                <div key={item.key} className="space-y-2 border border-white/60 rounded-2xl p-4 bg-white/20 relative">
+                <div key={item.key} className="space-y-2 border border-slate-200 rounded-2xl p-4 bg-white/20 relative">
                   <label className="text-xs font-bold uppercase text-slate-800">{item.label}</label>
                   
                   {uploadingMedia[item.key] ? (
@@ -398,8 +398,8 @@ export function SettingsManager() {
         </div>
 
         {/* About Page Media */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden shadow-xl shadow-slate-200/40">
-          <div className="p-6 border-b border-white/60 bg-white/30 flex items-center gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 bg-white/30 flex items-center gap-3">
             <div className="p-2 bg-indigo-500/10 text-indigo-600 rounded-2xl">
               <MonitorPlay className="size-6" />
             </div>
@@ -420,7 +420,7 @@ export function SettingsManager() {
                 { label: 'Journey Image 4', key: 'journey4', prefix: 'bg_journey_4', state: bgJourney4, setBg: setBgJourney4 },
                 { label: 'Journey Image 5', key: 'journey5', prefix: 'bg_journey_5', state: bgJourney5, setBg: setBgJourney5 },
               ].map(item => (
-                <div key={item.key} className="space-y-2 border border-white/60 rounded-2xl p-4 bg-white/20 relative">
+                <div key={item.key} className="space-y-2 border border-slate-200 rounded-2xl p-4 bg-white/20 relative">
                   <label className="text-xs font-bold uppercase text-slate-800">{item.label}</label>
                   
                   {uploadingMedia[item.key] ? (

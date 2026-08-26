@@ -226,7 +226,7 @@ export function ApplicationsManager() {
               placeholder="Search applications..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2.5 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none text-sm w-full bg-white/40 backdrop-blur-md transition-all placeholder:text-slate-400"
+              className="pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none text-sm w-full bg-slate-50 transition-all placeholder:text-slate-400"
             />
           </div>
           {activeTab === 'Member' && (
@@ -234,7 +234,7 @@ export function ApplicationsManager() {
               <button onClick={() => handleExport(false)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
                 Export All
               </button>
-              <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-xl shadow-slate-200/40 shadow-[#F26522]/20 transition-all whitespace-nowrap">
+              <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm shadow-[#F26522]/20 transition-all whitespace-nowrap">
                 Export Approved
               </button>
             </div>
@@ -243,7 +243,7 @@ export function ApplicationsManager() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-white/60 pb-px">
+      <div className="flex items-center gap-1 border-b border-slate-200 pb-px">
         <button
           onClick={() => setActiveTab('Member')}
           className={cn(
@@ -270,7 +270,7 @@ export function ApplicationsManager() {
           <button onClick={() => handleExport(false)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
             Export All
           </button>
-          <button onClick={() => handleExport(true)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-xl shadow-slate-200/40 transition-all">
+          <button onClick={() => handleExport(true)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm transition-all">
             Export Approved
           </button>
         </div>
@@ -282,18 +282,18 @@ export function ApplicationsManager() {
           <p className="text-sm font-medium text-slate-500">Loading applications...</p>
         </div>
       ) : applications.length === 0 ? (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
-          <div className="mx-auto size-16 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center mb-4 border border-slate-100">
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
+          <div className="mx-auto size-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
             <Users className="size-8 text-slate-400" />
           </div>
           <h3 className="text-lg font-bold text-slate-800 mb-1">No Applications Found</h3>
           <p className="text-sm text-slate-500 max-w-sm mx-auto">There are currently no applications matching your criteria.</p>
         </div>
       ) : (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-white/40 backdrop-blur-md text-slate-500 border-b border-white/60">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
                 <tr>
                   <th className="px-5 py-4 font-semibold text-xs tracking-wide">Tracking ID & Date</th>
                   {activeTab === 'Event' && <th className="px-5 py-4 font-semibold text-xs tracking-wide">Event Name</th>}
@@ -311,7 +311,7 @@ export function ApplicationsManager() {
                   <th className="px-5 py-4 font-semibold text-xs tracking-wide text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white/60 backdrop-blur-xl">
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredApps.map((app, index) => {
                   const memberCount = app.team_members ? app.team_members.length : 1
                   const leadMember = app.team_members && app.team_members.length > 0 ? app.team_members[0] : null
@@ -320,7 +320,7 @@ export function ApplicationsManager() {
                   const contactPhone = leadMember?.phone || '-'
 
                   return (
-                    <tr key={`${app.application_id}-${index}`} className="hover:bg-white/40 backdrop-blur-md/80 transition-colors group">
+                    <tr key={`${app.application_id}-${index}`} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="px-5 py-4">
                         <div className="font-mono text-xs font-medium text-slate-700">{app.application_id}</div>
                         {app.created_at && (
@@ -388,7 +388,7 @@ export function ApplicationsManager() {
                       {activeTab === 'Event' && (
                         <td className="px-5 py-4">
                           {app.transaction_id ? (
-                            <span className="font-mono text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded border border-white/60">
+                            <span className="font-mono text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
                               {app.transaction_id}
                             </span>
                           ) : (
@@ -410,7 +410,7 @@ export function ApplicationsManager() {
                         <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button 
                             onClick={() => setSelectedApp(app)}
-                            className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors border border-white/60 hover:border-blue-200" 
+                            className="p-1.5 bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 hover:border-blue-200" 
                             title="View Details"
                           >
                             <Eye className="size-4" />
@@ -419,14 +419,14 @@ export function ApplicationsManager() {
                             <>
                               <button 
                                 onClick={() => handleStatusChange(app.application_id, 'Approved')}
-                                className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors border border-white/60 hover:border-emerald-200" 
+                                className="p-1.5 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors border border-slate-200 hover:border-emerald-200" 
                                 title="Approve"
                               >
                                 <CheckCircle className="size-4" />
                               </button>
                               <button 
                                 onClick={() => handleStatusChange(app.application_id, 'Rejected')}
-                                className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-white/60 hover:border-red-200" 
+                                className="p-1.5 bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-slate-200 hover:border-red-200" 
                                 title="Reject"
                               >
                                 <XCircle className="size-4" />
@@ -436,7 +436,7 @@ export function ApplicationsManager() {
                           {(app.status === 'Rejected' || app.status === 'Approved') && (
                             <button 
                               onClick={() => handleStatusChange(app.application_id, 'Pending')}
-                              className="p-1.5 bg-white/40 backdrop-blur-md text-slate-600 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-colors border border-white/60 hover:border-amber-200" 
+                              className="p-1.5 bg-slate-50 text-slate-600 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-colors border border-slate-200 hover:border-amber-200" 
                               title="Reset to Pending"
                             >
                               <Undo2 className="size-4" />
@@ -444,7 +444,7 @@ export function ApplicationsManager() {
                           )}
                           <button 
                             onClick={() => confirmDelete(app.application_id)}
-                            className="p-1.5 bg-white/40 backdrop-blur-md text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-white/60 hover:border-red-200 ml-1" 
+                            className="p-1.5 bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-slate-200 hover:border-red-200 ml-1" 
                             title="Delete Permanently"
                           >
                             <Trash2 className="size-4" />
@@ -491,9 +491,9 @@ export function ApplicationsManager() {
             }
           `}</style>
           <div className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm no-print" onClick={() => setSelectedApp(null)} />
-          <div id="printable-modal" className="relative bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
+          <div id="printable-modal" className="relative bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="sticky top-0 bg-white/95 backdrop-blur-md p-6 border-b border-white/60 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md p-6 border-b border-slate-200 flex items-center justify-between z-10">
               <div>
                 <h3 className="text-2xl font-bold text-slate-800">Application Details</h3>
                 <p className="text-sm font-mono text-slate-500 mt-1">{selectedApp.application_id}</p>
@@ -516,7 +516,7 @@ export function ApplicationsManager() {
                 )}
               </div>
               <div className="flex items-center gap-3 no-print">
-                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-white/40 text-slate-800 font-bold rounded-2xl hover:bg-white/40 backdrop-blur-md transition-colors">
+                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-white/40 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
                   <Printer className="size-4" />
                   Download PDF
                 </button>
@@ -529,7 +529,7 @@ export function ApplicationsManager() {
             {/* Content */}
             <div className="p-8 space-y-8">
               {selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
-                <div key={index} className="space-y-6 pb-8 border-b border-white/60 last:border-0 print-break-inside-avoid">
+                <div key={index} className="space-y-6 pb-8 border-b border-slate-200 last:border-0 print-break-inside-avoid">
                   <div className="flex items-start gap-4 mb-8">
                     <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
                       {index + 1}
@@ -545,10 +545,10 @@ export function ApplicationsManager() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Identity & Contact */}
                     <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Identity & Contact</h5>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Identity & Contact</h5>
                       
                       {member.photo_url && (
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-white/30 p-4 rounded-3xl border border-white/60 mb-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-white/30 p-4 rounded-xl border border-slate-200 mb-6">
                           <img 
                             src={member.photo_url} 
                             alt={`${member.full_name || member.name}'s profile photo`} 
@@ -561,7 +561,7 @@ export function ApplicationsManager() {
                               target="_blank"
                               rel="noopener noreferrer"
                               download={`Applicant_${member.full_name || member.name}_Photo`}
-                              className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-200/40 no-print"
+                              className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-sm no-print"
                             >
                               <Printer className="size-4" />
                               Download
@@ -583,7 +583,7 @@ export function ApplicationsManager() {
 
                     {/* Socials & Roles */}
                     <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Socials & Roles</h5>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Socials & Roles</h5>
                       <dl className="space-y-3 text-sm">
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-slate-800">{member.interested_roles || member.interested_role || '-'}</dd></div>
                         {member.other_role && <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-slate-800">{member.other_role}</dd></div>}
@@ -606,7 +606,7 @@ export function ApplicationsManager() {
 
                   {/* Story & Bio (Full Width) */}
                   <div className="mt-8">
-                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-white/60 pb-2">Biography & Experience</h5>
+                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Biography & Experience</h5>
                     <dl className="space-y-6 text-sm">
                       <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.bio || '-'}</dd></div>
                       <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.why_join || '-'}</dd></div>

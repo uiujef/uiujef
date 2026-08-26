@@ -82,7 +82,7 @@ export default function DashboardPage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {/* Stat Cards */}
-              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-slate-500">Total Events</p>
                   <div className="size-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
@@ -94,7 +94,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-slate-500">News Published</p>
                   <div className="size-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-slate-500">Total Members</p>
                   <div className="size-10 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center">
@@ -118,7 +118,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-white/60 backdrop-blur-xl p-5 rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-slate-500">Pending Apps</p>
                   <div className="size-10 rounded-full bg-[#F26522]/10 border border-[#F26522]/20 flex items-center justify-center">
@@ -131,8 +131,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="mt-8 bg-gradient-to-r from-slate-50 to-white rounded-3xl border border-white/60 p-8 flex flex-col items-center justify-center text-center shadow-xl shadow-slate-200/40">
-              <div className="mx-auto size-14 bg-[#F26522]/10 rounded-3xl flex items-center justify-center mb-5 rotate-3">
+            <div className="mt-8 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="mx-auto size-14 bg-[#F26522]/10 rounded-xl flex items-center justify-center mb-5 rotate-3">
                 <LayoutDashboard className="size-7 text-[#F26522]" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Systems Operational</h3>

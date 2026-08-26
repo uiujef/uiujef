@@ -253,7 +253,7 @@ export function MembersManager() {
     return (
       <div className="mb-12 animate-in fade-in slide-in-from-bottom-4">
         <div className="flex items-center gap-3 mb-6">
-          <div className="size-12 rounded-2xl bg-[#F26522]/10 flex items-center justify-center text-[#F26522] shadow-xl shadow-slate-200/40">
+          <div className="size-12 rounded-2xl bg-[#F26522]/10 flex items-center justify-center text-[#F26522] shadow-sm">
             {icon}
           </div>
           <div>
@@ -263,12 +263,12 @@ export function MembersManager() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {data.map(member => (
-            <div key={member.id} className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden hover:shadow-lg transition-all group relative">
+            <div key={member.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-lg transition-all group relative">
               <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                <button onClick={() => openModal(member)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-xl shadow-slate-200/40 transition-colors" title="Edit">
+                <button onClick={() => openModal(member)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                   <Edit2 className="size-4" />
                 </button>
-                <button onClick={() => confirmDelete(member.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-xl shadow-slate-200/40 transition-colors" title="Delete">
+                <button onClick={() => confirmDelete(member.id)} className="p-2 bg-white/90 backdrop-blur text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg shadow-sm transition-colors" title="Delete">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -292,12 +292,12 @@ export function MembersManager() {
                     </div>
                   )}
                 </div>
-                <div className="mt-6 pt-5 border-t border-white/60/50 grid grid-cols-2 gap-4">
+                <div className="mt-6 pt-5 border-t border-slate-200/50 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">ID / Dept</p>
                     <p className="text-xs font-mono font-semibold text-slate-800 truncate" title={member.student_id}>{member.student_id || 'N/A'}</p>
                   </div>
-                  <div className="text-center border-l border-white/60/50">
+                  <div className="text-center border-l border-slate-200/50">
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Blood</p>
                     <p className="text-xs font-bold text-red-600">{member.blood_group}</p>
                   </div>
@@ -329,8 +329,8 @@ export function MembersManager() {
           <p className="text-lg font-semibold text-slate-800">Loading members directory...</p>
         </div>
       ) : members.length === 0 ? (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/60 p-12 text-center shadow-xl shadow-slate-200/40">
-          <div className="mx-auto size-20 bg-white/40 rounded-3xl flex items-center justify-center mb-6 transform -rotate-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
+          <div className="mx-auto size-20 bg-white/40 rounded-xl flex items-center justify-center mb-6 transform -rotate-6">
             <Users className="size-10 text-slate-500" />
           </div>
           <h3 className="text-2xl font-bold text-slate-800 mb-3">No Members Found</h3>
@@ -352,7 +352,7 @@ export function MembersManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-6 sm:px-8 sm:py-6 border-b border-white/60 flex items-center justify-between bg-transparent z-10 shrink-0">
+            <div className="p-6 sm:px-8 sm:py-6 border-b border-slate-200 flex items-center justify-between bg-transparent z-10 shrink-0">
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{editingMember ? 'Edit Member Profile' : 'Add New Member'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="size-10 flex items-center justify-center rounded-full hover:bg-white/40 text-slate-500 transition-colors">✕</button>
             </div>
@@ -362,41 +362,41 @@ export function MembersManager() {
                 
                 {/* Basic Info */}
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-white/60 pb-2">Basic Information</h4>
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Basic Information</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Full Name *</label>
-                      <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Student ID *</label>
-                      <input required type="text" value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="011231..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none font-mono transition-all" />
+                      <input required type="text" value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="011231..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none font-mono transition-all" />
                     </div>
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-white/60 pb-2">Contact Details</h4>
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Contact Details</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="space-y-2 sm:col-span-1">
                       <label className="text-xs font-bold uppercase text-slate-500">Phone Number</label>
-                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                     <div className="space-y-2 sm:col-span-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Email Address</label>
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                   </div>
                 </div>
 
                 {/* Role & Bio */}
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-white/60 pb-2">Role & Assignment</h4>
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Role & Assignment</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Category *</label>
-                      <select value={baseCategory} onChange={e => setBaseCategory(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white/60 backdrop-blur-xl transition-all">
+                      <select value={baseCategory} onChange={e => setBaseCategory(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
                         {BASE_CATEGORIES.map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
@@ -404,7 +404,7 @@ export function MembersManager() {
                     {baseCategory === 'Executive Panel' && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Executive Designation *</label>
-                        <select value={executiveDesignation} onChange={e => setExecutiveDesignation(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white/60 backdrop-blur-xl transition-all">
+                        <select value={executiveDesignation} onChange={e => setExecutiveDesignation(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
                           {PREDEFINED_EXEC_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                       </div>
@@ -413,7 +413,7 @@ export function MembersManager() {
                     {((baseCategory === 'Executive Panel' && executiveDesignation === 'Other (Custom)') || baseCategory === 'Other') && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Custom Role Title *</label>
-                        <input required type="text" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="e.g. IT Lead" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                        <input required type="text" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="e.g. IT Lead" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                       </div>
                     )}
                   </div>
@@ -422,11 +422,11 @@ export function MembersManager() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 animate-in fade-in slide-in-from-top-2">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Past Role in Club</label>
-                        <input type="text" value={pastRole} onChange={e => setPastRole(e.target.value)} placeholder="e.g. Former President" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                        <input type="text" value={pastRole} onChange={e => setPastRole(e.target.value)} placeholder="e.g. Former President" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Current Job / Company</label>
-                        <input type="text" value={currentJob} onChange={e => setCurrentJob(e.target.value)} placeholder="e.g. Software Engineer at Google" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                        <input type="text" value={currentJob} onChange={e => setCurrentJob(e.target.value)} placeholder="e.g. Software Engineer at Google" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                       </div>
                     </div>
                   )}
@@ -434,45 +434,45 @@ export function MembersManager() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Blood Group</label>
-                      <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white/60 backdrop-blur-xl transition-all">
+                      <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
                         {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Student Address</label>
-                      <input type="text" value={studentAddress} onChange={e => setStudentAddress(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="text" value={studentAddress} onChange={e => setStudentAddress(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                   </div>
                 </div>
 
                 {/* Social Links */}
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-white/60 pb-2">Social Links</h4>
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Social Links</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Facebook URL</label>
-                      <input type="url" value={facebookUrl} onChange={e => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="url" value={facebookUrl} onChange={e => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">LinkedIn URL</label>
-                      <input type="url" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="url" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Instagram URL</label>
-                      <input type="url" value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      <input type="url" value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                     </div>
                   </div>
                 </div>
 
                 {/* Media & Bio */}
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-white/60 pb-2">Media & Biography</h4>
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Media & Biography</h4>
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-slate-500">Profile Image Source</label>
-                      <div className="flex bg-white/50 p-1 rounded-2xl w-fit mb-2 border border-white/60">
-                        <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Upload File</button>
-                        <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white/60 backdrop-blur-xl text-slate-800 shadow-xl shadow-slate-200/40' : 'text-slate-500 hover:text-slate-800'}`}>Paste URL</button>
+                      <div className="flex bg-white/50 p-1 rounded-2xl w-fit mb-2 border border-slate-200">
+                        <button type="button" onClick={() => setImageInputType('upload')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'upload' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Upload File</button>
+                        <button type="button" onClick={() => setImageInputType('url')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${imageInputType === 'url' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Paste URL</button>
                       </div>
                       
                       {imageInputType === 'upload' ? (
@@ -486,16 +486,16 @@ export function MembersManager() {
                           />
                         </div>
                       ) : (
-                        <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
+                        <input type="url" value={externalImageUrl} onChange={e => setExternalImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all font-mono text-sm" />
                       )}
 
                       {/* Preview logic */}
                       {(imageInputType === 'url' && externalImageUrl) ? (
-                        <div className="mt-4 aspect-video relative rounded-2xl overflow-hidden border border-white/60 bg-white/50 w-full max-w-[200px] h-32">
+                        <div className="mt-4 aspect-video relative rounded-2xl overflow-hidden border border-slate-200 bg-white/50 w-full max-w-[200px] h-32">
                           <img src={externalImageUrl} alt="Preview" className="object-cover w-full h-full" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/200x200?text=Invalid+Image+URL')} />
                         </div>
                       ) : (imageUrl && !externalImageUrl) ? (
-                        <div className="mt-3 flex items-center gap-3 bg-white/50 p-2 rounded-2xl border border-white/60 w-max">
+                        <div className="mt-3 flex items-center gap-3 bg-white/50 p-2 rounded-2xl border border-slate-200 w-max">
                           <img src={imageUrl} alt="Current" className="size-10 rounded-lg object-cover" />
                           <span className="text-sm font-medium text-slate-800 pr-4">Current Image Active</span>
                         </div>
@@ -505,11 +505,11 @@ export function MembersManager() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Personal Quote / Bio</label>
-                        <textarea rows={3} value={quote} onChange={e => setQuote(e.target.value)} placeholder="A short meaningful quote or bio..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                        <textarea rows={3} value={quote} onChange={e => setQuote(e.target.value)} placeholder="A short meaningful quote or bio..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Hobby / Interest</label>
-                        <textarea rows={3} value={hobby} onChange={e => setHobby(e.target.value)} placeholder="e.g. Reading, Coding..." className="w-full px-4 py-3 rounded-2xl border border-white/60 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                        <textarea rows={3} value={hobby} onChange={e => setHobby(e.target.value)} placeholder="e.g. Reading, Coding..." className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
                       </div>
                     </div>
                   </div>
@@ -517,7 +517,7 @@ export function MembersManager() {
 
               </div>
 
-              <div className="mt-10 pt-6 flex justify-end gap-3 border-t border-white/60 sticky bottom-0 bg-white/60 backdrop-blur-xl">
+              <div className="mt-10 pt-6 flex justify-end gap-3 border-t border-slate-200 sticky bottom-0 bg-white">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-2xl font-bold text-slate-500 hover:bg-white/40 transition-colors">
                   Cancel
                 </button>

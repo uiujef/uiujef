@@ -30,14 +30,14 @@ export function AdminSidebar() {
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between bg-white/60 backdrop-blur-xl border-b border-white/60 p-4 sticky top-0 z-30 shadow-xl shadow-slate-200/40">
-        <div className="font-serif text-lg font-bold text-slate-800 flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-[#F26522] flex items-center justify-center shadow-md">
+      <div className="md:hidden flex items-center justify-between bg-white border-b border-slate-200 p-4 sticky top-0 z-30 shadow-sm">
+        <div className="font-serif text-lg font-bold text-slate-900 flex items-center gap-3">
+          <div className="size-8 rounded-lg bg-[#F26522] flex items-center justify-center">
             <span className="text-white font-bold leading-none">J</span>
           </div>
           UIUJEF Admin
         </div>
-        <button onClick={toggleSidebar} className="text-slate-600 p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+        <button onClick={toggleSidebar} className="text-slate-600 p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors border border-slate-200">
           {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
@@ -45,26 +45,28 @@ export function AdminSidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation */}
       <aside className={cn(
-        "fixed md:sticky top-0 left-0 h-screen w-72 bg-white/60 backdrop-blur-xl border-r border-white/60 flex flex-col shadow-xl md:shadow-none z-50 transition-transform duration-300 ease-in-out md:translate-x-0",
+        "fixed md:sticky top-0 left-0 h-screen w-72 bg-white border-r border-slate-200 flex flex-col z-50 transition-transform duration-300 ease-in-out md:translate-x-0 shadow-2xl md:shadow-none",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 border-b border-slate-100 hidden md:flex flex-col items-center justify-center">
-          <div className="size-14 rounded-3xl bg-gradient-to-br from-[#F26522] to-[#FF7A3D] flex items-center justify-center shadow-lg shadow-[#F26522]/20 mb-3">
-            <span className="text-white font-black text-2xl leading-none tracking-tighter">JEF</span>
+        <div className="p-6 border-b border-slate-200 hidden md:flex items-center gap-3">
+          <div className="size-10 rounded-lg bg-[#F26522] flex items-center justify-center shadow-inner">
+            <span className="text-white font-black text-xl leading-none tracking-tighter">JEF</span>
           </div>
-          <h2 className="font-bold text-slate-800 tracking-tight">Admin Portal</h2>
-          <p className="text-xs font-medium text-slate-500">Secure Management</p>
+          <div>
+            <h2 className="font-bold text-slate-900 tracking-tight leading-tight">Admin Portal</h2>
+            <p className="text-xs font-medium text-slate-500">Secure Management</p>
+          </div>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 px-3">Main Navigation</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4 px-3">Main Navigation</div>
           {navItems.map((item) => {
             const isActive = item.tab === currentTab
             return (
@@ -73,14 +75,14 @@ export function AdminSidebar() {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group font-medium",
+                  "flex items-center gap-3.5 px-4 py-3 rounded-lg transition-all group font-medium",
                   isActive 
-                    ? "bg-[#F26522]/10 text-[#F26522]" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    ? "bg-slate-100 text-slate-900 shadow-sm border border-slate-200" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent"
                 )}
               >
                 <item.icon className={cn(
-                  "size-4.5 transition-colors",
+                  "size-5 transition-colors",
                   isActive ? "text-[#F26522]" : "text-slate-400 group-hover:text-slate-600"
                 )} />
                 <span className="text-sm">{item.label}</span>
@@ -89,7 +91,7 @@ export function AdminSidebar() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-100 bg-white/40 backdrop-blur-md">
+        <div className="p-4 border-t border-slate-200 bg-slate-50/50">
           <LogoutButton />
         </div>
       </aside>
