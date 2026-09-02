@@ -100,6 +100,7 @@ const jsonLd = {
 
 import { Toaster } from 'sonner'
 import { AIChatbot } from '@/components/AIChatbot'
+import NextTopLoader from 'nextjs-toploader'
 
 export default function RootLayout({
   children,
@@ -115,6 +116,11 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-svh flex-col font-sans antialiased">
+        <NextTopLoader
+          color="#F26522"
+          showSpinner={false}
+          shadow="0 0 10px #F26522,0 0 5px #F26522"
+        />
         <div className="flex flex-1 flex-col">{children}</div>
         <CreditFooter />
         <AIChatbot />
