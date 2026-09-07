@@ -40,9 +40,24 @@ export function CloudinaryUploader({
           resourceType: resourceType,
           clientAllowedFormats: resourceType === "image" ? ["png", "jpeg", "jpg", "webp", "gif"] : undefined,
           maxFileSize: 104857600,
-          maxVideoFileSize: 104857600,
-          showCompletedButton: true,
-        }}
+          styles: {
+            palette: {
+              window: "#0B1120",
+              sourceBg: "#0B1120",
+              windowBorder: "#F26522",
+              tabIcon: "#FFFFFF",
+              inactiveTabIcon: "#8A94A6",
+              menuIcons: "#FFFFFF",
+              link: "#F26522",
+              action: "#F26522",
+              inProgress: "#F26522",
+              complete: "#22c55e",
+              error: "#ef4444",
+              textDark: "#0B1120",
+              textLight: "#FFFFFF"
+            }
+          }
+        } as any}
         onSuccess={(result: any) => {
           toast.success("Image uploaded successfully!");
           if (result?.info?.secure_url) {

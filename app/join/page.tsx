@@ -29,6 +29,9 @@ type PendingMemberPayload = {
   mother_name: string
   blood_group: string
   department: string
+  trimester: string
+  skills: string
+  hobby: string
   bio: string
   why_join: string
   expect_from_jef: string
@@ -41,6 +44,7 @@ type PendingMemberPayload = {
   facebook_url?: string
   instagram_url?: string
   linkedin_url?: string
+  portfolio_url?: string
   photo_url: string | null
   other_role?: string
   status: 'pending'
@@ -153,6 +157,9 @@ export default function JoinPage() {
     mother_name: '',
     blood_group: '',
     department: '',
+    trimester: '',
+    skills: '',
+    hobby: '',
     bio: '',
     why_join: '',
     expect_from_jef: '',
@@ -452,9 +459,6 @@ export default function JoinPage() {
       </div>
     )
   }
-
-  return (
-    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" onInput={() => telemetryStore.notifyTyping('Member Registration')}>
 
   return (
     <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" onInput={() => telemetryStore.notifyTyping('Member Registration')}>
