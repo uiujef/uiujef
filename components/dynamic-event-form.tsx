@@ -7,6 +7,7 @@ import emailjs from '@emailjs/browser'
 import { supabase } from '@/lib/supabase'
 import type { EventRegistrationConfig } from '@/types'
 import { cn } from '@/lib/utils'
+import { telemetryStore } from '@/components/telemetry-provider'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -428,6 +429,7 @@ export function DynamicEventForm({
   return (
     <form
       onSubmit={handleSubmit}
+      onInput={() => telemetryStore.notifyTyping(`Event Registration: ${eventName}`)}
       className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
     >
       <div className="space-y-6 p-6 sm:p-8">

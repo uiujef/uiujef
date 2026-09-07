@@ -102,6 +102,8 @@ import { Toaster } from 'sonner'
 import { AIChatbot } from '@/components/AIChatbot'
 import NextTopLoader from 'nextjs-toploader'
 
+import { TelemetryProvider } from '@/components/telemetry-provider'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -124,6 +126,7 @@ export default function RootLayout({
         <div className="flex flex-1 flex-col">{children}</div>
         <CreditFooter />
         <AIChatbot />
+        <TelemetryProvider />
         <Toaster richColors position="top-right" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

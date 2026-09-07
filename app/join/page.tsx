@@ -1,5 +1,6 @@
 'use client'
 import { supabase } from '@/lib/supabase'
+import { telemetryStore } from "@/components/telemetry-provider"
 import React, { useState, useEffect, useReducer, useCallback, ChangeEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -453,7 +454,10 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative">
+    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" onInput={() => telemetryStore.notifyTyping('Member Registration')}>
+
+  return (
+    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" onInput={() => telemetryStore.notifyTyping('Member Registration')}>
       <div className="max-w-3xl w-full flex flex-col gap-8">
         
         {/* Back to Home Button */}

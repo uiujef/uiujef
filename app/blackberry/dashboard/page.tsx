@@ -8,6 +8,8 @@ import { ApplicationsManager } from '@/components/admin/applications-manager'
 import { MembersManager } from '@/components/admin/members-manager'
 import { GalleryManager } from '@/components/admin/gallery-manager'
 import { SettingsManager } from '@/components/admin/settings-manager'
+import { TelemetryOverview } from "@/components/admin/telemetry-overview"
+
 import { WhyJoinManager } from '@/components/admin/why-join-manager'
 import { SponsorsManager } from '@/components/admin/sponsors-manager'
 import { ArchiveManager } from '@/components/admin/archive-manager'
@@ -134,15 +136,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="mt-8 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center shadow-sm">
-              <div className="mx-auto size-14 bg-[#F26522]/10 rounded-xl flex items-center justify-center mb-5 rotate-3">
-                <LayoutDashboard className="size-7 text-[#F26522]" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Systems Operational</h3>
-              <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
-                Database integrations are fully active. Use the navigation sidebar to securely manage your community, events, and applications.
-              </p>
-            </div>
+            <TelemetryOverview stats={stats} />
           </div>
         )
     }
