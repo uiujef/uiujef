@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: `Members — ${org.shortName}`,
+  title: `Community — ${org.shortName}`,
   description: `Meet the members and executive board of ${org.shortName}.`,
 }
 

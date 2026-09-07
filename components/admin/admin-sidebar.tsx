@@ -11,7 +11,7 @@ const navItems = [
   { label: 'Overview', href: '/blackberry/dashboard', icon: LayoutDashboard, tab: null },
   { label: 'Manage Events', href: '/blackberry/dashboard?tab=events', icon: Calendar, tab: 'events' },
   { label: 'Manage News', href: '/blackberry/dashboard?tab=news', icon: FileText, tab: 'news' },
-  { label: 'Manage Members', href: '/blackberry/dashboard?tab=members', icon: Users, tab: 'members' },
+  { label: 'Manage Community', href: '/blackberry/dashboard?tab=members', icon: Users, tab: 'members' },
   { label: 'Manage Gallery', href: '/blackberry/dashboard?tab=gallery', icon: ImageIcon, tab: 'gallery' },
   { label: 'Applications', href: '/blackberry/dashboard?tab=applications', icon: ShieldCheck, tab: 'applications' },
   { label: 'Why Join Us', href: '/blackberry/dashboard?tab=why-join', icon: FileText, tab: 'why-join' },

@@ -326,12 +326,12 @@ export function MembersManager() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Manage Members</h2>
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Manage Community</h2>
           <p className="text-slate-500 mt-1">Organize and update the official UIUJEF directory.</p>
         </div>
         <button onClick={() => openModal()} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
           <Plus className="size-5" />
-          Add New Member
+          Add to Community
         </button>
       </div>
 
@@ -365,7 +365,7 @@ export function MembersManager() {
           <div className="absolute inset-0 bg-navy-deep/70 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white/95 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
             <div className="p-6 sm:px-8 sm:py-6 border-b border-slate-200 flex items-center justify-between bg-transparent z-10 shrink-0">
-              <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{editingMember ? 'Edit Member Profile' : 'Add New Member'}</h3>
+              <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{editingMember ? 'Edit Member Profile' : 'Add to Community'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="size-10 flex items-center justify-center rounded-full hover:bg-white/40 text-slate-500 transition-colors">✕</button>
             </div>
             

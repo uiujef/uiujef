@@ -152,7 +152,7 @@ export function MembersSection() {
               Our Community
             </span>
             <h1 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white text-balance sm:text-4xl lg:text-5xl">
-              Meet the <span className="text-gold">Members</span>
+              Our <span className="text-gold">Community</span>
             </h1>
             <div className="mt-4 h-1.5 w-24 rounded-full bg-[#F26522]" />
             <p className="mt-6 text-base leading-relaxed text-white/70 text-pretty sm:text-lg">

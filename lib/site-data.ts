@@ -61,7 +61,7 @@ export const navLinks: NavLink[] = [
   { id: 'events', label: 'Events', href: '/events' },
   { id: 'news', label: 'News', href: '/news' },
   { id: 'gallery', label: 'Gallery', href: '/gallery' },
-  { id: 'members', label: 'Members', href: '/members' },
+  { id: 'members', label: 'Community', href: '/members' },
   { id: 'applications', label: 'Track Application', href: '/applications' },
   { id: 'contact', label: 'Contact', href: '/contact' },
 ]
@@ -223,7 +223,7 @@ export const footerColumns: { id: string; title: string; links: NavLink[] }[] = 
     links: [
       { id: 'events', label: 'Events', href: '/events' },
       { id: 'gallery', label: 'Gallery', href: '/gallery' },
-      { id: 'members', label: 'Members', href: '/members' },
+      { id: 'members', label: 'Community', href: '/members' },
       { id: 'contact', label: 'Contact', href: '/contact' },
     ],
   },

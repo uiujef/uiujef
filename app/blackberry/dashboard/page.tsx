@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 transition-shadow hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 hover:shadow-[#F26522]/10">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-slate-500">Total Members</p>
+                  <p className="text-sm font-medium text-slate-500">Total Community</p>
                   <div className="size-10 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center">
                     <Users className="size-5 text-orange-600" />
                   </div>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Systems Operational</h3>
               <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
-                Database integrations are fully active. Use the navigation sidebar to securely manage your members, events, and applications.
+                Database integrations are fully active. Use the navigation sidebar to securely manage your community, events, and applications.
               </p>
             </div>
           </div>
