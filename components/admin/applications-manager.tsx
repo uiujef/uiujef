@@ -25,6 +25,7 @@ export function ApplicationsManager() {
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedEventFilter, setSelectedEventFilter] = useState('All Events')
   const [activeTab, setActiveTab] = useState<'Member' | 'Event'>('Member')
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [appToDelete, setAppToDelete] = useState<string | null>(null)
@@ -36,6 +37,8 @@ export function ApplicationsManager() {
     try {
       let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
       
+      query = query.neq('status', 'archived')
+
       if (tab === 'Member') {
         query = query.in('type', ['Member', 'Membership'])
       } else {
@@ -146,9 +149,9 @@ export function ApplicationsManager() {
     if (!appToDelete) return
 
     try {
-      const { error } = await supabase.from('applications').delete().eq('application_id', appToDelete)
+      const { error } = await supabase.from('applications').update({ status: 'archived' }).eq('application_id', appToDelete)
       if (error) throw error
-      toast.success(`Deleted application ${appToDelete}`)
+      toast.success(`Archived application ${appToDelete}`)
       setApplications(apps => apps.filter(a => a.application_id !== appToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete): ' + err.message)
@@ -158,57 +161,83 @@ export function ApplicationsManager() {
     }
   }
 
-  const filteredApps = applications.filter(app => 
-    (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredApps = applications.filter(app => {
+    const matchesSearch = (app.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (app.application_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+      
+    const matchesEvent = activeTab === 'Event' && selectedEventFilter !== 'All Events' 
+      ? app.type === selectedEventFilter 
+      : true;
+      
+    return matchesSearch && matchesEvent
+  })
 
-  const handleExport = (approvedOnly: boolean) => {
-    let dataToExport = applications.filter(a => isMemberApp(a.type))
-    if (approvedOnly) {
-      dataToExport = dataToExport.filter(a => a.status === 'Approved')
+  const handleExport = async (approvedOnly: boolean) => {
+    const toastId = toast.loading('Exporting data...')
+    try {
+      let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
+      
+      if (activeTab === 'Member') {
+        query = query.in('type', ['Member', 'Membership'])
+      } else {
+        query = query.not('type', 'in', '("Member","Membership")')
+      }
+
+      if (approvedOnly) {
+        query = query.eq('status', 'Approved')
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+
+      const dataToExport = data as Application[]
+
+      const columns = [
+        { header: 'App ID', key: (r: Application) => r.application_id },
+        { header: 'Type', key: (r: Application) => r.type },
+        { header: 'Status', key: (r: Application) => r.status },
+        { header: 'Name', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
+            return r.team_members[0].name || r.name || ''
+          }
+        },
+        { header: 'Email', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.email || ''
+            return r.team_members[0].email || r.email || ''
+          }
+        },
+        { header: 'Phone', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).phone || ''
+            return r.team_members[0].phone || ''
+          }
+        },
+        { header: 'University', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).university || ''
+            return r.team_members[0].university || ''
+          }
+        },
+        { header: 'Student ID', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
+            return r.team_members[0].student_id || ''
+          }
+        },
+        { header: 'Address', key: (r: Application) => {
+            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).address || ''
+            return r.team_members[0].address || ''
+          }
+        },
+        { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
+      ]
+
+      exportToCsv(`UIUJEF_${activeTab}_Applications_${approvedOnly ? 'Approved' : 'All'}`, dataToExport, columns)
+      toast.success('Export complete', { id: toastId })
+    } catch (err: any) {
+      toast.error('Export Failed: ' + err.message, { id: toastId })
     }
-
-    const columns = [
-      { header: 'App ID', key: (r: Application) => r.application_id },
-      { header: 'Type', key: (r: Application) => r.type },
-      { header: 'Status', key: (r: Application) => r.status },
-      { header: 'Name', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
-          return r.team_members[0].name || r.name || ''
-        }
-      },
-      { header: 'Email', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.email || ''
-          return r.team_members[0].email || r.email || ''
-        }
-      },
-      { header: 'Phone', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).phone || ''
-          return r.team_members[0].phone || ''
-        }
-      },
-      { header: 'University', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).university || ''
-          return r.team_members[0].university || ''
-        }
-      },
-      { header: 'Student ID', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
-          return r.team_members[0].student_id || ''
-        }
-      },
-      { header: 'Address', key: (r: Application) => {
-          if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).address || ''
-          return r.team_members[0].address || ''
-        }
-      },
-      { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
-    ]
-
-    exportToCsv(`UIUJEF_Applications_${approvedOnly ? 'Approved' : 'All'}`, dataToExport, columns)
   }
+
+  const eventTypes = Array.from(new Set(applications.filter(a => !isMemberApp(a.type)).map(a => a.type)))
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -229,52 +258,69 @@ export function ApplicationsManager() {
               className="pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] outline-none text-sm w-full bg-slate-50 transition-all placeholder:text-slate-400"
             />
           </div>
-          {activeTab === 'Member' && (
-            <div className="hidden sm:flex items-center gap-2">
-              <button onClick={() => handleExport(false)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
-                Export All
-              </button>
-              <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm shadow-[#F26522]/20 transition-all whitespace-nowrap">
-                Export Approved
-              </button>
-            </div>
-          )}
+          <div className="hidden sm:flex items-center gap-2">
+            <button onClick={() => handleExport(false)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
+              Export All
+            </button>
+            <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm shadow-[#F26522]/20 transition-all whitespace-nowrap">
+              Export Approved
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-200 pb-px">
-        <button
-          onClick={() => setActiveTab('Member')}
-          className={cn(
-            "px-5 py-3 text-sm font-semibold transition-all border-b-2",
-            activeTab === 'Member' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-          )}
-        >
-          Member Registrations
-        </button>
-        <button
-          onClick={() => setActiveTab('Event')}
-          className={cn(
-            "px-5 py-3 text-sm font-semibold transition-all border-b-2",
-            activeTab === 'Event' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-          )}
-        >
-          Event Applications
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-px">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setActiveTab('Member')}
+            className={cn(
+              "px-5 py-3 text-sm font-semibold transition-all border-b-2",
+              activeTab === 'Member' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+            )}
+          >
+            Member Registrations
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('Event')
+              setSelectedEventFilter('All Events')
+            }}
+            className={cn(
+              "px-5 py-3 text-sm font-semibold transition-all border-b-2",
+              activeTab === 'Event' ? "border-[#F26522] text-[#F26522]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+            )}
+          >
+            Event Applications
+          </button>
+        </div>
+
+        {/* Event Filter Dropdown */}
+        {activeTab === 'Event' && eventTypes.length > 0 && (
+          <div className="pb-2 sm:pb-0 px-2 sm:px-0">
+            <select
+              value={selectedEventFilter}
+              onChange={(e) => setSelectedEventFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:outline-none focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] cursor-pointer shadow-sm hover:border-slate-300 transition-all"
+            >
+              <option value="All Events">All Events</option>
+              {eventTypes.map(type => (
+                <option key={type} value={type}>{type.replace('Event: ', '')}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
       
       {/* Mobile Export Buttons */}
-      {activeTab === 'Member' && (
-        <div className="flex sm:hidden items-center gap-2 w-full">
-          <button onClick={() => handleExport(false)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
-            Export All
-          </button>
-          <button onClick={() => handleExport(true)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm transition-all">
-            Export Approved
-          </button>
-        </div>
-      )}
+      <div className="flex sm:hidden items-center gap-2 w-full">
+        <button onClick={() => handleExport(false)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+          Export All
+        </button>
+        <button onClick={() => handleExport(true)} className="flex-1 px-4 py-2 text-sm font-semibold rounded-2xl bg-[#F26522] text-white hover:bg-[#F26522]/90 shadow-sm transition-all">
+          Export Approved
+        </button>
+      </div>
 
       {isLoading ? (
         <div className="py-32 text-center">
@@ -468,9 +514,9 @@ export function ApplicationsManager() {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Application"
-        message="Are you sure you want to delete this application permanently? This action cannot be undone."
-        requireText="delete"
+        title="Archive Application"
+        message="Are you sure you want to archive this application? It will be safely hidden from this view but kept in the database."
+        requireText="archive"
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)
