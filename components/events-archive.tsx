@@ -352,10 +352,10 @@ export default function EventsArchive() {
           aria-label={`Register for ${registerEvent.title}`}
         >
           <div
-            className="absolute inset-0 bg-navy-deep/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setRegisterEvent(null)}
           />
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-3xl bg-navy-deep shadow-2xl">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-3xl bg-[#0B1120] shadow-2xl border border-white/10">
             <button
               onClick={() => setRegisterEvent(null)}
               className="absolute right-3 top-3 z-50 flex size-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-orange-50 hover:text-orange-500"
@@ -403,7 +403,7 @@ export default function EventsArchive() {
           aria-label={`Details for ${detailsEvent.title}`}
         >
           <div
-            className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setDetailsEvent(null)}
           />
           <div className="relative w-full max-w-4xl max-h-[90vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">

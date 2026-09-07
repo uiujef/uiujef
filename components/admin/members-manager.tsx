@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { CloudinaryUploader } from '@/components/cloudinary-uploader'
 import { toast } from 'sonner'
+import { exportToCsv } from '@/lib/export-csv'
 
 type Member = {
   id: string
@@ -70,7 +71,7 @@ export function MembersManager() {
   const loadMembers = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
+      const { data, error } = await supabase.from('members').select('*').neq('status', 'archived').order('name', { ascending: true })
       if (error) throw error
       if (data) setMembers(data as Member[])
     } catch (err: any) {
@@ -224,9 +225,9 @@ export function MembersManager() {
     if (!memberToDelete) return
 
     try {
-      const { error } = await supabase.from('members').delete().eq('id', memberToDelete)
+      const { error } = await supabase.from('members').update({ status: 'archived' }).eq('id', memberToDelete)
       if (error) throw error
-      toast.success('Member deleted successfully.')
+      toast.success('Member archived successfully.')
       setMembers(members.filter(m => m.id !== memberToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete Member): ' + err.message)
@@ -326,6 +327,26 @@ export function MembersManager() {
     )
   }
 
+  const handleExport = (exportAll: boolean) => {
+    let dataToExport = exportAll ? members : groupedMembers[activeTab as keyof typeof groupedMembers] || members;
+    
+    const columns = [
+      { header: 'Member ID', key: (r: Member) => r.id },
+      { header: 'Name', key: (r: Member) => r.name || '' },
+      { header: 'Email', key: (r: Member) => r.email || '' },
+      { header: 'Phone', key: (r: Member) => r.phone || '' },
+      { header: 'Student ID', key: (r: Member) => r.student_id || '' },
+      { header: 'Blood Group', key: (r: Member) => r.blood_group || '' },
+      { header: 'Role', key: (r: Member) => r.role || '' },
+      { header: 'Current Job', key: (r: Member) => r.current_job || '' },
+      { header: 'Past Role', key: (r: Member) => r.past_role || '' },
+      { header: 'Hobby', key: (r: Member) => r.hobby || '' },
+      { header: 'Address', key: (r: Member) => r.student_address || '' },
+    ]
+
+    exportToCsv(`UIUJEF_Members_${exportAll ? 'All' : activeTab}`, dataToExport, columns)
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -333,10 +354,18 @@ export function MembersManager() {
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Manage Community</h2>
           <p className="text-slate-500 mt-1">Organize and update the official UIUJEF directory.</p>
         </div>
-        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
-          <Plus className="size-5" />
-          Add to Community
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => handleExport(false)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
+            Export Active Tab
+          </button>
+          <button onClick={() => handleExport(true)} className="px-4 py-2.5 text-sm font-semibold rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
+            Export All
+          </button>
+          <button onClick={() => openModal()} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap">
+            <Plus className="size-5" />
+            Add to Community
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -607,8 +636,8 @@ export function MembersManager() {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Member"
-        message="Are you sure you want to delete this member? This action cannot be undone."
+        title="Archive Member"
+        message="Are you sure you want to archive this member? They will be hidden from the active lists but kept in the database."
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

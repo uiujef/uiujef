@@ -10,6 +10,7 @@ import { GalleryManager } from '@/components/admin/gallery-manager'
 import { SettingsManager } from '@/components/admin/settings-manager'
 import { WhyJoinManager } from '@/components/admin/why-join-manager'
 import { SponsorsManager } from '@/components/admin/sponsors-manager'
+import { ArchiveManager } from '@/components/admin/archive-manager'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 
@@ -31,9 +32,9 @@ export default function DashboardPage() {
         setIsLoadingStats(true)
         try {
           const [eventsRes, newsRes, membersRes, appsRes] = await Promise.all([
-            supabase.from('events').select('*', { count: 'exact', head: true }),
-            supabase.from('news').select('*', { count: 'exact', head: true }),
-            supabase.from('members').select('*', { count: 'exact', head: true }),
+            supabase.from('events').select('*', { count: 'exact', head: true }).neq('status', 'archived'),
+            supabase.from('news').select('*', { count: 'exact', head: true }).neq('status', 'archived'),
+            supabase.from('members').select('*', { count: 'exact', head: true }).neq('status', 'archived'),
             supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Pending')
           ])
 
@@ -71,6 +72,8 @@ export default function DashboardPage() {
         return <WhyJoinManager />
       case 'sponsors':
         return <SponsorsManager />
+      case 'archive':
+        return <ArchiveManager />
       case 'overview':
       default:
         return (

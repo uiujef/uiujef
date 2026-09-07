@@ -40,7 +40,7 @@ export function NewsManager() {
   const loadNews = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from('news').select('*').order('published_at', { ascending: false })
+      const { data, error } = await supabase.from('news').select('*').neq('status', 'archived').order('published_at', { ascending: false })
       if (error) throw error
       if (data) setNews(data as NewsArticle[])
     } catch (err: any) {
@@ -130,9 +130,9 @@ export function NewsManager() {
     if (!newsToDelete) return
 
     try {
-      const { error } = await supabase.from('news').delete().eq('id', newsToDelete)
+      const { error } = await supabase.from('news').update({ status: 'archived' }).eq('id', newsToDelete)
       if (error) throw error
-      toast.success('Article deleted successfully.')
+      toast.success('Article archived successfully.')
       setNews(news.filter(n => n.id !== newsToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete News): ' + err.message)
@@ -301,8 +301,8 @@ export function NewsManager() {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Article"
-        message="Are you sure you want to delete this article? This action cannot be undone."
+        title="Archive Article"
+        message="Are you sure you want to archive this article? It will be hidden from the active list but kept in the database."
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

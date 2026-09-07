@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings, Menu, X, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings, Menu, X, ShieldCheck, Archive } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Applications', href: '/blackberry/dashboard?tab=applications', icon: ShieldCheck, tab: 'applications' },
   { label: 'Why Join Us', href: '/blackberry/dashboard?tab=why-join', icon: FileText, tab: 'why-join' },
   { label: 'Sponsors', href: '/blackberry/dashboard?tab=sponsors', icon: ImageIcon, tab: 'sponsors' },
+  { label: 'Archive', href: '/blackberry/dashboard?tab=archive', icon: Archive, tab: 'archive' },
   { label: 'Site Settings', href: '/blackberry/dashboard?tab=settings', icon: Settings, tab: 'settings' },
 ]
 

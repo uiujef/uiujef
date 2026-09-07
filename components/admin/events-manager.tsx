@@ -64,7 +64,7 @@ export function EventsManager() {
   const loadEvents = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from('events').select('*').order('date', { ascending: false })
+      const { data, error } = await supabase.from('events').select('*').neq('status', 'archived').order('date', { ascending: false })
       if (error) throw error
       if (data) setEvents(data as Event[])
     } catch (err: any) {
@@ -217,9 +217,9 @@ export function EventsManager() {
     if (!eventToDelete) return
 
     try {
-      const { error } = await supabase.from('events').delete().eq('id', eventToDelete)
+      const { error } = await supabase.from('events').update({ status: 'archived' }).eq('id', eventToDelete)
       if (error) throw error
-      toast.success('Event deleted successfully.')
+      toast.success('Event archived successfully.')
       setEvents(events.filter(ev => ev.id !== eventToDelete))
     } catch (err: any) {
       toast.error('Database Error (Delete Event): ' + err.message)
@@ -642,8 +642,8 @@ export function EventsManager() {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Event"
-        message="Are you sure you want to delete this event? This action cannot be undone."
+        title="Archive Event"
+        message="Are you sure you want to archive this event? It will be hidden from the active list but kept in the database."
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

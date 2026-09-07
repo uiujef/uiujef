@@ -18,6 +18,7 @@ export type Member = {
   email?: string
   phone?: string
   hobby?: string
+  status?: string
   socials?: {
     linkedin?: string
     github?: string
@@ -36,6 +37,7 @@ export type NewsArticle = {
   excerpt?: string
   content: string
   published?: boolean
+  status?: string
 }
 
 export type Event = {
@@ -47,6 +49,7 @@ export type Event = {
   image?: string
   category: string
   excerpt: string
+  status?: string
   isRegistrationOpen?: boolean
   requiresRegistration?: boolean
   registrationDeadline?: string // e.g. '2026-09-01T23:59:59'
