@@ -22,20 +22,28 @@ export function TelemetryProvider() {
     if (pathname?.startsWith('/blackberry')) return
 
     const channelId = `visitor-${Math.random().toString(36).substring(7)}`
-    const channel = supabase.channel('public:telemetry', {
+    const channel = supabase.channel('site_telemetry', {
       config: { presence: { key: channelId } }
     })
     
     channelRef.current = channel
 
-    channel.subscribe(async (status) => {
+    channel.subscribe(async (status, err) => {
+      if (err) {
+        console.warn('Telemetry connection error (harmless fallback):', err)
+        return
+      }
       if (status === 'SUBSCRIBED') {
-        await channel.track({
-          page: pathname,
-          isTyping: false,
-          formName: '',
-          startedAt: Date.now()
-        })
+        try {
+          await channel.track({
+            page: pathname,
+            isTyping: false,
+            formName: '',
+            startedAt: Date.now()
+          })
+        } catch (trackErr) {
+          console.warn('Telemetry track error:', trackErr)
+        }
       }
     })
 
@@ -43,23 +51,29 @@ export function TelemetryProvider() {
       if (!channelRef.current) return
       const { formName } = e.detail
 
-      await channelRef.current.track({
-        page: pathname,
-        isTyping: true,
-        formName,
-        startedAt: Date.now()
-      })
+      try {
+        await channelRef.current.track({
+          page: pathname,
+          isTyping: true,
+          formName,
+          startedAt: Date.now()
+        })
+      } catch (err) {
+        // ignore
+      }
 
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
 
       typingTimeoutRef.current = setTimeout(async () => {
         if (channelRef.current) {
-          await channelRef.current.track({
-            page: pathname,
-            isTyping: false,
-            formName: '',
-            startedAt: Date.now()
-          })
+          try {
+            await channelRef.current.track({
+              page: pathname,
+              isTyping: false,
+              formName: '',
+              startedAt: Date.now()
+            })
+          } catch (err) {}
         }
       }, 3000)
     }

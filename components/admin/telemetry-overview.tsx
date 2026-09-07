@@ -41,7 +41,7 @@ export function TelemetryOverview({ stats }: { stats: any }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const channel = supabase.channel('public:telemetry')
+    const channel = supabase.channel('site_telemetry')
     
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState()
@@ -61,7 +61,9 @@ export function TelemetryOverview({ stats }: { stats: any }) {
       setActiveApplicants(applicants)
     })
 
-    channel.subscribe()
+    channel.subscribe((status, err) => {
+      if (err) console.warn('Admin telemetry connection error:', err)
+    })
 
     return () => {
       supabase.removeChannel(channel)
