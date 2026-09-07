@@ -469,20 +469,20 @@ export function MembersManager() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className={baseCategory === 'Moderator' ? "space-y-2 sm:col-span-2" : "space-y-2"}>
-                      <label className="text-xs font-bold uppercase text-slate-500">Blood Group</label>
-                      <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
-                        {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
-                      </select>
-                    </div>
-                    {baseCategory !== 'Moderator' && (
+                  {baseCategory !== 'Moderator' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase text-slate-500">Blood Group</label>
+                        <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
+                          {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                        </select>
+                      </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Student Address</label>
                         <input type="text" value={studentAddress} onChange={e => setStudentAddress(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Social Links */}
