@@ -114,7 +114,7 @@ export function MembersSection() {
     { id: 'executive',  label: 'Executive Panel',  icon: Star,          count: executives.length },
     { id: 'general',    label: 'General Members',  icon: UserCheck,     count: generalMembers.length },
     { id: 'advisors',   label: 'Advisors',         icon: GraduationCap, count: advisors.length },
-    { id: 'moderators', label: 'Moderators',       icon: Shield,        count: moderators.length },
+    { id: 'moderators', label: 'Moderator',       icon: Shield,        count: moderators.length },
     { id: 'alumni',     label: 'Alumni',           icon: History,       count: alumni.length },
   ]
 
@@ -365,7 +365,7 @@ export function MembersSection() {
                 <>
                   <SectionHeader
                     icon={Shield}
-                    title="Moderators"
+                    title="Moderator"
                     subtitle="Dedicated mentors guiding the community and ensuring seamless operations."
                   />
                   {moderators.length > 0 ? (
