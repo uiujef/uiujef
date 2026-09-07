@@ -9,7 +9,7 @@ export function TelemetryOverview({ stats }: { stats: any }) {
   const [activeApplicants, setActiveApplicants] = useState<any[]>([])
   const [historicalData, setHistoricalData] = useState<any[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
-  const [trueVisitorCount, setTrueVisitorCount] = useState<number>(15893)
+  const [trueVisitorCount, setTrueVisitorCount] = useState<number>(0)
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -37,12 +37,12 @@ export function TelemetryOverview({ stats }: { stats: any }) {
       }
     }
     
+    // Initial True Visitor Count Fetch
     const fetchVisitors = async () => {
       try {
-        const { count, error } = await supabase.from('site_visits').select('*', { count: 'exact', head: true })
+        const { count, error } = await supabase.from('site_visitors').select('*', { count: 'exact', head: true })
         if (!error && count !== null) {
-          // Baseline + Dynamic Count
-          setTrueVisitorCount(15893 + count)
+          setTrueVisitorCount(count) // Zero-based true dynamic hits!
         }
       } catch (err) {
         // Table might not exist yet
@@ -53,6 +53,49 @@ export function TelemetryOverview({ stats }: { stats: any }) {
     fetchVisitors()
   }, [])
 
+  // Live Subscription for Site Visitors to auto-increment without refresh
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const channel = supabase.channel('realtime_visitors')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'site_visitors' },
+        () => {
+          setTrueVisitorCount(prev => prev + 1)
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  // Live Active Forms Heartbeat Polling
+  useEffect(() => {
+    let interval: any
+    const pollFormActivity = async () => {
+      try {
+        const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString()
+        const { data, error } = await supabase
+          .from('form_activity')
+          .select('form_type')
+          .eq('is_active', true)
+          .gte('updated_at', fiveSecondsAgo)
+
+        if (!error && data) {
+          setActiveApplicants(data.map(d => ({ formName: d.form_type })))
+        } else {
+          setActiveApplicants([])
+        }
+      } catch (err) {
+        // Table might not exist yet
+      }
+    }
+
+    pollFormActivity()
+    interval = setInterval(pollFormActivity, 2500)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Site-Wide Presence Channel
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -61,19 +104,14 @@ export function TelemetryOverview({ stats }: { stats: any }) {
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState()
       const users: any[] = []
-      const applicants: any[] = []
       
       Object.keys(state).forEach(key => {
         state[key].forEach((presence: any) => {
           users.push(presence)
-          if (presence.isTyping && presence.formName) {
-            applicants.push(presence)
-          }
         })
       })
       
       setActiveUsers(users)
-      setActiveApplicants(applicants)
     })
 
     channel.subscribe((status, err) => {

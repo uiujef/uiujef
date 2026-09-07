@@ -17,42 +17,53 @@ export const telemetryStore = {
   }
 }
 
+// Fallback UUID generator if crypto is unavailable
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+}
+
 export function TelemetryProvider() {
   const pathname = usePathname()
   const channelRef = useRef<any>(null)
   const heartbeatIntervalRef = useRef<any>(null)
   const isFocusedRef = useRef(false)
   const currentFormRef = useRef('')
+  const sessionIdRef = useRef<string>('')
 
-  // 1. Session Tracking (Dynamic Visitor Counter)
+  // 1. Session Tracking (Dynamic Visitor Counter - Zero-Based)
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (pathname?.startsWith('/blackberry')) return
 
     const trackSession = async () => {
-      const visitKey = 'jef_session_tracked_v1'
-      if (!sessionStorage.getItem(visitKey)) {
-        sessionStorage.setItem(visitKey, 'true')
+      let sessionId = sessionStorage.getItem('jef_session_id')
+      if (!sessionId) {
+        sessionId = generateId()
+        sessionStorage.setItem('jef_session_id', sessionId)
         try {
-          await supabase.from('site_visits').insert([{
+          // Atomically insert unique visitor session
+          await supabase.from('site_visitors').insert([{
+            session_id: sessionId,
             path: pathname,
-            user_agent: navigator.userAgent
+            created_at: new Date().toISOString()
           }])
         } catch (err) {
-          // Graceful fallback if table doesn't exist yet
-          console.warn('Could not record site visit (requires site_visits table):', err)
+          console.warn('Could not record site visit. Ensure site_visitors table exists.', err)
         }
       }
+      sessionIdRef.current = sessionId
     }
     trackSession()
   }, [pathname])
 
-  // 2. Presence & Form Heartbeat
+  // 2. Presence & Bulletproof Database Form Heartbeat
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (pathname?.startsWith('/blackberry')) return
 
-    const channelId = `visitor-${Math.random().toString(36).substring(7)}`
+    // Keep lightweight Presence for "Active Visitors Right Now" (Site-wide)
+    const channelId = `visitor-${sessionIdRef.current || generateId()}`
     const channel = supabase.channel('site_telemetry', {
       config: { presence: { key: channelId } }
     })
@@ -60,61 +71,45 @@ export function TelemetryProvider() {
     channelRef.current = channel
 
     channel.subscribe(async (status, err) => {
-      if (err) {
-        console.warn('Telemetry connection error (harmless fallback):', err)
-        return
-      }
+      if (err) return
       if (status === 'SUBSCRIBED') {
         try {
           await channel.track({
             page: pathname,
-            isTyping: isFocusedRef.current,
-            formName: currentFormRef.current,
-            startedAt: Date.now(),
-            lastHeartbeat: Date.now()
+            startedAt: Date.now()
           })
-        } catch (trackErr) {
-          console.warn('Telemetry track error:', trackErr)
-        }
+        } catch (trackErr) {}
       }
     })
 
+    const upsertFormHeartbeat = async () => {
+      if (!isFocusedRef.current || !currentFormRef.current || !sessionIdRef.current) return
+      try {
+        await supabase.from('form_activity').upsert({
+          id: sessionIdRef.current,
+          form_type: currentFormRef.current,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' })
+      } catch (err) {
+        // Fallback or ignore if table isn't created yet
+      }
+    }
+
     const handleFocus = async (e: any) => {
-      if (!channelRef.current) return
       const { formName } = e.detail
       isFocusedRef.current = true
       currentFormRef.current = formName
 
-      // Initial track
-      try {
-        await channelRef.current.track({
-          page: pathname,
-          isTyping: true,
-          formName,
-          startedAt: Date.now(),
-          lastHeartbeat: Date.now()
-        })
-      } catch (err) {}
+      // Immediate heartbeat ping
+      upsertFormHeartbeat()
 
-      // Start Continuous Heartbeat every 3 seconds
+      // Continuous strict ping every 2.5 seconds
       if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current)
-      heartbeatIntervalRef.current = setInterval(async () => {
-        if (channelRef.current && isFocusedRef.current) {
-          try {
-            await channelRef.current.track({
-              page: pathname,
-              isTyping: true,
-              formName: currentFormRef.current,
-              startedAt: Date.now(),
-              lastHeartbeat: Date.now()
-            })
-          } catch (err) {}
-        }
-      }, 3000)
+      heartbeatIntervalRef.current = setInterval(upsertFormHeartbeat, 2500)
     }
 
     const handleBlur = async () => {
-      if (!channelRef.current) return
       isFocusedRef.current = false
       currentFormRef.current = ''
 
@@ -122,15 +117,14 @@ export function TelemetryProvider() {
         clearInterval(heartbeatIntervalRef.current)
       }
 
-      try {
-        await channelRef.current.track({
-          page: pathname,
-          isTyping: false,
-          formName: '',
-          startedAt: Date.now(),
-          lastHeartbeat: Date.now()
-        })
-      } catch (err) {}
+      // Proactively delete/disable the session from heartbeat immediately
+      if (sessionIdRef.current) {
+        try {
+          await supabase.from('form_activity')
+            .update({ is_active: false, updated_at: new Date().toISOString() })
+            .eq('id', sessionIdRef.current)
+        } catch (err) {}
+      }
     }
 
     window.addEventListener('telemetry:focus', handleFocus as EventListener)
