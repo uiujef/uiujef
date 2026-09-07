@@ -10,22 +10,22 @@ import { cn } from '@/lib/utils'
 
 const linkClass = (isHome: boolean, isActive: boolean) =>
   cn(
-    'text-sm transition-colors duration-200',
+    'text-sm whitespace-nowrap transition-colors duration-200',
     isActive 
       ? 'text-[#F26522] font-bold border-b-2 border-[#F26522] pb-1' 
       : isHome 
-        ? 'font-semibold text-white/70 hover:text-white' 
-        : 'font-semibold text-muted-foreground hover:text-navy',
+        ? 'font-medium text-white/70 hover:text-white' 
+        : 'font-medium text-muted-foreground hover:text-navy',
   )
 
 const mobileLinkClass = (isHome: boolean, isActive: boolean) =>
   cn(
-    'block rounded-lg px-3 py-3 text-sm transition-colors',
+    'block rounded-lg px-3 py-3 text-sm whitespace-nowrap transition-colors',
     isActive
       ? 'text-[#F26522] font-bold bg-[#F26522]/10 border-l-4 border-[#F26522]'
       : isHome
-        ? 'font-semibold text-white/80 hover:bg-white/10 hover:text-white'
-        : 'font-semibold text-foreground hover:bg-secondary hover:text-navy',
+        ? 'font-medium text-white/80 hover:bg-white/10 hover:text-white'
+        : 'font-medium text-foreground hover:bg-secondary hover:text-navy',
   )
 
 export function SiteNav() {
@@ -65,7 +65,7 @@ export function SiteNav() {
         aria-label="Main"
         className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8"
       >
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0 mr-8 lg:mr-12">
           <Image
             src="/logo.png"
             alt="UIUJEF Logo"
@@ -76,11 +76,11 @@ export function SiteNav() {
           />
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 lg:gap-8 md:flex">
           {renderNavLinks((isActive) => linkClass(isHome, isActive))}
           <Link
             href={org.ctaHref}
-            className="inline-flex h-9 items-center rounded-full bg-gold px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-gold-soft"
+            className="inline-flex whitespace-nowrap h-9 items-center rounded-full bg-gold px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-gold-soft ml-2"
           >
             {org.ctaLabel}
           </Link>
