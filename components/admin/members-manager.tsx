@@ -285,10 +285,22 @@ export function MembersManager() {
                   <span className="inline-flex mt-2 items-center px-3 py-1 rounded-full bg-[#F26522]/10 text-[#F26522] text-[10px] font-bold uppercase tracking-wider">
                     {member.role}
                   </span>
-                  {(member.role === 'Alumni' || member.role === 'Advisor' || member.role === 'Moderator') && (
+                  {(member.role === 'Alumni' || member.role === 'Advisor') && (
                     <div className="mt-3 text-xs text-slate-500 line-clamp-2">
                       {member.current_job && <p className="font-medium">💼 {member.current_job}</p>}
                       {member.past_role && <p>Was: {member.past_role}</p>}
+                    </div>
+                  )}
+                  {member.role === 'Moderator' && (
+                    <div className="mt-3 text-xs text-slate-500 flex flex-col items-center gap-1.5 w-full">
+                      {member.current_job && <p className="font-medium text-slate-700">🎓 {member.current_job}</p>}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                        member.past_role === 'Ex-Moderator' 
+                          ? 'bg-slate-50 text-slate-500 border-slate-200' 
+                          : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      }`}>
+                        {member.past_role === 'Ex-Moderator' ? 'Ex-Moderator' : 'Current Moderator'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -340,7 +352,7 @@ export function MembersManager() {
         <div className="space-y-4">
           {renderSection('Executive Panel', <Star className="size-6" />, groupedMembers.executive)}
           {renderSection('Advisors', <Shield className="size-6" />, groupedMembers.advisors)}
-          {renderSection('Moderators', <Award className="size-6" />, groupedMembers.moderators)}
+          {renderSection('Moderator', <Award className="size-6" />, groupedMembers.moderators)}
           {renderSection('General Members', <Users className="size-6" />, groupedMembers.general)}
           {renderSection('Alumni', <GraduationCap className="size-6" />, groupedMembers.alumni)}
           {renderSection('Other Roles', <Briefcase className="size-6" />, groupedMembers.other)}
@@ -418,7 +430,7 @@ export function MembersManager() {
                     )}
                   </div>
 
-                  {(baseCategory === 'Alumni' || baseCategory === 'Advisor' || baseCategory === 'Moderator') && (
+                  {(baseCategory === 'Alumni' || baseCategory === 'Advisor') && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 animate-in fade-in slide-in-from-top-2">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Past Role in Club</label>
@@ -427,6 +439,28 @@ export function MembersManager() {
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-slate-500">Current Job / Company</label>
                         <input type="text" value={currentJob} onChange={e => setCurrentJob(e.target.value)} placeholder="e.g. Software Engineer at Google" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      </div>
+                    </div>
+                  )}
+
+                  {baseCategory === 'Moderator' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 animate-in fade-in slide-in-from-top-2">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase text-slate-500">University Designation</label>
+                        <input type="text" value={currentJob} onChange={e => setCurrentJob(e.target.value)} placeholder="e.g. Assistant Professor" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase text-slate-500">Moderator Status</label>
+                        <div className="flex gap-4 items-center h-[50px]">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="moderatorStatus" value="Current Moderator" checked={pastRole !== 'Ex-Moderator'} onChange={e => setPastRole(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522] accent-[#F26522]" />
+                            <span className="text-sm font-medium text-slate-700">Current Moderator</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="moderatorStatus" value="Ex-Moderator" checked={pastRole === 'Ex-Moderator'} onChange={e => setPastRole(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522] accent-[#F26522]" />
+                            <span className="text-sm font-medium text-slate-700">Ex-Moderator</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   )}
