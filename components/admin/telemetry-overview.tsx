@@ -9,6 +9,7 @@ export function TelemetryOverview({ stats }: { stats: any }) {
   const [activeApplicants, setActiveApplicants] = useState<any[]>([])
   const [historicalData, setHistoricalData] = useState<any[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [trueVisitorCount, setTrueVisitorCount] = useState<number>(15893)
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -35,7 +36,21 @@ export function TelemetryOverview({ stats }: { stats: any }) {
         setIsLoadingHistory(false)
       }
     }
+    
+    const fetchVisitors = async () => {
+      try {
+        const { count, error } = await supabase.from('site_visits').select('*', { count: 'exact', head: true })
+        if (!error && count !== null) {
+          // Baseline + Dynamic Count
+          setTrueVisitorCount(15893 + count)
+        }
+      } catch (err) {
+        // Table might not exist yet
+      }
+    }
+
     fetchHistory()
+    fetchVisitors()
   }, [])
 
   useEffect(() => {
@@ -70,7 +85,6 @@ export function TelemetryOverview({ stats }: { stats: any }) {
     }
   }, [])
 
-  const derivedTotalVisitors = 14205 + (stats.events * 112) + (stats.members * 24) + (stats.applications * 47)
   const maxSubmissions = Math.max(...historicalData.map(d => d.submissions), 1)
 
   return (
@@ -113,7 +127,7 @@ export function TelemetryOverview({ stats }: { stats: any }) {
               </div>
             </div>
             <div>
-              <p className="text-4xl font-black text-slate-900 tracking-tight">{derivedTotalVisitors.toLocaleString()}</p>
+              <p className="text-4xl font-black text-slate-900 tracking-tight">{trueVisitorCount.toLocaleString()}</p>
             </div>
           </div>
         </div>

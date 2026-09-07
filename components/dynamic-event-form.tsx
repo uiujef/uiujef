@@ -429,7 +429,12 @@ export function DynamicEventForm({
   return (
     <form
       onSubmit={handleSubmit}
-      onInput={() => telemetryStore.notifyTyping(`Event Registration: ${eventName}`)}
+      onFocusCapture={() => telemetryStore.startFocus(`Event Registration: ${eventName}`)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          telemetryStore.stopFocus()
+        }
+      }}
       className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
     >
       <div className="space-y-6 p-6 sm:p-8">

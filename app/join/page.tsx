@@ -461,7 +461,15 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" onInput={() => telemetryStore.notifyTyping('Member Registration')}>
+    <div 
+      className="min-h-screen bg-navy-deep py-12 px-4 flex justify-center relative" 
+      onFocusCapture={() => telemetryStore.startFocus('Member Registration')}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          telemetryStore.stopFocus()
+        }
+      }}
+    >
       <div className="max-w-3xl w-full flex flex-col gap-8">
         
         {/* Back to Home Button */}
