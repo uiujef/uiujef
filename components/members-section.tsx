@@ -71,7 +71,7 @@ export function MembersSection() {
           setBgMedia(settingsData.bg_members)
         }
 
-        const { data, error } = await supabase.from('members').select('*').order('name', { ascending: true })
+        const { data, error } = await supabase.from('members').select('*').neq('status', 'archived').order('name', { ascending: true })
         if (error) throw error
         if (data) {
           setMembers(data as Member[])

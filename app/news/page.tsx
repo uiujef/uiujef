@@ -32,6 +32,7 @@ export default function NewsPage() {
         const { data, error } = await supabase
           .from('news')
           .select('*')
+          .neq('status', 'archived')
           .eq('published', true)
           .order('published_at', { ascending: false })
 

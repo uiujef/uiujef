@@ -5,7 +5,7 @@
  * exported constant with a query that returns the same shape, e.g.
  *
  *   export async function getEvents(): Promise<EventItem[]> {
- *     const { data } = await supabase.from('events').select('*').order('date')
+ *     const { data } = await supabase.from('events').select('*').neq('status', 'archived').order('date')
  *     return data ?? []
  *   }
  *

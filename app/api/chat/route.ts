@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         if (settings.location) location = settings.location;
       }
       if (!settings?.official_contact_number) {
-        const { data: pres } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle();
+        const { data: pres } = await supabase.from('members').select('phone').neq('status', 'archived').eq('role', 'President').limit(1).maybeSingle();
         if (pres?.phone) contactNumber = pres.phone;
       }
     } catch (e) { console.error('Failed to fetch dynamic site settings:', e); }
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     // 2. Fetch ALL Members (Token Optimized)
     let membersContext = '';
     try {
-      const { data: membersData } = await supabase.from('members').select('name, role, quote, hobby').order('created_at', { ascending: true });
+      const { data: membersData } = await supabase.from('members').select('name, role, quote, hobby').neq('status', 'archived').order('created_at', { ascending: true });
       if (membersData && membersData.length > 0) {
         membersContext = '\n\nALL MEMBERS KNOWLEDGE:\n' + membersData.map(m => 
           `- ${m.name} (${m.role}): Bio: ${m.quote || 'None'}. Hobby: ${m.hobby || 'None'}.`
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     // 3. Fetch ALL News (Token Optimized)
     let newsContext = '';
     try {
-      const { data: newsData } = await supabase.from('news').select('title, published_at, content').eq('published', true).order('published_at', { ascending: false });
+      const { data: newsData } = await supabase.from('news').select('title, published_at, content').neq('status', 'archived').eq('published', true).order('published_at', { ascending: false });
       if (newsData && newsData.length > 0) {
         // Limit content to summary/first 80 chars to save tokens
         newsContext = '\n\nALL NEWS:\n' + newsData.map(n => `- ${n.title} (${new Date(n.published_at).toLocaleDateString()}): ${n.content?.substring(0, 80).replace(/\n/g, ' ')}...`).join('\n');
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     // 4. Fetch ALL Events (Token Optimized)
     let eventsContext = '';
     try {
-      const { data: eventsData } = await supabase.from('events').select('title, date, status, category').eq('published', true).order('date', { ascending: false });
+      const { data: eventsData } = await supabase.from('events').select('title, date, status, category').neq('status', 'archived').eq('published', true).order('date', { ascending: false });
       if (eventsData && eventsData.length > 0) {
         eventsContext = '\n\nALL EVENTS:\n' + eventsData.map(e => `- ${e.title} (${new Date(e.date).toLocaleDateString()}): Status is ${e.status}, Category: ${e.category}`).join('\n');
       }
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     // 5. Fetch ALL Gallery Albums (Token Optimized)
     let galleryContext = '';
     try {
-      const { data: galleryData } = await supabase.from('gallery_albums').select('title, description').order('created_at', { ascending: false });
+      const { data: galleryData } = await supabase.from('gallery_albums').select('title, description').neq('status', 'archived').order('created_at', { ascending: false });
       if (galleryData && galleryData.length > 0) {
         galleryContext = '\n\nGALLERY MEMORIES & TOURS:\n' + galleryData.map(g => `- ${g.title}: ${g.description || 'No description'}`).join('\n');
       }
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     if (appIdMatch) {
       const appId = appIdMatch[0].toUpperCase();
       try {
-        const { data: appData } = await supabase.from('applications').select('status, type').eq('application_id', appId).maybeSingle();
+        const { data: appData } = await supabase.from('applications').select('status, type').neq('status', 'archived').eq('application_id', appId).maybeSingle();
         if (appData) {
           appStatusContext = `\n\nAPPLICATION TRACKING DATA:\nThe user is asking about application ID: ${appId}.\nStatus: ${appData.status}\nType/Event: ${appData.type}\nTell the user this status politely.`;
         } else {

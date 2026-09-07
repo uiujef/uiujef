@@ -142,7 +142,7 @@ export default function EventsArchive() {
           setBgMedia(settingsData.bg_events)
         }
 
-        const { data, error } = await supabase.from('events').select('*').order('date', { ascending: false })
+        const { data, error } = await supabase.from('events').select('*').neq('status', 'archived').order('date', { ascending: false })
         if (error) throw error
         if (data) {
           const mappedEvents: Event[] = data.map(d => ({

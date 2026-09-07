@@ -9,6 +9,7 @@ export async function HeroSection() {
   const { data: featuredEvent } = await supabase
     .from('events')
     .select('*')
+    .neq('status', 'archived')
     .eq('is_featured', true)
     .order('created_at', { ascending: false })
     .limit(1)

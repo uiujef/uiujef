@@ -101,7 +101,7 @@ export function SiteFooter() {
         if (settings?.official_contact_number) {
           setContactPhone(settings.official_contact_number)
         } else {
-          const { data: president } = await supabase.from('members').select('phone').eq('role', 'President').limit(1).maybeSingle()
+          const { data: president } = await supabase.from('members').select('phone').neq('status', 'archived').eq('role', 'President').limit(1).maybeSingle()
           if (president?.phone) {
             setContactPhone(president.phone)
           }

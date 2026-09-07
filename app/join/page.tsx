@@ -276,7 +276,7 @@ export default function JoinPage() {
     setIsLoading(true);
     try {
       // 1. Generate ID
-      const { count } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('type', 'Membership');
+      const { count } = await supabase.from('applications').select('*', { count: 'exact', head: true }).neq('status', 'archived').eq('type', 'Membership');
       const newId = `JEF-MEM-N${(count || 0) + 1}`;
       setApplicationId(newId);
 

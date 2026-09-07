@@ -29,6 +29,7 @@ export default async function LegacyPage() {
     const { data } = await supabase
       .from('members')
       .select('email')
+      .neq('status', 'archived')
       .eq('role', 'President')
       .single()
 

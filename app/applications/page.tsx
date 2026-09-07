@@ -28,6 +28,7 @@ export default function ApplicationsTrackingPage() {
     const { data, error } = await supabase
       .from('applications')
       .select('*')
+      .neq('status', 'archived')
       .ilike('application_id', `%${cleanId}%`) // Re-added % for bulletproof fuzzy matching
       .limit(1)
       .maybeSingle()
@@ -46,6 +47,7 @@ export default function ApplicationsTrackingPage() {
     const { data: memberData, error: memberError } = await supabase
       .from('members')
       .select('*')
+      .neq('status', 'archived')
       .ilike('application_id', `%${cleanId}%`)
       .limit(1)
       .maybeSingle()
