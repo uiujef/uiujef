@@ -34,6 +34,7 @@ const PREDEFINED_EXEC_ROLES = ['President', 'Vice President', 'General Secretary
 export function MembersManager() {
   const [members, setMembers] = useState<Member[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('executive')
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null)
@@ -262,8 +263,11 @@ export function MembersManager() {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {data.map(member => (
+          {data.map((member, idx) => (
             <div key={member.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-lg transition-all group relative">
+              <div className="absolute top-4 left-4 size-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 z-10">
+                {idx + 1}
+              </div>
               <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                 <button onClick={() => openModal(member)} className="p-2 bg-white/90 backdrop-blur text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg shadow-sm transition-colors" title="Edit">
                   <Edit2 className="size-4" />
@@ -350,12 +354,42 @@ export function MembersManager() {
         </div>
       ) : (
         <div className="space-y-4">
-          {renderSection('Executive Panel', <Star className="size-6" />, groupedMembers.executive)}
-          {renderSection('Advisors', <Shield className="size-6" />, groupedMembers.advisors)}
-          {renderSection('Moderator', <Award className="size-6" />, groupedMembers.moderators)}
-          {renderSection('General Members', <Users className="size-6" />, groupedMembers.general)}
-          {renderSection('Alumni', <GraduationCap className="size-6" />, groupedMembers.alumni)}
-          {renderSection('Other Roles', <Briefcase className="size-6" />, groupedMembers.other)}
+          <div className="flex overflow-x-auto gap-2 pb-2 mb-6 scrollbar-hide">
+            {[
+              { id: 'executive', label: 'Executive Panel', icon: Star, data: groupedMembers.executive },
+              { id: 'moderators', label: 'Moderator', icon: Award, data: groupedMembers.moderators },
+              { id: 'general', label: 'General Members', icon: Users, data: groupedMembers.general },
+              { id: 'advisors', label: 'Advisors', icon: Shield, data: groupedMembers.advisors },
+              { id: 'alumni', label: 'Alumni', icon: GraduationCap, data: groupedMembers.alumni },
+              { id: 'other', label: 'Other Roles', icon: Briefcase, data: groupedMembers.other }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-bold transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-[#F26522] text-white shadow-md'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                }`}
+              >
+                <tab.icon className="size-4" />
+                {tab.label}
+                <span className={`ml-1.5 px-2 py-0.5 rounded-md text-[10px] ${
+                  activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {tab.data.length}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'executive' && renderSection('Executive Panel', <Star className="size-6" />, groupedMembers.executive)}
+          {activeTab === 'moderators' && renderSection('Moderator', <Award className="size-6" />, groupedMembers.moderators)}
+          {activeTab === 'general' && renderSection('General Members', <Users className="size-6" />, groupedMembers.general)}
+          {activeTab === 'advisors' && renderSection('Advisors', <Shield className="size-6" />, groupedMembers.advisors)}
+          {activeTab === 'alumni' && renderSection('Alumni', <GraduationCap className="size-6" />, groupedMembers.alumni)}
+          {activeTab === 'other' && renderSection('Other Roles', <Briefcase className="size-6" />, groupedMembers.other)}
         </div>
       )}
 

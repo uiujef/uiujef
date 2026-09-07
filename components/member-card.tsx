@@ -13,6 +13,8 @@ type MemberCardProps = {
 
 export function MemberCard({ member, onClick, className }: MemberCardProps) {
   const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
+  const isJubair = member.name === 'Shaikh Jubair'
+  const isPremiumRole = displayRole === 'President' || displayRole === 'Moderator'
 
   return (
     <article
@@ -23,12 +25,20 @@ export function MemberCard({ member, onClick, className }: MemberCardProps) {
         className,
       )}
     >
-      {/* Circular profile image with animated border */}
-      <div className="relative mb-4">
+      {/* Container for Avatar */}
+      <div className={cn(
+        "relative mb-4 flex items-center justify-center rounded-full",
+        isPremiumRole ? "size-36 sm:size-44" : "size-32 sm:size-40"
+      )}>
+        
         {/* Spinning dashed ring on hover */}
         <div className="absolute inset-0 -m-1.5 rounded-full border-2 border-dashed border-[#F26522]/40 transition-transform duration-700 group-hover:rotate-180" />
+        
         {/* Solid colored ring */}
-        <div className="relative size-32 overflow-hidden rounded-full ring-4 ring-[#F26522] shadow-xl transition-transform duration-300 group-hover:scale-105 sm:size-40">
+        <div className="absolute inset-0 rounded-full ring-4 ring-[#F26522] shadow-xl transition-transform duration-300 group-hover:scale-105" />
+
+        {/* Image / Avatar inside */}
+        <div className="relative overflow-hidden rounded-full z-10 w-full h-full transition-transform duration-300 group-hover:scale-105">
           {member.image_url ? (
             <Image
               src={member.image_url}
@@ -36,9 +46,9 @@ export function MemberCard({ member, onClick, className }: MemberCardProps) {
               fill
               className={cn(
                 'object-cover',
-                member.name === 'Shaikh Jubair' ? 'scale-[1.6] object-bottom' : 'object-center'
+                isJubair ? 'scale-[1.6] object-bottom' : 'object-center'
               )}
-              sizes="(max-width: 640px) 128px, 160px"
+              sizes="(max-width: 640px) 160px, 192px"
             />
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center text-4xl font-bold text-muted-foreground">
@@ -49,11 +59,24 @@ export function MemberCard({ member, onClick, className }: MemberCardProps) {
       </div>
 
       {/* Name, designation, bio */}
-      <div className="text-center w-full">
-        <h3 className="font-serif text-lg font-bold text-navy transition-colors group-hover:text-[#F26522] sm:text-xl line-clamp-1 px-2" title={member.name}>
-          {member.name}
-        </h3>
-        <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-[#F26522]/80 line-clamp-1 px-2" title={displayRole}>
+      <div className="text-center w-full z-10">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <h3 className="font-serif text-lg font-bold transition-colors sm:text-xl line-clamp-1 text-navy group-hover:text-[#F26522]" title={member.name}>
+            {member.name}
+          </h3>
+          {isJubair && (
+            <div className="flex items-center gap-1 px-1.5 py-[2px] rounded border border-[#F26522]/20 bg-[#F26522]/5 text-[#F26522]" title="System Architect">
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-wider">Architect</span>
+            </div>
+          )}
+        </div>
+        <p className={cn(
+          "mt-1 text-sm uppercase tracking-wider text-[#F26522]/80 line-clamp-1 px-2",
+          isPremiumRole ? "font-extrabold" : "font-semibold"
+        )} title={displayRole}>
           {displayRole}
         </p>
 
