@@ -137,11 +137,11 @@ export function GallerySection() {
     try {
       if (!currentCategory) {
         // Load Categories with their album count and a representative cover image
-        const { data: cats, error: catsError } = await supabase.from('gallery_categories').select('*').neq('status', 'archived').order('created_at', { ascending: false })
+        const { data: cats, error: catsError } = await supabase.from('gallery_categories').select('*').order('created_at', { ascending: false })
         if (catsError) throw catsError
 
         // Fetch albums to get counts and covers
-        const { data: allAlbums, error: albumsError } = await supabase.from('gallery_albums').select('category_id, cover_image').neq('status', 'archived').order('created_at', { ascending: false })
+        const { data: allAlbums, error: albumsError } = await supabase.from('gallery_albums').select('category_id, cover_image').order('created_at', { ascending: false })
         if (albumsError) throw albumsError
 
         const enrichedCats = (cats as GalleryCategory[]).map(cat => {
@@ -155,12 +155,12 @@ export function GallerySection() {
         setCategories(enrichedCats)
       } else if (!currentAlbum) {
         // Load Albums for Category
-        const { data, error } = await supabase.from('gallery_albums').select('*').neq('status', 'archived').eq('category_id', currentCategory.id).order('created_at', { ascending: false })
+        const { data, error } = await supabase.from('gallery_albums').select('*').eq('category_id', currentCategory.id).order('created_at', { ascending: false })
         if (error) throw error
         setAlbums(data as GalleryAlbum[])
       } else {
         // Load Images for Album
-        const { data, error } = await supabase.from('gallery_images').select('*').neq('status', 'archived').eq('album_id', currentAlbum.id).order('created_at', { ascending: false })
+        const { data, error } = await supabase.from('gallery_images').select('*').eq('album_id', currentAlbum.id).order('created_at', { ascending: false })
         if (error) throw error
         setImages(data as GalleryImage[])
       }
