@@ -37,6 +37,7 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
   if (!member) return null
 
   const isAdvisor = member.role === 'Advisor'
+  const isModerator = member.role === 'Moderator'
   const displayRole = member.custom_role && member.role === 'Other (Custom Role)' ? member.custom_role : member.role
   const isDeveloper = member.name === 'Shaikh Jubair'
   const shouldHide = member.role === 'General Member' && member.name !== 'Shaikh Jubair'
@@ -167,88 +168,129 @@ export function MemberModal({ member, onClose }: MemberModalProps) {
 
             {/* Data points grid */}
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-navy/8 pt-5">
-              {/* Student ID */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-2">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
-                    <Hash className="size-3.5" />
+              {!isModerator && (
+                <>
+                  {/* Student ID */}
+                  {showSensitiveInfo && (
+                    <div className="flex items-start gap-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F26522]">
+                        <Hash className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                          {isAdvisor ? 'Employee ID' : 'Student ID'}
+                        </p>
+                        <p className="text-[11px] font-bold text-[#F26522] truncate">
+                          {member.student_id || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Blood Group */}
+                  <div className="flex items-start gap-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
+                      <Droplet className="size-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                        Blood Group
+                      </p>
+                      <p className="text-[11px] font-bold text-navy truncate">
+                        {member.blood_group || 'N/A'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
-                      {isAdvisor ? 'Employee ID' : 'Student ID'}
-                    </p>
-                    <p className="text-[11px] font-bold text-[#F26522] truncate">
-                      {member.student_id || 'N/A'}
-                    </p>
+
+                  {/* Phone */}
+                  {showSensitiveInfo && (
+                    <div className="flex items-start gap-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
+                        <Phone className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                          Phone
+                        </p>
+                        <a
+                          href={`tel:${member.phone}`}
+                          className="block text-[11px] font-bold text-navy transition-colors hover:text-[#F26522] truncate"
+                        >
+                          {member.phone || 'N/A'}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hobby */}
+                  <div className="flex items-start gap-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-yellow-50 text-yellow-600">
+                      <Star className="size-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                        Hobby
+                      </p>
+                      <p className="text-[11px] font-bold text-navy truncate">
+                        {member.hobby || 'N/A'}
+                      </p>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Student Address */}
+                  {showSensitiveInfo && (
+                    <div className="flex items-start gap-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                        <Building2 className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                          Address
+                        </p>
+                        <p className="text-[11px] font-bold text-navy truncate" title={member.student_address}>
+                          {member.student_address || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Blood Group */}
-              <div className="flex items-start gap-2">
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
-                  <Droplet className="size-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
-                    Blood Group
-                  </p>
-                  <p className="text-[11px] font-bold text-navy truncate">
-                    {member.blood_group || 'N/A'}
-                  </p>
-                </div>
-              </div>
+              {isModerator && (
+                <>
+                  {/* University Designation */}
+                  {member.current_job && (
+                    <div className="flex items-start gap-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                        <Briefcase className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
+                          Designation
+                        </p>
+                        <p className="text-[11px] font-bold text-navy truncate" title={member.current_job}>
+                          {member.current_job}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Phone */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-2">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                    <Phone className="size-3.5" />
+                  {/* Moderator Status */}
+                  <div className="flex items-start gap-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                      <ShieldCheck className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex flex-col justify-center h-7">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border w-fit ${
+                        member.past_role === 'Ex-Moderator' 
+                          ? 'bg-slate-50 text-slate-500 border-slate-200' 
+                          : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      }`}>
+                        {member.past_role === 'Ex-Moderator' ? 'Ex-Moderator' : 'Current Moderator'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
-                      Phone
-                    </p>
-                    <a
-                      href={`tel:${member.phone}`}
-                      className="block text-[11px] font-bold text-navy transition-colors hover:text-[#F26522] truncate"
-                    >
-                      {member.phone || 'N/A'}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Hobby */}
-              <div className="flex items-start gap-2">
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-yellow-50 text-yellow-600">
-                  <Star className="size-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
-                    Hobby
-                  </p>
-                  <p className="text-[11px] font-bold text-navy truncate">
-                    {member.hobby || 'N/A'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Student Address */}
-              {showSensitiveInfo && (
-                <div className="flex items-start gap-2">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <Building2 className="size-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-tight text-navy/40">
-                      Address
-                    </p>
-                    <p className="text-[11px] font-bold text-navy truncate" title={member.student_address}>
-                      {member.student_address || 'N/A'}
-                    </p>
-                  </div>
-                </div>
+                </>
               )}
 
               {/* Email */}
