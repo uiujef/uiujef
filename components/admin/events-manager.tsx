@@ -22,6 +22,7 @@ type Event = {
   registration_fee: number
   is_featured: boolean
   is_pinned: boolean
+  is_priority?: boolean
   pinned_at: string | null
   participation_type: string
   event_level: string
@@ -59,6 +60,7 @@ export function EventsManager() {
   const [registrationFee, setRegistrationFee] = useState<number>(0)
   const [isFeatured, setIsFeatured] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
+  const [isPriority, setIsPriority] = useState(false)
   const [participationType, setParticipationType] = useState('Individual')
   const [eventLevel, setEventLevel] = useState('On Campus')
   const [registrationDeadline, setRegistrationDeadline] = useState('')
@@ -118,6 +120,7 @@ export function EventsManager() {
       setRegistrationFee(event.registration_fee || 0)
       setIsFeatured(event.is_featured || false)
       setIsPinned(event.is_pinned || false)
+      setIsPriority(event.is_priority || false)
       setParticipationType(event.participation_type || 'Individual')
       setEventLevel(event.event_level || 'On Campus')
 
@@ -150,6 +153,7 @@ export function EventsManager() {
       setRegistrationFee(0)
       setIsFeatured(false)
       setIsPinned(false)
+      setIsPriority(false)
       setParticipationType('Individual')
       setEventLevel('On Campus')
       setRegistrationDeadline('')
@@ -207,6 +211,7 @@ export function EventsManager() {
         registration_fee: registrationFee,
         is_featured: isFeatured,
         is_pinned: isPinned,
+        is_priority: isPriority,
         pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
         participation_type: participationType,
         event_level: eventLevel,
@@ -554,6 +559,17 @@ export function EventsManager() {
                         <p className="text-xs text-slate-500">Always show this event at the top of the archive.</p>
                       </div>
                     </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input type="checkbox" checked={isPriority} onChange={e => setIsPriority(e.target.checked)} className="peer sr-only" />
+                        <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Mark as Priority Event</span>
+                        <p className="text-xs text-slate-500">Highlight this event as a high priority.</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -808,6 +824,7 @@ export function EventsManager() {
         isOpen={isConfirmOpen}
         title="Archive Event"
         message="Are you sure you want to archive this event? It will be hidden from the active list but kept in the database."
+        requireText="archive"
         onConfirm={handleDelete}
         onCancel={() => {
           setIsConfirmOpen(false)

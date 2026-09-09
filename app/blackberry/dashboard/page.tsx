@@ -9,6 +9,7 @@ import { MembersManager } from '@/components/admin/members-manager'
 import { GalleryManager } from '@/components/admin/gallery-manager'
 import { SettingsManager } from '@/components/admin/settings-manager'
 import { TelemetryOverview } from "@/components/admin/telemetry-overview"
+import { PriorityListManager } from '@/components/admin/priority-list-manager'
 
 import { WhyJoinManager } from '@/components/admin/why-join-manager'
 import { SponsorsManager } from '@/components/admin/sponsors-manager'
@@ -68,6 +69,8 @@ export default function DashboardPage() {
         return <GalleryManager />
       case 'applications':
         return <ApplicationsManager />
+      case 'priority':
+        return <PriorityListManager />
       case 'settings':
         return <SettingsManager />
       case 'why-join':

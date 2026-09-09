@@ -9,11 +9,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const resolvedParams = await params
   const { data: event } = await supabase
     .from('events')
     .select('title, excerpt, image')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single()
 
   if (!event) {
@@ -40,12 +41,14 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default function EventPage({ params }: { params: { id: string } }) {
+export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+
   return (
     <div className="relative bg-background min-h-screen flex flex-col">
       <SiteNav />
       <main className="flex-1">
-        <EventDetailsClient eventId={params.id} />
+        <EventDetailsClient eventId={resolvedParams.id} />
       </main>
       <SiteFooter />
     </div>

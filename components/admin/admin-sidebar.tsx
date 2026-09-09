@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings, Menu, X, ShieldCheck, Archive } from 'lucide-react'
+import { LayoutDashboard, Calendar, FileText, Users, Image as ImageIcon, Settings, Menu, X, ShieldCheck, Archive, Star } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Manage Community', href: '/blackberry/dashboard?tab=members', icon: Users, tab: 'members' },
   { label: 'Manage Gallery', href: '/blackberry/dashboard?tab=gallery', icon: ImageIcon, tab: 'gallery' },
   { label: 'Applications', href: '/blackberry/dashboard?tab=applications', icon: ShieldCheck, tab: 'applications' },
+  { label: 'Priority List', href: '/blackberry/dashboard?tab=priority', icon: Star, tab: 'priority' },
   { label: 'Why Join Us', href: '/blackberry/dashboard?tab=why-join', icon: FileText, tab: 'why-join' },
   { label: 'Sponsors', href: '/blackberry/dashboard?tab=sponsors', icon: ImageIcon, tab: 'sponsors' },
   { label: 'Archive', href: '/blackberry/dashboard?tab=archive', icon: Archive, tab: 'archive' },
