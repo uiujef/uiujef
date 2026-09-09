@@ -16,6 +16,8 @@ type Application = {
   status: string
   created_at?: string
   team_members?: any[]
+  custom_responses?: any
+  student_id?: string
   transaction_id?: string
 }
 
@@ -574,7 +576,54 @@ export function ApplicationsManager() {
 
             {/* Content */}
             <div className="p-8 space-y-8">
-              {selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
+              {selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0 ? (
+                <div className="space-y-6 pb-8 print-break-inside-avoid">
+                  <div className="flex items-start gap-4 mb-8">
+                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
+                      1
+                    </div>
+                    <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-800">{selectedApp.name || 'Custom Application'}</h4>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{selectedApp.type}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Primary Details</h5>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Email</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.email || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{selectedApp.student_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
+                      </dl>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Status</h5>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Application Status</dt><dd className="font-medium text-slate-800">{selectedApp.status || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-slate-800">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
+                      </dl>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Custom Responses</h5>
+                    <dl className="grid grid-cols-1 gap-6 text-sm">
+                      {Object.entries(selectedApp.custom_responses).map(([key, value]) => (
+                        <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
+                          <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
+                          <dd className="text-slate-800 font-medium whitespace-pre-wrap">
+                            {Array.isArray(value) ? value.join(', ') : (value as string) || '-'}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </div>
+              ) : selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
                 <div key={index} className="space-y-6 pb-8 border-b border-slate-200 last:border-0 print-break-inside-avoid">
                   <div className="flex items-start gap-4 mb-8">
                     <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">

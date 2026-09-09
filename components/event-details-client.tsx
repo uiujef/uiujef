@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { CalendarDays, ChevronRight, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { DynamicEventForm } from '@/components/dynamic-event-form'
 
 export default function EventDetailsClient({ eventId }: { eventId: string }) {
   const router = useRouter()
@@ -38,6 +39,20 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           isRegistrationOpen: data.is_registration_open ?? data.isRegistrationOpen,
           requiresRegistration: data.requires_registration ?? data.requiresRegistration,
           extendedDetails: data.extendedDetails || data.extended_details,
+          registrationFee: data.registration_fee,
+          appIdPrefix: data.app_id_prefix || 'EVENT',
+          registration: data.requires_registration ?? data.requiresRegistration ? {
+            isTeamBased: data.participation_type === 'Team' || data.is_team_based || data.isTeamBased,
+            maxTeamMembers: data.max_team_size ?? data.max_team_members ?? data.maxTeamMembers,
+            requireTeamName: data.require_team_name ?? data.requireTeamName ?? true,
+            requireTeamIcon: data.require_team_icon ?? data.requireTeamIcon ?? false,
+            requireUniversityID: data.require_university_id ?? data.requireUniversityID ?? true,
+            requiresPayment: data.requires_payment ?? data.requiresPayment,
+            eventLevel: data.event_level,
+            is_members_only: data.is_members_only,
+            custom_form_fields: data.custom_form_fields,
+            is_custom_form: data.is_custom_form,
+          } : undefined,
         }
         setEvent(mappedEvent)
       } catch (err: any) {
@@ -148,15 +163,28 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
               </>
             )}
 
-            {event.requiresRegistration && event.isRegistrationOpen && (
-              <div className="pt-8 border-t border-border flex justify-end">
-                <button
-                  onClick={() => router.push(`/events?register=${event.id}`)}
-                  className="group inline-flex items-center gap-2 rounded-full bg-[#F26522] px-8 py-4 text-base font-bold text-white shadow-[0_0_20px_rgba(242,101,34,0.4)] transition-all hover:bg-[#FF7A3D] hover:shadow-[0_0_30px_rgba(242,101,34,0.6)]"
-                >
-                  Register Now
-                  <ChevronRight className="size-5 transition-transform group-hover:translate-x-1" />
-                </button>
+            {event.requiresRegistration && (
+              <div className="pt-8 border-t border-border mt-10">
+                {event.isRegistrationOpen ? (
+                  <div className="bg-navy-deep/5 rounded-3xl p-6 md:p-10 border border-slate-100 shadow-sm">
+                    <h3 className="font-serif text-2xl font-bold text-navy mb-6 text-center">Event Registration</h3>
+                    <DynamicEventForm
+                      eventId={event.id}
+                      eventName={event.title}
+                      eventDescription={event.description}
+                      appIdPrefix={event.appIdPrefix}
+                      config={event.registration}
+                      registrationFee={event.registrationFee}
+                      onSuccess={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-slate-100 text-slate-500 rounded-full px-8 py-4 font-bold text-center">
+                    Registration Closed
+                  </div>
+                )}
               </div>
             )}
           </div>

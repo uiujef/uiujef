@@ -299,7 +299,10 @@ export function DynamicEventForm({
     let leadStudentId = ''
     
     if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-      leadEmail = customResponses[config.custom_form_fields[0].id] || ''
+      const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
+      if (emailField) {
+        leadEmail = customResponses[emailField.id] || ''
+      }
       
       const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
       if (studentIdField) {
@@ -412,7 +415,7 @@ export function DynamicEventForm({
         console.log('[Supabase] Successfully inserted application record.')
         
         // Send email only after successful insert
-        if (leadEmail && leadEmail.trim() !== '') {
+        if (leadEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail.trim())) {
           try {
             await emailjs.send(
               process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,

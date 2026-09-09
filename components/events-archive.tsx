@@ -108,12 +108,12 @@ function EventCard({
             )
           )}
           
-          <button
-            onClick={() => onLearnMore(event)}
+          <Link
+            href={`/events/${event.id}`}
             className="inline-flex items-center gap-2 rounded-full border border-navy/20 bg-transparent px-5 py-2.5 text-sm font-bold text-navy transition-all hover:bg-navy/5"
           >
             Read More
-          </button>
+          </Link>
         </div>
       </div>
     </article>
