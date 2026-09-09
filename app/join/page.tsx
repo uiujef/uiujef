@@ -182,10 +182,16 @@ export default function JoinPage() {
 
   const validateStep1 = useCallback(() => {
     const newErrors: Record<string, string> = {}
+    const ALLOWED_DOMAINS = ['@bsces.uiu.ac.bd', '@bseee.uiu.ac.bd', '@bseco.uiu.ac.bd', '@mscse.uiu.ac.bd', '@mseee.uiu.ac.bd']
     if (!form.full_name.trim()) newErrors.full_name = 'Required'
     if (!form.student_id.trim()) newErrors.student_id = 'Required'
     if (!form.student_address.trim()) newErrors.student_address = 'Required'
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Valid Email Required'
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Valid Email Required'
+    } else if (!ALLOWED_DOMAINS.some(domain => form.email.toLowerCase().endsWith(domain))) {
+      newErrors.email = `Must use UIU domain (${ALLOWED_DOMAINS.join(', ')})`
+      toast.error('Please use your official UIU email address.')
+    }
     if (!form.phone.trim() || !/^(?:\+88|88)?(01[3-9]\d{8})$/.test(form.phone)) newErrors.phone = 'Valid BD Phone Required'
     if (!form.date_of_birth) newErrors.date_of_birth = 'Required'
     if (!form.father_name.trim()) newErrors.father_name = 'Required'
@@ -300,11 +306,11 @@ export default function JoinPage() {
       // 3. Clean the payload (use finalPhotoUrl)
       const safeForm = { ...form, photo_url: finalPhotoUrl };
 
-      // 4. STRICT Supabase Insert FIRST
       const { error: dbError } = await supabase.from('applications').insert([{
         application_id: newId,
         name: safeForm.full_name,
         email: safeForm.email,
+        student_id: safeForm.student_id,
         type: 'Membership',
         status: 'Pending',
         transaction_id: safeForm.transaction_id,

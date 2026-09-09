@@ -239,6 +239,15 @@ export function DynamicEventForm({
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (verificationInput.includes('@')) {
+      const ALLOWED_DOMAINS = ['@bsces.uiu.ac.bd', '@bseee.uiu.ac.bd', '@bseco.uiu.ac.bd', '@mscse.uiu.ac.bd', '@mseee.uiu.ac.bd']
+      if (!ALLOWED_DOMAINS.some(domain => verificationInput.toLowerCase().endsWith(domain))) {
+        toast.error(`Please use an official UIU email address (${ALLOWED_DOMAINS.join(', ')}).`)
+        return;
+      }
+    }
+
     setIsVerifying(true)
     
     const { data: memberData, error: memberError } = await supabase
@@ -325,6 +334,30 @@ export function DynamicEventForm({
     e.preventDefault()
     setIsSubmitting(true)
 
+    const ALLOWED_DOMAINS = ['@bsces.uiu.ac.bd', '@bseee.uiu.ac.bd', '@bseco.uiu.ac.bd', '@mscse.uiu.ac.bd', '@mseee.uiu.ac.bd']
+    let isValidDomain = true;
+    
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+      const email = customResponses[config.custom_form_fields[0].id] || '';
+      if (!ALLOWED_DOMAINS.some(domain => email.toLowerCase().endsWith(domain))) {
+        isValidDomain = false;
+      }
+    } else {
+      const memsToCheck = config.isTeamBased ? members : [members[0]];
+      for (const m of memsToCheck) {
+        if (!ALLOWED_DOMAINS.some(domain => m.email.toLowerCase().endsWith(domain))) {
+          isValidDomain = false;
+          break;
+        }
+      }
+    }
+
+    if (!isValidDomain) {
+      toast.error(`Please use official UIU email addresses for all members. Allowed: ${ALLOWED_DOMAINS.join(', ')}`)
+      setIsSubmitting(false)
+      return;
+    }
+
     // Fetch count of all event applications
     const { count, error: countError } = await supabase
       .from('applications')
@@ -343,12 +376,15 @@ export function DynamicEventForm({
     
     let leadEmail = ''
     let leadName = 'Custom Application'
+    let leadStudentId = ''
     
-    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length >= 2) {
       leadEmail = customResponses[config.custom_form_fields[0].id] || ''
+      leadStudentId = customResponses[config.custom_form_fields[1].id] || ''
     } else {
       leadEmail = members[0].email
       leadName = members[0].name
+      leadStudentId = members[0].student_id
     }
 
     const payload: EventRegistrationPayload = {
@@ -373,6 +409,7 @@ export function DynamicEventForm({
             application_id: newId,
             name: leadName,
             email: leadEmail,
+            student_id: leadStudentId,
             type: 'Event',
             status: 'Pending',
             team_members: finalMembers,
