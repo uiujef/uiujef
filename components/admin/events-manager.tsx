@@ -178,6 +178,18 @@ export function EventsManager() {
         finalImageUrl = externalImageUrl
       }
 
+      let processedCustomFields = undefined
+      if (isCustomForm) {
+        processedCustomFields = customFormFields.map(field => {
+          const newField = { ...field }
+          if (newField.raw_options !== undefined) {
+            newField.options = newField.raw_options.split(',').map((s: string) => s.trim()).filter(Boolean)
+            delete newField.raw_options
+          }
+          return newField
+        })
+      }
+
       const payload = {
         title,
         date: new Date(date).toISOString(), // Ensure proper ISO format for DB
@@ -197,7 +209,7 @@ export function EventsManager() {
         registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
         status,
         is_members_only: isMembersOnly,
-        custom_form_fields: isCustomForm ? customFormFields : undefined,
+        custom_form_fields: processedCustomFields,
         is_custom_form: isCustomForm
       }
 
@@ -725,9 +737,9 @@ export function EventsManager() {
                                     </div>
                                     {(field.type === 'dropdown' || field.type === 'radio') && (
                                       <div className="space-y-2">
-                                        <input type="text" value={field.options?.join(', ')} onChange={e => {
+                                        <input type="text" value={field.raw_options !== undefined ? field.raw_options : (field.options?.join(', ') || '')} onChange={e => {
                                           const newFields = [...customFormFields]
-                                          newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                                          newFields[idx].raw_options = e.target.value
                                           setCustomFormFields(newFields)
                                         }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
                                         <div className="flex items-center gap-4 mt-2">
