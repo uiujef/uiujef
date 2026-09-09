@@ -155,8 +155,7 @@ export function EventsManager() {
       setIsCustomForm(isCustom || false)
       if (isCustom) {
         setCustomFormFields([
-          { id: 'email', label: 'University Email', type: 'email', required: true },
-          { id: 'student_id', label: 'Student ID', type: 'text', required: true }
+          { id: 'email', label: 'Email', type: 'email', required: true }
         ])
       } else {
         setCustomFormFields([])
@@ -340,8 +339,7 @@ export function EventsManager() {
           <button onClick={() => { 
             setIsCustomForm(true);
             setCustomFormFields([
-              { id: 'email', label: 'University Email', type: 'email', required: true },
-              { id: 'student_id', label: 'Student ID', type: 'text', required: true }
+              { id: 'email', label: 'Email', type: 'email', required: true }
             ]);
             openModal(undefined, true); 
           }} className="flex items-center justify-center gap-2 bg-[#1B2A4A] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#1B2A4A]/20 hover:bg-[#1B2A4A]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
@@ -696,7 +694,7 @@ export function EventsManager() {
                           <h5 className="text-sm font-bold text-slate-800 mb-4">Custom Form Fields</h5>
                           <div className="space-y-4">
                             {customFormFields.map((field, idx) => {
-                              const isFixed = isCustomForm && (idx === 0 || idx === 1);
+                              const isFixed = isCustomForm && (idx === 0);
                               return (
                                 <div key={idx} className={`flex items-start gap-4 bg-white p-4 rounded-xl border ${isFixed ? 'border-[#F26522]/30 bg-[#F26522]/5' : 'border-slate-200'}`}>
                                   <div className="flex-1 space-y-3">
