@@ -234,6 +234,8 @@ export function DynamicEventForm({
   const [customResponses, setCustomResponses] = useState<Record<string, any>>({})
   const [otherToggled, setOtherToggled] = useState<Record<string, boolean>>({})
   const [otherText, setOtherText] = useState<Record<string, string>>({})
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [verificationErrorMsg, setVerificationErrorMsg] = useState('')
   
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
@@ -332,7 +334,8 @@ export function DynamicEventForm({
         .limit(1)
 
       if (memberError || !memberData || memberData.length === 0) {
-        toast.error("Verification Failed: Your Name and Email/Student ID do not match our official UIUJEF member records.")
+        setVerificationErrorMsg("Your Name, Email, or Student ID does not match our official UIUJEF member records. Only verified members can register for this event.")
+        setShowVerificationModal(true)
         setIsSubmitting(false)
         return
       }
@@ -343,7 +346,8 @@ export function DynamicEventForm({
       
       // We can check if one includes the other, to handle "Md. Shafiqul" vs "Shafiqul"
       if (!officialName.includes(providedName) && !providedName.includes(officialName) && officialName !== providedName) {
-        toast.error("Verification Failed: Your Name does not match the official member record for this ID/Email.")
+        setVerificationErrorMsg("Your Name does not match the official member record for this ID/Email. Only verified members can register for this event.")
+        setShowVerificationModal(true)
         setIsSubmitting(false)
         return
       }
@@ -510,16 +514,45 @@ export function DynamicEventForm({
 
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      onFocusCapture={() => telemetryStore.startFocus(`Event Registration: ${eventName}`)}
-      onBlurCapture={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          telemetryStore.stopFocus()
-        }
-      }}
-      className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
-    >
+    <>
+      {showVerificationModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#0B1120]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full mx-auto text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-500/10 ring-2 ring-red-500/30">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h3 className="font-serif text-2xl font-bold text-white mb-3">Membership Verification Failed</h3>
+            <p className="mb-8 text-sm leading-relaxed text-white/70">
+              {verificationErrorMsg}
+            </p>
+            <div className="flex flex-col gap-3">
+              <a
+                href="/join"
+                className="w-full inline-block rounded-full bg-[#F26522] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
+              >
+                Register as a Member First
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowVerificationModal(false)}
+                className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-all hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <form
+        onSubmit={handleSubmit}
+        onFocusCapture={() => telemetryStore.startFocus(`Event Registration: ${eventName}`)}
+        onBlurCapture={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            telemetryStore.stopFocus()
+          }
+        }}
+        className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
+      >
       <div className="space-y-6 p-6 sm:p-8">
         <div>
           <h3 className="font-serif text-xl font-bold text-white">{eventName}</h3>
@@ -824,5 +857,6 @@ export function DynamicEventForm({
         </button>
       </div>
     </form>
+    </>
   )
 }

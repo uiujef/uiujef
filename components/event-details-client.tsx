@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { CalendarDays, ChevronRight, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -78,8 +79,20 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
 
   if (error || !event) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-white/60">{error}</p>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
+        <div className="mx-auto mb-6 flex size-24 items-center justify-center rounded-full bg-white/5 border border-white/10 ring-4 ring-white/5">
+          <span className="text-4xl">🗓️</span>
+        </div>
+        <h2 className="font-serif text-3xl font-bold text-white md:text-4xl mb-4">Event Not Found</h2>
+        <p className="max-w-md text-white/60 mb-8 leading-relaxed">
+          The event you are looking for does not exist or has been removed. It may have concluded or been archived by the organizers.
+        </p>
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-2 rounded-full bg-white/10 px-8 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/20 border border-white/5"
+        >
+          Back to Events
+        </Link>
       </div>
     )
   }
