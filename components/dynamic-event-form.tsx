@@ -228,6 +228,7 @@ export function DynamicEventForm({
   const [applicationId, setApplicationId] = useState('')
   const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
   const [customResponses, setCustomResponses] = useState<Record<string, string>>({})
+  const [otherToggled, setOtherToggled] = useState<Record<string, boolean>>({})
   
   const [isMemberVerified, setIsMemberVerified] = useState(!config.is_members_only)
   const [verificationInput, setVerificationInput] = useState('')
@@ -607,21 +608,93 @@ export function DynamicEventForm({
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Additional Information</p>
             <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-white/10 bg-white/3 p-5">
               {config.custom_form_fields.map((field) => (
-                <div key={field.id} className="sm:col-span-2 lg:col-span-1">
+                <div key={field.id} className="sm:col-span-2 lg:col-span-1 space-y-2">
                   <FieldLabel htmlFor={`custom-${field.id}`} icon={Hash} label={field.label} />
+                  
                   {field.type === 'dropdown' || field.type === 'select' ? (
-                    <select
-                      id={`custom-${field.id}`}
-                      required={field.required}
-                      value={customResponses[field.id] || ''}
-                      onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      className={cn(inputCls, 'bg-[#1B2A4A]/60')}
-                    >
-                      <option value="" disabled>Select {field.label}</option>
-                      {field.options?.map((opt, idx) => (
-                        <option key={idx} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                    <div className="space-y-3">
+                      <select
+                        id={`custom-${field.id}`}
+                        required={field.required && !otherToggled[field.id]}
+                        value={otherToggled[field.id] ? '__other__' : (customResponses[field.id] || '')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__other__') {
+                            setOtherToggled(prev => ({ ...prev, [field.id]: true }));
+                            setCustomResponses(prev => ({ ...prev, [field.id]: '' }));
+                          } else {
+                            setOtherToggled(prev => ({ ...prev, [field.id]: false }));
+                            setCustomResponses(prev => ({ ...prev, [field.id]: val }));
+                          }
+                        }}
+                        className={cn(inputCls, 'bg-[#1B2A4A]/60')}
+                      >
+                        <option value="" disabled>Select {field.label}</option>
+                        {field.options?.map((opt, idx) => (
+                          <option key={idx} value={opt}>{opt}</option>
+                        ))}
+                        {field.allow_other && <option value="__other__">Other</option>}
+                      </select>
+                      {otherToggled[field.id] && (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={customResponses[field.id] || ''}
+                          onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          placeholder={`Please specify...`}
+                          className={cn(inputCls, 'mt-2')}
+                        />
+                      )}
+                    </div>
+                  ) : field.type === 'radio' ? (
+                    <div className="space-y-3">
+                      <div className="flex flex-col gap-2">
+                        {field.options?.map((opt, idx) => (
+                          <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                            <input
+                              type="radio"
+                              name={`custom-${field.id}`}
+                              required={field.required && !otherToggled[field.id] && !customResponses[field.id]}
+                              value={opt}
+                              checked={!otherToggled[field.id] && customResponses[field.id] === opt}
+                              onChange={(e) => {
+                                setOtherToggled(prev => ({ ...prev, [field.id]: false }));
+                                setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }));
+                              }}
+                              className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20"
+                            />
+                            {opt}
+                          </label>
+                        ))}
+                        {field.allow_other && (
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                            <input
+                              type="radio"
+                              name={`custom-${field.id}`}
+                              required={field.required && !otherToggled[field.id] && !customResponses[field.id]}
+                              value="__other__"
+                              checked={otherToggled[field.id]}
+                              onChange={(e) => {
+                                setOtherToggled(prev => ({ ...prev, [field.id]: true }));
+                                setCustomResponses(prev => ({ ...prev, [field.id]: '' }));
+                              }}
+                              className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20"
+                            />
+                            Other
+                          </label>
+                        )}
+                      </div>
+                      {otherToggled[field.id] && (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={customResponses[field.id] || ''}
+                          onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          placeholder={`Please specify...`}
+                          className={cn(inputCls, 'mt-2')}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <input
                       type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : 'text'}

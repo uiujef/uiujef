@@ -694,52 +694,56 @@ export function EventsManager() {
                           <h5 className="text-sm font-bold text-slate-800 mb-4">Custom Form Fields</h5>
                           <div className="space-y-4">
                             {customFormFields.map((field, idx) => {
-                              const isFixed = isCustomForm && (idx === 0);
                               return (
-                                <div key={idx} className={`flex items-start gap-4 bg-white p-4 rounded-xl border ${isFixed ? 'border-[#F26522]/30 bg-[#F26522]/5' : 'border-slate-200'}`}>
+                                <div key={idx} className={`flex items-start gap-4 bg-white p-4 rounded-xl border border-slate-200`}>
                                   <div className="flex-1 space-y-3">
                                     <input type="text" value={field.label} onChange={e => {
                                       const newFields = [...customFormFields]
                                       newFields[idx].label = e.target.value
                                       setCustomFormFields(newFields)
-                                    }} placeholder="Field Label" disabled={isFixed} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none disabled:opacity-70 disabled:bg-slate-50" />
+                                    }} placeholder="Field Label" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
                                     <div className="flex items-center gap-4">
                                       <select value={field.type} onChange={e => {
                                         const newFields = [...customFormFields]
                                         newFields[idx].type = e.target.value
                                         setCustomFormFields(newFields)
-                                      }} disabled={isFixed} className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:border-[#F26522] outline-none disabled:opacity-70 disabled:bg-slate-50">
+                                      }} className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:border-[#F26522] outline-none">
                                         <option value="text">Text</option>
                                         <option value="email">Email</option>
                                         <option value="number">Number</option>
                                         <option value="dropdown">Dropdown</option>
+                                        <option value="radio">Radio</option>
                                       </select>
                                       <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                                        <input type="checkbox" checked={isFixed ? true : field.required} onChange={e => {
-                                          if (isFixed) return;
+                                        <input type="checkbox" checked={field.required} onChange={e => {
                                           const newFields = [...customFormFields]
                                           newFields[idx].required = e.target.checked
                                           setCustomFormFields(newFields)
-                                        }} disabled={isFixed} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522] disabled:opacity-70" />
+                                        }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
                                         Required
                                       </label>
                                     </div>
-                                    {field.type === 'dropdown' && (
-                                      <input type="text" value={field.options?.join(', ')} onChange={e => {
-                                        const newFields = [...customFormFields]
-                                        newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                                        setCustomFormFields(newFields)
-                                      }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
+                                    {(field.type === 'dropdown' || field.type === 'radio') && (
+                                      <div className="space-y-2">
+                                        <input type="text" value={field.options?.join(', ')} onChange={e => {
+                                          const newFields = [...customFormFields]
+                                          newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                                          setCustomFormFields(newFields)
+                                        }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
+                                        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                          <input type="checkbox" checked={field.allow_other || false} onChange={e => {
+                                            const newFields = [...customFormFields]
+                                            newFields[idx].allow_other = e.target.checked
+                                            setCustomFormFields(newFields)
+                                          }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
+                                          Allow 'Other' Option
+                                        </label>
+                                      </div>
                                     )}
                                   </div>
-                                  {!isFixed && (
-                                    <button type="button" onClick={() => setCustomFormFields(customFormFields.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                      <Trash2 className="size-4" />
-                                    </button>
-                                  )}
-                                  {isFixed && (
-                                    <span className="text-[10px] font-bold text-[#F26522] uppercase tracking-wider mt-2 px-2 py-1 bg-[#F26522]/10 rounded">Fixed</span>
-                                  )}
+                                  <button type="button" onClick={() => setCustomFormFields(customFormFields.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                    <Trash2 className="size-4" />
+                                  </button>
                                 </div>
                               );
                             })}
