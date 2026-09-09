@@ -730,14 +730,24 @@ export function EventsManager() {
                                           newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                                           setCustomFormFields(newFields)
                                         }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
-                                        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                                          <input type="checkbox" checked={field.allow_other || false} onChange={e => {
-                                            const newFields = [...customFormFields]
-                                            newFields[idx].allow_other = e.target.checked
-                                            setCustomFormFields(newFields)
-                                          }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
-                                          Allow 'Other' Option
-                                        </label>
+                                        <div className="flex items-center gap-4 mt-2">
+                                          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                            <input type="checkbox" checked={field.allow_other || false} onChange={e => {
+                                              const newFields = [...customFormFields]
+                                              newFields[idx].allow_other = e.target.checked
+                                              setCustomFormFields(newFields)
+                                            }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
+                                            Allow 'Other' Option
+                                          </label>
+                                          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                            <input type="checkbox" checked={field.allow_multiple || false} onChange={e => {
+                                              const newFields = [...customFormFields]
+                                              newFields[idx].allow_multiple = e.target.checked
+                                              setCustomFormFields(newFields)
+                                            }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
+                                            Allow Multiple Selections
+                                          </label>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
