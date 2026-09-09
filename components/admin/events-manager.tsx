@@ -552,12 +552,10 @@ export function EventsManager() {
               <div>
                 <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Content</h4>
                 <div className="space-y-6">
-                  {!isCustomForm && (
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-slate-500">Description / Details</label>
+                      <label className="text-xs font-bold uppercase text-slate-500">Description / Details {isCustomForm && <span className="lowercase font-normal ml-1">(Optional)</span>}</label>
                       <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about?" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
                     </div>
-                  )}
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Cover Image *</label>

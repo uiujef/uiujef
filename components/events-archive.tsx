@@ -385,6 +385,7 @@ export default function EventsArchive() {
                 <DynamicEventForm
                   eventId={registerEvent.id}
                   eventName={registerEvent.title}
+                  eventDescription={registerEvent.description}
                   config={registerEvent.registration}
                   registrationFee={(registerEvent as any).registrationFee}
                   onSuccess={() => setRegisterEvent(null)}

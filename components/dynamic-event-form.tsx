@@ -207,6 +207,7 @@ function MemberBlock({
 interface DynamicEventFormProps {
   eventId: string
   eventName: string
+  eventDescription?: string
   config: EventRegistrationConfig
   registrationFee?: number
   onSuccess?: (payload: EventRegistrationPayload) => void
@@ -215,6 +216,7 @@ interface DynamicEventFormProps {
 export function DynamicEventForm({
   eventId,
   eventName,
+  eventDescription,
   config,
   registrationFee,
   onSuccess,
@@ -383,16 +385,16 @@ export function DynamicEventForm({
       }
 
       // Supabase Insertion
-      const finalMembers = config.is_custom_form ? [] : (config.isTeamBased ? members : [members[0]])
+      const finalMembers = config.is_custom_form ? null : (config.isTeamBased ? members : [members[0]])
       
       const { error: dbError } = await supabase
         .from('applications')
         .insert([
           {
             application_id: newId,
-            name: leadName,
-            email: leadEmail,
-            student_id: leadStudentId,
+            name: leadName || 'Custom Application',
+            email: leadEmail || null,
+            student_id: leadStudentId || null,
             type: 'Event',
             status: 'Pending',
             team_members: finalMembers,
@@ -425,10 +427,10 @@ export function DynamicEventForm({
         }
       }
     } catch (err: any) {
-      console.error('[Event Registration Error]:', err)
+      console.error('[Event Registration Error]:', err, JSON.stringify(err, null, 2))
       setIsSubmitting(false)
-      const errorMessage = err.message || (typeof err === 'string' ? err : 'An unknown error occurred during registration.')
-      toast.error(errorMessage)
+      const errorMessage = err.message || err.details || err.hint || (typeof err === 'string' ? err : 'An unknown error occurred during registration.')
+      toast.error(`Registration Failed: ${errorMessage}`)
       // Return early to prevent success screen on error
       return
     }
@@ -511,7 +513,10 @@ export function DynamicEventForm({
       <div className="space-y-6 p-6 sm:p-8">
         <div>
           <h3 className="font-serif text-xl font-bold text-white">{eventName}</h3>
-          <p className="mt-1 text-sm text-white/50">
+          {eventDescription && (
+            <p className="mt-2 text-sm text-white/70 whitespace-pre-wrap">{eventDescription}</p>
+          )}
+          <p className="mt-1 text-xs font-semibold text-white/50 uppercase tracking-wider">
             {config.isTeamBased
               ? `Team registration — up to ${config.maxTeamMembers} members`
               : 'Individual registration'}
