@@ -26,6 +26,9 @@ type Event = {
   participation_type: string
   event_level: string
   registration_deadline: string | null
+  status: string
+  is_members_only?: boolean
+  custom_form_fields?: any[]
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -57,6 +60,9 @@ export function EventsManager() {
   const [participationType, setParticipationType] = useState('Individual')
   const [eventLevel, setEventLevel] = useState('On Campus')
   const [registrationDeadline, setRegistrationDeadline] = useState('')
+  const [status, setStatus] = useState<'draft' | 'published'>('draft')
+  const [isMembersOnly, setIsMembersOnly] = useState(false)
+  const [customFormFields, setCustomFormFields] = useState<any[]>([])
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<string | null>(null)
@@ -123,6 +129,9 @@ export function EventsManager() {
         formattedDeadline = event.registration_deadline || ''
       }
       setRegistrationDeadline(formattedDeadline)
+      setStatus((event.status as 'draft' | 'published') || 'draft')
+      setIsMembersOnly(event.is_members_only || false)
+      setCustomFormFields(event.custom_form_fields || [])
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -140,6 +149,9 @@ export function EventsManager() {
       setParticipationType('Individual')
       setEventLevel('On Campus')
       setRegistrationDeadline('')
+      setStatus('draft')
+      setIsMembersOnly(false)
+      setCustomFormFields([])
     }
     setImageFile(null)
     setExternalImageUrl('')
@@ -174,7 +186,10 @@ export function EventsManager() {
         pinned_at: isPinned ? (editingEvent?.pinned_at || new Date().toISOString()) : null,
         participation_type: participationType,
         event_level: eventLevel,
-        registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null
+        registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
+        status,
+        is_members_only: isMembersOnly,
+        custom_form_fields: customFormFields
       }
 
       if (isFeatured) {
@@ -284,6 +299,11 @@ export function EventsManager() {
             return r.team_members[0].address || ''
           }
         },
+        { header: 'Custom Responses', key: (r: any) => {
+            if (!r.custom_responses) return ''
+            return JSON.stringify(r.custom_responses)
+          }
+        },
         { header: 'TrxID', key: (r: any) => r.transaction_id || '' },
       ]
 
@@ -350,6 +370,9 @@ export function EventsManager() {
                   <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
                       {event.category}
+                    </span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider ${event.status === 'published' ? 'bg-green-500/90' : 'bg-slate-500/90'}`}>
+                      {event.status === 'published' ? 'Published' : 'Draft'}
                     </span>
                     {event.is_pinned && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-500/90 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
@@ -455,6 +478,13 @@ export function EventsManager() {
                     <label className="text-xs font-bold uppercase text-slate-500">Event Category *</label>
                     <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-slate-500">Status *</label>
+                    <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none bg-white transition-all">
+                      <option value="draft">Draft</option>
+                      <option value="published">Published Immediately</option>
                     </select>
                   </div>
                   
@@ -621,6 +651,70 @@ export function EventsManager() {
                           </div>
                         </div>
                       </div>
+
+                      <label className="flex items-center gap-3 cursor-pointer group mt-4">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={isMembersOnly} onChange={e => setIsMembersOnly(e.target.checked)} className="peer sr-only" />
+                          <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F26522]"></div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-slate-800 group-hover:text-[#F26522] transition-colors">Members Only</span>
+                          <p className="text-xs text-slate-500">Only verified UIUJEF members can register.</p>
+                        </div>
+                      </label>
+
+                      {/* Form Builder */}
+                      <div className="pt-6 border-t border-slate-200 mt-6">
+                        <h5 className="text-sm font-bold text-slate-800 mb-4">Custom Form Fields</h5>
+                        <div className="space-y-4">
+                          {customFormFields.map((field, idx) => (
+                            <div key={idx} className="flex items-start gap-4 bg-white p-4 rounded-xl border border-slate-200">
+                              <div className="flex-1 space-y-3">
+                                <input type="text" value={field.label} onChange={e => {
+                                  const newFields = [...customFormFields]
+                                  newFields[idx].label = e.target.value
+                                  setCustomFormFields(newFields)
+                                }} placeholder="Field Label" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
+                                <div className="flex items-center gap-4">
+                                  <select value={field.type} onChange={e => {
+                                    const newFields = [...customFormFields]
+                                    newFields[idx].type = e.target.value
+                                    setCustomFormFields(newFields)
+                                  }} className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:border-[#F26522] outline-none">
+                                    <option value="text">Text</option>
+                                    <option value="email">Email</option>
+                                    <option value="number">Number</option>
+                                    <option value="dropdown">Dropdown</option>
+                                  </select>
+                                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                    <input type="checkbox" checked={field.required} onChange={e => {
+                                      const newFields = [...customFormFields]
+                                      newFields[idx].required = e.target.checked
+                                      setCustomFormFields(newFields)
+                                    }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
+                                    Required
+                                  </label>
+                                </div>
+                                {field.type === 'dropdown' && (
+                                  <input type="text" value={field.options?.join(', ')} onChange={e => {
+                                    const newFields = [...customFormFields]
+                                    newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                                    setCustomFormFields(newFields)
+                                  }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
+                                )}
+                              </div>
+                              <button type="button" onClick={() => setCustomFormFields(customFormFields.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <Trash2 className="size-4" />
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => setCustomFormFields([...customFormFields, { id: Math.random().toString(36).substr(2, 9), label: '', type: 'text', required: false }])} className="flex items-center gap-2 text-sm font-semibold text-[#F26522] hover:text-[#F26522]/80 transition-colors bg-[#F26522]/5 px-4 py-2 rounded-lg border border-[#F26522]/20">
+                            <Plus className="size-4" />
+                            Add Custom Field
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
                   )}
                 </div>

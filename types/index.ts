@@ -67,6 +67,14 @@ export type Event = {
     requireUniversityID?: boolean
     requiresPayment?: boolean
     eventLevel?: string
+    is_members_only?: boolean
+    custom_form_fields?: Array<{
+      id: string
+      label: string
+      type: 'text' | 'email' | 'number' | 'select' | 'dropdown'
+      required: boolean
+      options?: string[]
+    }>
     formFields?: Array<{
       id: string
       label: string
@@ -109,4 +117,12 @@ export type EventRegistrationConfig = {
   requireUniversityID?: boolean
   requiresPayment?: boolean
   eventLevel?: string
+  is_members_only?: boolean
+  custom_form_fields?: Array<{
+    id: string
+    label: string
+    type: 'text' | 'email' | 'number' | 'select' | 'dropdown'
+    required: boolean
+    options?: string[]
+  }>
 }

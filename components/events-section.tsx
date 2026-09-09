@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { SectionHeader } from '@/components/ui/section-header'
 
 export async function EventsSection() {
-  const { data: latestEvents } = await supabase.from('events').select('*').neq('status', 'archived').order('date', { ascending: false }).limit(3)
+  const { data: latestEvents } = await supabase.from('events').select('*').eq('status', 'published').order('date', { ascending: false }).limit(3)
   return (
     <section id="events" className="bg-background">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:px-8 lg:py-28">

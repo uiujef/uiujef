@@ -228,6 +228,7 @@ export function DynamicEventForm({
   const [isSuccess, setIsSuccess] = useState(false)
   const [applicationId, setApplicationId] = useState('')
   const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
+  const [customResponses, setCustomResponses] = useState<Record<string, string>>({})
 
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
@@ -288,6 +289,20 @@ export function DynamicEventForm({
     e.preventDefault()
     setIsSubmitting(true)
 
+    if (config.is_members_only) {
+      const { data: memberData, error: memberError } = await supabase
+        .from('members')
+        .select('id')
+        .or(`student_id.eq.${members[0].student_id},email.eq.${members[0].email}`)
+        .limit(1)
+
+      if (memberError || !memberData || memberData.length === 0) {
+        toast.error("Only verified UIUJEF members can register for this event. Please use your registered Student ID or Email.")
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     // Fetch count of all event applications
     const { count, error: countError } = await supabase
       .from('applications')
@@ -326,10 +341,12 @@ export function DynamicEventForm({
             application_id: newId,
             name: members[0].name,
             email: members[0].email,
-            type: `Event: ${eventName}`,
+            type: 'Event',
             status: 'Pending',
             team_members: finalMembers,
             transaction_id: config.requiresPayment ? transactionId : null,
+            event_id: eventId,
+            custom_responses: Object.keys(customResponses).length > 0 ? customResponses : null,
           }
         ])
         
@@ -492,6 +509,44 @@ export function DynamicEventForm({
           >
             + Add Member {members.length + 1}
           </button>
+        )}
+
+        {/* Custom Fields */}
+        {config.custom_form_fields && config.custom_form_fields.length > 0 && (
+          <div className="space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Additional Information</p>
+            <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-white/10 bg-white/3 p-5">
+              {config.custom_form_fields.map((field) => (
+                <div key={field.id} className="sm:col-span-2 lg:col-span-1">
+                  <FieldLabel htmlFor={`custom-${field.id}`} icon={Hash} label={field.label} />
+                  {field.type === 'dropdown' || field.type === 'select' ? (
+                    <select
+                      id={`custom-${field.id}`}
+                      required={field.required}
+                      value={customResponses[field.id] || ''}
+                      onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      className={cn(inputCls, 'bg-[#1B2A4A]/60')}
+                    >
+                      <option value="" disabled>Select {field.label}</option>
+                      {field.options?.map((opt, idx) => (
+                        <option key={idx} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : 'text'}
+                      id={`custom-${field.id}`}
+                      required={field.required}
+                      value={customResponses[field.id] || ''}
+                      onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      placeholder={field.label}
+                      className={inputCls}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Payment Block */}

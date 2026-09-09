@@ -142,7 +142,7 @@ export default function EventsArchive() {
           setBgMedia(settingsData.bg_events)
         }
 
-        const { data, error } = await supabase.from('events').select('*').neq('status', 'archived').order('date', { ascending: false })
+        const { data, error } = await supabase.from('events').select('*').eq('status', 'published').order('date', { ascending: false })
         if (error) throw error
         if (data) {
           const mappedEvents: Event[] = data.map(d => ({
@@ -165,6 +165,8 @@ export default function EventsArchive() {
               requireUniversityID: d.require_university_id ?? d.requireUniversityID ?? true,
               requiresPayment: d.requires_payment ?? d.requiresPayment,
               eventLevel: d.event_level,
+              is_members_only: d.is_members_only,
+              custom_form_fields: d.custom_form_fields,
             } : undefined,
             registrationFee: d.registration_fee,
             extendedDetails: d.extendedDetails || d.extended_details,
