@@ -45,6 +45,7 @@ export type Event = {
   title: string
   date: string // format: YYYY-MM-DD
   dateLabel?: string // optional friendly string, e.g. 'Oct 15, 2026'
+  appIdPrefix?: string
   description: string
   image?: string
   category: string

@@ -179,7 +179,9 @@ export default function JoinPage() {
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
-
+  const [hasDuplicateMatch, setHasDuplicateMatch] = useState(false)
+  const [duplicateAppId, setDuplicateAppId] = useState<string | null>(null)
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
   const validateStep1 = useCallback(() => {
     const newErrors: Record<string, string> = {}
     if (!form.full_name.trim()) newErrors.full_name = 'Required'
@@ -223,16 +225,57 @@ export default function JoinPage() {
     return Object.keys(newErrors).length === 0
   }, [form])
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     let isValid = false
     if (step === 1) isValid = validateStep1()
     else if (step === 2) isValid = validateStep2()
 
     if (isValid) {
+      if (step === 1) {
+        setIsCheckingDuplicate(true)
+        try {
+          const idOrEmailMatch = `student_id.eq."${form.student_id}",email.eq."${form.email}",name.eq."${form.full_name}"`
+          
+          // 1. Check Applications Table (Pending or Approved Membership applications)
+          const { data: appsData, error: appsError } = await supabase
+            .from('applications')
+            .select('application_id')
+            .or(idOrEmailMatch)
+            .eq('type', 'Membership')
+            .limit(1)
+            
+          if (appsData && appsData.length > 0) {
+            setDuplicateAppId(appsData[0].application_id)
+            setHasDuplicateMatch(true)
+            setIsCheckingDuplicate(false)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            return
+          }
+          
+          // 2. Check Members Table
+          const { data: membersData, error: membersError } = await supabase
+            .from('members')
+            .select('member_id')
+            .or(idOrEmailMatch)
+            .limit(1)
+            
+          if (membersData && membersData.length > 0) {
+            setDuplicateAppId(membersData[0].member_id)
+            setHasDuplicateMatch(true)
+            setIsCheckingDuplicate(false)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            return
+          }
+        } catch (error) {
+          console.error("Error checking duplicates:", error)
+        }
+        setIsCheckingDuplicate(false)
+      }
+
       dispatchStep({ type: 'NEXT_STEP' })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  }, [step, validateStep1, validateStep2])
+  }, [step, validateStep1, validateStep2, form.student_id, form.email])
 
   const handlePrev = useCallback(() => {
     dispatchStep({ type: 'PREV_STEP' })
@@ -404,6 +447,70 @@ export default function JoinPage() {
             </Link>
           </div>
 
+        </div>
+      </div>
+    )
+  }
+
+  if (hasDuplicateMatch) {
+    return (
+      <div className="min-h-screen bg-navy-deep flex items-center justify-center p-4">
+        <div className="rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl p-8 md:p-12 max-w-2xl w-full text-center">
+          <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="relative bg-[#F26522] rounded-full w-full h-full flex items-center justify-center shadow-lg shadow-[#F26522]/30">
+              <CheckCircle2 className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          <h2 className="font-serif text-3xl font-bold text-white mb-2">Already Registered!</h2>
+          <p className="text-white/70 text-lg mb-8">
+            It looks like you are already a part of UIUJEF or your application is already in progress.
+          </p>
+
+          {/* Application ID Box */}
+          {duplicateAppId && (
+            <div className="mb-8 rounded-2xl border border-[#F26522]/20 bg-[#F26522]/10 p-6 shadow-inner backdrop-blur-sm mx-auto max-w-sm">
+              <p className="text-sm font-semibold uppercase tracking-widest text-[#F26522]/80 mb-2">
+                Your Member / Application ID
+              </p>
+              <div className="group flex items-center justify-center gap-3">
+                <div className="font-mono text-2xl font-bold tracking-wider text-white">
+                  {duplicateAppId}
+                </div>
+                <button
+                  onClick={() => handleCopyId(duplicateAppId)}
+                  className="flex size-10 items-center justify-center rounded-full bg-white/5 text-white/50 transition-all hover:bg-white/10 hover:text-white"
+                  title="Copy ID"
+                >
+                  {copiedId ? <Check className="size-5 text-green-500" /> : <Copy className="size-5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link 
+              href="/track" 
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full bg-[#F26522] text-white font-bold hover:bg-[#FF7A3D] transition-all duration-200"
+            >
+              Track Application
+            </Link>
+            <Link 
+              href="/members" 
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full bg-white/10 text-white font-bold hover:bg-white/20 transition-all duration-200"
+            >
+              View Community Directory
+            </Link>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/50 font-medium hover:text-white transition-all duration-200"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -842,10 +949,20 @@ export default function JoinPage() {
                 <button 
                   type="button" 
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-medium bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-all shadow-lg shadow-[#F26522]/20 hover:shadow-[#F26522]/40"
+                  disabled={isCheckingDuplicate}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-medium bg-[#F26522] text-white hover:bg-[#F26522]/90 transition-all shadow-lg shadow-[#F26522]/20 hover:shadow-[#F26522]/40 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
+                  {isCheckingDuplicate ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               ) : (
                 <button 

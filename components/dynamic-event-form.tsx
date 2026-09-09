@@ -412,20 +412,25 @@ export function DynamicEventForm({
         console.log('[Supabase] Successfully inserted application record.')
         
         // Send email only after successful insert
-        if (leadEmail) {
-          await emailjs.send(
-            process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-            process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-            {
-              to_name: leadName,
-              to_email: leadEmail,
-              application_id: newId,
-            },
-            {
-              publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-            }
-          )
-          console.log(`[EmailJS] Sent confirmation email to ${leadEmail}. Application ID: ${newId}`)
+        if (leadEmail && leadEmail.trim() !== '') {
+          try {
+            await emailjs.send(
+              process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+              process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+              {
+                to_name: leadName,
+                to_email: leadEmail,
+                application_id: newId,
+              },
+              {
+                publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+              }
+            )
+            console.log(`[EmailJS] Sent confirmation email to ${leadEmail}. Application ID: ${newId}`)
+          } catch (emailErr) {
+            console.error('[EmailJS Error]:', emailErr)
+            toast.error("Registration successful, but failed to send confirmation email.")
+          }
         }
       }
     } catch (err: any) {

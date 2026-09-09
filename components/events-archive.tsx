@@ -387,6 +387,7 @@ export default function EventsArchive() {
                   eventId={registerEvent.id}
                   eventName={registerEvent.title}
                   eventDescription={registerEvent.description}
+                  appIdPrefix={registerEvent.appIdPrefix}
                   config={registerEvent.registration}
                   registrationFee={(registerEvent as any).registrationFee}
                   onSuccess={() => setRegisterEvent(null)}
