@@ -122,8 +122,11 @@ export type EventRegistrationConfig = {
   custom_form_fields?: Array<{
     id: string
     label: string
-    type: 'text' | 'email' | 'number' | 'select' | 'dropdown'
+    type: 'text' | 'email' | 'number' | 'select' | 'dropdown' | 'radio'
     required: boolean
     options?: string[]
+    allow_other?: boolean
+    allow_multiple?: boolean
+    raw_options?: string
   }>
 }

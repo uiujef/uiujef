@@ -231,45 +231,8 @@ export function DynamicEventForm({
   const [otherToggled, setOtherToggled] = useState<Record<string, boolean>>({})
   const [otherText, setOtherText] = useState<Record<string, string>>({})
   
-  const [isMemberVerified, setIsMemberVerified] = useState(!config.is_members_only)
-  const [verificationInput, setVerificationInput] = useState('')
-  const [isVerifying, setIsVerifying] = useState(false)
-
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    setIsVerifying(true)
-    
-    const { data: memberData, error: memberError } = await supabase
-      .from('members')
-      .select('id')
-      .or(`student_id.eq.${verificationInput},email.eq.${verificationInput}`)
-      .limit(1)
-
-    setIsVerifying(false)
-
-    if (memberError || !memberData || memberData.length === 0) {
-      toast.error("Only verified UIUJEF members can register for this event. Please use your registered Student ID or Email.")
-      return
-    }
-
-    toast.success("Membership verified!")
-    setIsMemberVerified(true)
-    
-    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-      const fieldId = config.custom_form_fields[0].id;
-      setCustomResponses(prev => ({ ...prev, [fieldId]: verificationInput }))
-    } else {
-      if (verificationInput.includes('@')) {
-        setMembers(prev => { const next = [...prev]; next[0] = { ...next[0], email: verificationInput }; return next })
-      } else {
-        setMembers(prev => { const next = [...prev]; next[0] = { ...next[0], student_id: verificationInput }; return next })
-      }
-    }
-  }
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id)
@@ -327,6 +290,58 @@ export function DynamicEventForm({
     e.preventDefault()
     setIsSubmitting(true)
 
+    let leadEmail = ''
+    let leadName = 'Custom Application'
+    let leadStudentId = ''
+    
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+      leadEmail = customResponses[config.custom_form_fields[0].id] || ''
+      
+      const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
+      if (studentIdField) {
+        leadStudentId = customResponses[studentIdField.id] || ''
+      }
+
+      const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
+      if (nameField) {
+        leadName = customResponses[nameField.id] || 'Custom Application'
+      }
+    } else {
+      leadEmail = members[0].email
+      leadName = members[0].name
+      leadStudentId = members[0].student_id
+    }
+
+    // On-Submit Membership Verification
+    if (config.is_members_only) {
+      const idOrEmailMatch = leadStudentId ? `student_id.eq.${leadStudentId},email.eq.${leadEmail}` : `email.eq.${leadEmail}`
+      
+      // Using ilike for rough name matching, but it's safer to just require an exact match on email/student_id and rough match on name
+      // We will first find the member by ID or Email.
+      const { data: memberData, error: memberError } = await supabase
+        .from('members')
+        .select('name')
+        .or(idOrEmailMatch)
+        .limit(1)
+
+      if (memberError || !memberData || memberData.length === 0) {
+        toast.error("Verification Failed: Your Name and Email/Student ID do not match our official UIUJEF member records.")
+        setIsSubmitting(false)
+        return
+      }
+
+      // Roughly verify the name matches (case-insensitive)
+      const officialName = memberData[0].name.trim().toLowerCase()
+      const providedName = leadName.trim().toLowerCase()
+      
+      // We can check if one includes the other, to handle "Md. Shafiqul" vs "Shafiqul"
+      if (!officialName.includes(providedName) && !providedName.includes(officialName) && officialName !== providedName) {
+        toast.error("Verification Failed: Your Name does not match the official member record for this ID/Email.")
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     // Fetch count of all event applications
     const { count, error: countError } = await supabase
       .from('applications')
@@ -342,22 +357,6 @@ export function DynamicEventForm({
     
     const newId = `JEF-EVENT-N${(count || 0) + 1}`
     setApplicationId(newId)
-    
-    let leadEmail = ''
-    let leadName = 'Custom Application'
-    let leadStudentId = ''
-    
-    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-      leadEmail = customResponses[config.custom_form_fields[0].id] || ''
-      const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
-      if (studentIdField) {
-        leadStudentId = customResponses[studentIdField.id] || ''
-      }
-    } else {
-      leadEmail = members[0].email
-      leadName = members[0].name
-      leadStudentId = members[0].student_id
-    }
 
     const payload: EventRegistrationPayload = {
       application_id: newId,
@@ -496,54 +495,7 @@ export function DynamicEventForm({
     )
   }
 
-  if (!isMemberVerified) {
-    return (
-      <form
-        onSubmit={handleVerify}
-        className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
-      >
-        <div className="space-y-6 p-6 sm:p-8 text-center">
-          <div>
-            <h3 className="font-serif text-xl font-bold text-white mb-2">Members Only Event</h3>
-            <p className="text-sm text-white/60">
-              Only verified UIUJEF members can register for {eventName}.
-            </p>
-          </div>
-          <div className="text-left">
-            <FieldLabel htmlFor="verify-id" icon={User} label="Student ID or Registered Email" />
-            <input
-              required
-              type="text"
-              id="verify-id"
-              value={verificationInput}
-              onChange={(e) => setVerificationInput(e.target.value)}
-              placeholder="e.g. 01123XXXX or email@domain.com"
-              className={inputCls}
-            />
-          </div>
-        </div>
-        <div className="border-t border-white/8 p-6 sm:px-8">
-          <button
-            disabled={isVerifying || !verificationInput.trim()}
-            type="submit"
-            className="group relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26522] py-4 text-base font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all duration-200 hover:bg-[#FF7A3D] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isVerifying ? (
-              <>
-                <Loader2 className="size-5 animate-spin" />
-                Verifying…
-              </>
-            ) : (
-              <>
-                Verify Membership
-                <ChevronRight className="size-5 transition-transform duration-150 group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    )
-  }
+
 
   return (
     <form

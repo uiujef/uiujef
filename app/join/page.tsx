@@ -182,14 +182,13 @@ export default function JoinPage() {
 
   const validateStep1 = useCallback(() => {
     const newErrors: Record<string, string> = {}
-    const ALLOWED_DOMAINS = ['@bsces.uiu.ac.bd', '@bseee.uiu.ac.bd', '@bseco.uiu.ac.bd', '@mscse.uiu.ac.bd', '@mseee.uiu.ac.bd']
     if (!form.full_name.trim()) newErrors.full_name = 'Required'
     if (!form.student_id.trim()) newErrors.student_id = 'Required'
     if (!form.student_address.trim()) newErrors.student_address = 'Required'
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       newErrors.email = 'Valid Email Required'
-    } else if (!ALLOWED_DOMAINS.some(domain => form.email.toLowerCase().endsWith(domain))) {
-      newErrors.email = `Must use UIU domain (${ALLOWED_DOMAINS.join(', ')})`
+    } else if (!form.email.toLowerCase().endsWith('.uiu.ac.bd')) {
+      newErrors.email = `Must use UIU domain`
       toast.error('Please use your official UIU email address.')
     }
     if (!form.phone.trim() || !/^(?:\+88|88)?(01[3-9]\d{8})$/.test(form.phone)) newErrors.phone = 'Valid BD Phone Required'
@@ -608,9 +607,12 @@ export default function JoinPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Field id="email" label="UIU Email Address" icon={Mail} error={errors.email}>
-                  <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="e.g., shaikh.jubair.2025@gmail.com" />
-                </Field>
+                <div className="flex flex-col gap-1">
+                  <Field id="email" label="UIU Email Address" icon={Mail} error={errors.email}>
+                    <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="e.g., shaikh.jubair.2025@gmail.com" />
+                  </Field>
+                  <p className="text-[10px] text-white/40 pl-2">Must use official UIU domain (e.g., @bscse.uiu.ac.bd, @bsds.uiu.ac.bd, etc.)</p>
+                </div>
                 <Field id="phone" label="Phone Number" icon={Phone} error={errors.phone}>
                   <input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} placeholder="01XXXXXXXXX" />
                 </Field>
