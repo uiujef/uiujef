@@ -102,6 +102,17 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 border border-gold/30 px-4 py-1.5 text-sm font-semibold text-gold-soft">
               {event.category}
             </span>
+            {event.requiresRegistration && event.isRegistrationOpen && (
+              <button
+                onClick={() => {
+                  document.getElementById('registration-section')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="ml-auto inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#FF7A3D]"
+              >
+                Register Now
+                <ChevronRight className="size-4" />
+              </button>
+            )}
           </div>
 
           <div className="space-y-8">
@@ -164,7 +175,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
             )}
 
             {event.requiresRegistration && (
-              <div className="pt-8 border-t border-border mt-10">
+              <div id="registration-section" className="pt-8 border-t border-border mt-10">
                 {event.isRegistrationOpen ? (
                   <div className="bg-navy-deep/5 rounded-3xl p-6 md:p-10 border border-slate-100 shadow-sm">
                     <h3 className="font-serif text-2xl font-bold text-navy mb-6 text-center">Event Registration</h3>
