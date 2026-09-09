@@ -118,6 +118,7 @@ export type EventRegistrationConfig = {
   requiresPayment?: boolean
   eventLevel?: string
   is_members_only?: boolean
+  is_custom_form?: boolean
   custom_form_fields?: Array<{
     id: string
     label: string

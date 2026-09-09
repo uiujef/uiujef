@@ -29,6 +29,7 @@ type Event = {
   status: string
   is_members_only?: boolean
   custom_form_fields?: any[]
+  is_custom_form?: boolean
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -63,6 +64,7 @@ export function EventsManager() {
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [isMembersOnly, setIsMembersOnly] = useState(false)
   const [customFormFields, setCustomFormFields] = useState<any[]>([])
+  const [isCustomForm, setIsCustomForm] = useState(false)
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<string | null>(null)
@@ -87,7 +89,7 @@ export function EventsManager() {
     loadEvents()
   }, [])
 
-  const openModal = (event?: Event) => {
+  const openModal = (event?: Event, isCustom?: boolean) => {
     if (event) {
       setEditingEvent(event)
       setTitle(event.title)
@@ -118,20 +120,19 @@ export function EventsManager() {
       setEventLevel(event.event_level || 'On Campus')
 
       let formattedDeadline = ''
-      try {
-        if (event.registration_deadline) {
-          const d = new Date(event.registration_deadline)
-          const pad = (n: number) => n.toString().padStart(2, '0')
-          formattedDeadline = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-        }
-      } catch (e) {
-        console.error('Error parsing deadline', e)
+      if (event.registration_deadline) {
+        const dateObj = new Date(event.registration_deadline)
+        const tzOffset = dateObj.getTimezoneOffset() * 60000
+        const localISOTime = (new Date(dateObj.getTime() - tzOffset)).toISOString().slice(0, 16)
+        formattedDeadline = localISOTime
+      } else {
         formattedDeadline = event.registration_deadline || ''
       }
       setRegistrationDeadline(formattedDeadline)
       setStatus((event.status as 'draft' | 'published') || 'draft')
       setIsMembersOnly(event.is_members_only || false)
       setCustomFormFields(event.custom_form_fields || [])
+      setIsCustomForm(event.is_custom_form || false)
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -140,7 +141,7 @@ export function EventsManager() {
       setCategory('Competition')
       setImage('')
       setRequiresPayment(false)
-      setRequiresRegistration(false)
+      setRequiresRegistration(isCustom || false)
       setIsRegistrationOpen(false)
       setMaxTeamSize(1)
       setRegistrationFee(0)
@@ -151,7 +152,12 @@ export function EventsManager() {
       setRegistrationDeadline('')
       setStatus('draft')
       setIsMembersOnly(false)
-      setCustomFormFields([])
+      setIsCustomForm(isCustom || false)
+      if (isCustom) {
+        setCustomFormFields([{ id: Math.random().toString(36).substr(2, 9), label: 'Email Address / Student ID', type: 'email', required: true }])
+      } else {
+        setCustomFormFields([])
+      }
     }
     setImageFile(null)
     setExternalImageUrl('')
@@ -189,7 +195,8 @@ export function EventsManager() {
         registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
         status,
         is_members_only: isMembersOnly,
-        custom_form_fields: customFormFields
+        custom_form_fields: isCustomForm ? customFormFields : undefined,
+        is_custom_form: isCustomForm
       }
 
       if (isFeatured) {
@@ -202,7 +209,7 @@ export function EventsManager() {
         if (error) throw error
         toast.success('Event updated successfully!')
         setEvents(events.map(ev => {
-          if (ev.id === editingEvent.id) return { ...ev, ...payload }
+          if (ev.id === editingEvent.id) return { ...ev, ...payload } as Event
           return isFeatured ? { ...ev, is_featured: false } : ev
         }))
         setIsModalOpen(false)
@@ -322,10 +329,20 @@ export function EventsManager() {
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Manage Events</h2>
           <p className="text-slate-500 mt-1">Plan, create, and oversee UIUJEF events.</p>
         </div>
-        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
-          <Plus className="size-5" />
-          Create New Event
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => { setIsCustomForm(false); openModal(); }} className="flex items-center justify-center gap-2 bg-[#F26522] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#F26522]/20 hover:bg-[#F26522]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <Plus className="size-5" />
+            Standard Event
+          </button>
+          <button onClick={() => { 
+            setIsCustomForm(true);
+            setCustomFormFields([{ id: Math.random().toString(36).substr(2, 9), label: 'Email Address / Student ID', type: 'email', required: true }]);
+            openModal(); 
+          }} className="flex items-center justify-center gap-2 bg-[#1B2A4A] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#1B2A4A]/20 hover:bg-[#1B2A4A]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <Plus className="size-5" />
+            Custom Event
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -519,10 +536,12 @@ export function EventsManager() {
               <div>
                 <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Content</h4>
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500">Description / Details</label>
-                    <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about?" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
-                  </div>
+                  {!isCustomForm && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase text-slate-500">Description / Details</label>
+                      <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about?" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Cover Image *</label>
@@ -616,41 +635,43 @@ export function EventsManager() {
                         </div>
                       )}
 
-                      <div className="pt-2 space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-500">Participation Type</label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="participation_type" value="Individual" checked={participationType === 'Individual'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
-                              <span className="text-sm font-medium text-slate-800">Individual</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="participation_type" value="Team" checked={participationType === 'Team'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
-                              <span className="text-sm font-medium text-slate-800">Team</span>
-                            </label>
+                      {!isCustomForm && (
+                        <div className="pt-2 space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase text-slate-500">Participation Type</label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="participation_type" value="Individual" checked={participationType === 'Individual'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">Individual</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="participation_type" value="Team" checked={participationType === 'Team'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">Team</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 max-w-[200px]">
+                            <label className="text-xs font-bold uppercase text-slate-500">Max Team Members</label>
+                            <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-white/40" />
+                            <p className="text-xs text-slate-500">Applies if Team.</p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase text-slate-500">Event Level</label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="event_level" value="On Campus" checked={eventLevel === 'On Campus'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">On Campus</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="event_level" value="National" checked={eventLevel === 'National'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">National</span>
+                              </label>
+                            </div>
                           </div>
                         </div>
-
-                        <div className="space-y-2 max-w-[200px]">
-                          <label className="text-xs font-bold uppercase text-slate-500">Max Team Members</label>
-                          <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-white/40" />
-                          <p className="text-xs text-slate-500">Applies if Team.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-500">Event Level</label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="event_level" value="On Campus" checked={eventLevel === 'On Campus'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
-                              <span className="text-sm font-medium text-slate-800">On Campus</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="event_level" value="National" checked={eventLevel === 'National'} onChange={e => setEventLevel(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
-                              <span className="text-sm font-medium text-slate-800">National</span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
+                      )}
 
                       <label className="flex items-center gap-3 cursor-pointer group mt-4">
                         <div className="relative flex items-center">
@@ -664,56 +685,67 @@ export function EventsManager() {
                       </label>
 
                       {/* Form Builder */}
-                      <div className="pt-6 border-t border-slate-200 mt-6">
-                        <h5 className="text-sm font-bold text-slate-800 mb-4">Custom Form Fields</h5>
-                        <div className="space-y-4">
-                          {customFormFields.map((field, idx) => (
-                            <div key={idx} className="flex items-start gap-4 bg-white p-4 rounded-xl border border-slate-200">
-                              <div className="flex-1 space-y-3">
-                                <input type="text" value={field.label} onChange={e => {
-                                  const newFields = [...customFormFields]
-                                  newFields[idx].label = e.target.value
-                                  setCustomFormFields(newFields)
-                                }} placeholder="Field Label" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
-                                <div className="flex items-center gap-4">
-                                  <select value={field.type} onChange={e => {
-                                    const newFields = [...customFormFields]
-                                    newFields[idx].type = e.target.value
-                                    setCustomFormFields(newFields)
-                                  }} className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:border-[#F26522] outline-none">
-                                    <option value="text">Text</option>
-                                    <option value="email">Email</option>
-                                    <option value="number">Number</option>
-                                    <option value="dropdown">Dropdown</option>
-                                  </select>
-                                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                                    <input type="checkbox" checked={field.required} onChange={e => {
+                      {isCustomForm && (
+                        <div className="pt-6 border-t border-slate-200 mt-6">
+                          <h5 className="text-sm font-bold text-slate-800 mb-4">Custom Form Fields</h5>
+                          <div className="space-y-4">
+                            {customFormFields.map((field, idx) => {
+                              const isFixed = isCustomForm && idx === 0;
+                              return (
+                                <div key={idx} className={`flex items-start gap-4 bg-white p-4 rounded-xl border ${isFixed ? 'border-[#F26522]/30 bg-[#F26522]/5' : 'border-slate-200'}`}>
+                                  <div className="flex-1 space-y-3">
+                                    <input type="text" value={field.label} onChange={e => {
                                       const newFields = [...customFormFields]
-                                      newFields[idx].required = e.target.checked
+                                      newFields[idx].label = e.target.value
                                       setCustomFormFields(newFields)
-                                    }} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522]" />
-                                    Required
-                                  </label>
+                                    }} placeholder="Field Label" disabled={isFixed} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none disabled:opacity-70 disabled:bg-slate-50" />
+                                    <div className="flex items-center gap-4">
+                                      <select value={field.type} onChange={e => {
+                                        const newFields = [...customFormFields]
+                                        newFields[idx].type = e.target.value
+                                        setCustomFormFields(newFields)
+                                      }} disabled={isFixed} className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:border-[#F26522] outline-none disabled:opacity-70 disabled:bg-slate-50">
+                                        <option value="text">Text</option>
+                                        <option value="email">Email</option>
+                                        <option value="number">Number</option>
+                                        <option value="dropdown">Dropdown</option>
+                                      </select>
+                                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                        <input type="checkbox" checked={isFixed ? true : field.required} onChange={e => {
+                                          if (isFixed) return;
+                                          const newFields = [...customFormFields]
+                                          newFields[idx].required = e.target.checked
+                                          setCustomFormFields(newFields)
+                                        }} disabled={isFixed} className="rounded border-slate-300 text-[#F26522] focus:ring-[#F26522] disabled:opacity-70" />
+                                        Required
+                                      </label>
+                                    </div>
+                                    {field.type === 'dropdown' && (
+                                      <input type="text" value={field.options?.join(', ')} onChange={e => {
+                                        const newFields = [...customFormFields]
+                                        newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                                        setCustomFormFields(newFields)
+                                      }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
+                                    )}
+                                  </div>
+                                  {!isFixed && (
+                                    <button type="button" onClick={() => setCustomFormFields(customFormFields.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                      <Trash2 className="size-4" />
+                                    </button>
+                                  )}
+                                  {isFixed && (
+                                    <span className="text-[10px] font-bold text-[#F26522] uppercase tracking-wider mt-2 px-2 py-1 bg-[#F26522]/10 rounded">Fixed</span>
+                                  )}
                                 </div>
-                                {field.type === 'dropdown' && (
-                                  <input type="text" value={field.options?.join(', ')} onChange={e => {
-                                    const newFields = [...customFormFields]
-                                    newFields[idx].options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                                    setCustomFormFields(newFields)
-                                  }} placeholder="Options (comma separated)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-[#F26522] outline-none" />
-                                )}
-                              </div>
-                              <button type="button" onClick={() => setCustomFormFields(customFormFields.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                <Trash2 className="size-4" />
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" onClick={() => setCustomFormFields([...customFormFields, { id: Math.random().toString(36).substr(2, 9), label: '', type: 'text', required: false }])} className="flex items-center gap-2 text-sm font-semibold text-[#F26522] hover:text-[#F26522]/80 transition-colors bg-[#F26522]/5 px-4 py-2 rounded-lg border border-[#F26522]/20">
-                            <Plus className="size-4" />
-                            Add Custom Field
-                          </button>
+                              );
+                            })}
+                            <button type="button" onClick={() => setCustomFormFields([...customFormFields, { id: Math.random().toString(36).substr(2, 9), label: '', type: 'text', required: false }])} className="flex items-center gap-2 text-sm font-semibold text-[#F26522] hover:text-[#F26522]/80 transition-colors bg-[#F26522]/5 px-4 py-2 rounded-lg border border-[#F26522]/20">
+                              <Plus className="size-4" />
+                              Add Custom Field
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                     </div>
                   )}

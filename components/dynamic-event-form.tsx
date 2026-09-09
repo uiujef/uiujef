@@ -229,9 +229,45 @@ export function DynamicEventForm({
   const [applicationId, setApplicationId] = useState('')
   const [paymentMethods, setPaymentMethods] = useState<{method: string, account_number: string, bank_name?: string}[]>([])
   const [customResponses, setCustomResponses] = useState<Record<string, string>>({})
+  
+  const [isMemberVerified, setIsMemberVerified] = useState(!config.is_members_only)
+  const [verificationInput, setVerificationInput] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
 
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsVerifying(true)
+    
+    const { data: memberData, error: memberError } = await supabase
+      .from('members')
+      .select('id')
+      .or(`student_id.eq.${verificationInput},email.eq.${verificationInput}`)
+      .limit(1)
+
+    setIsVerifying(false)
+
+    if (memberError || !memberData || memberData.length === 0) {
+      toast.error("Only verified UIUJEF members can register for this event. Please use your registered Student ID or Email.")
+      return
+    }
+
+    toast.success("Membership verified!")
+    setIsMemberVerified(true)
+    
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+      const fieldId = config.custom_form_fields[0].id;
+      setCustomResponses(prev => ({ ...prev, [fieldId]: verificationInput }))
+    } else {
+      if (verificationInput.includes('@')) {
+        setMembers(prev => { const next = [...prev]; next[0] = { ...next[0], email: verificationInput }; return next })
+      } else {
+        setMembers(prev => { const next = [...prev]; next[0] = { ...next[0], student_id: verificationInput }; return next })
+      }
+    }
+  }
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id)
@@ -289,20 +325,6 @@ export function DynamicEventForm({
     e.preventDefault()
     setIsSubmitting(true)
 
-    if (config.is_members_only) {
-      const { data: memberData, error: memberError } = await supabase
-        .from('members')
-        .select('id')
-        .or(`student_id.eq.${members[0].student_id},email.eq.${members[0].email}`)
-        .limit(1)
-
-      if (memberError || !memberData || memberData.length === 0) {
-        toast.error("Only verified UIUJEF members can register for this event. Please use your registered Student ID or Email.")
-        setIsSubmitting(false)
-        return
-      }
-    }
-
     // Fetch count of all event applications
     const { count, error: countError } = await supabase
       .from('applications')
@@ -318,12 +340,22 @@ export function DynamicEventForm({
     
     const newId = `JEF-EVENT-N${(count || 0) + 1}`
     setApplicationId(newId)
+    
+    let leadEmail = ''
+    let leadName = 'Custom Application'
+    
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+      leadEmail = customResponses[config.custom_form_fields[0].id] || ''
+    } else {
+      leadEmail = members[0].email
+      leadName = members[0].name
+    }
 
     const payload: EventRegistrationPayload = {
       application_id: newId,
       event_id: eventId,
-      team_name: config.requireTeamName ? teamName : null,
-      members: config.isTeamBased ? members : [members[0]],
+      team_name: config.requireTeamName && !config.is_custom_form ? teamName : null,
+      members: config.is_custom_form ? [] : (config.isTeamBased ? members : [members[0]]),
       payment_method: config.requiresPayment ? paymentMethod : undefined,
       transaction_id: config.requiresPayment ? transactionId : undefined,
       status: 'pending',
@@ -332,15 +364,15 @@ export function DynamicEventForm({
 
     try {
       // Supabase Insertion
-      const finalMembers = config.isTeamBased ? members : [members[0]]
+      const finalMembers = config.is_custom_form ? [] : (config.isTeamBased ? members : [members[0]])
       
       const { error: dbError } = await supabase
         .from('applications')
         .insert([
           {
             application_id: newId,
-            name: members[0].name,
-            email: members[0].email,
+            name: leadName,
+            email: leadEmail,
             type: 'Event',
             status: 'Pending',
             team_members: finalMembers,
@@ -356,19 +388,21 @@ export function DynamicEventForm({
         console.log('[Supabase] Successfully inserted application record.')
         
         // Send email only after successful insert
-        await emailjs.send(
-          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-          {
-            to_name: members[0].name,
-            to_email: members[0].email,
-            application_id: newId,
-          },
-          {
-            publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-          }
-        )
-        console.log(`[EmailJS] Sent confirmation email to ${members[0].email}. Application ID: ${newId}`)
+        if (leadEmail) {
+          await emailjs.send(
+            process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+            process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+            {
+              to_name: leadName,
+              to_email: leadEmail,
+              application_id: newId,
+            },
+            {
+              publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+            }
+          )
+          console.log(`[EmailJS] Sent confirmation email to ${leadEmail}. Application ID: ${newId}`)
+        }
       }
     } catch (err: any) {
       console.error('[Event Registration Error]:', err)
@@ -428,10 +462,8 @@ export function DynamicEventForm({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-
           <button
             onClick={() => {
-              // Only close the modal, no redirect
               onSuccess?.({} as any)
             }}
             className="w-full sm:w-auto rounded-full bg-[#F26522] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
@@ -440,6 +472,55 @@ export function DynamicEventForm({
           </button>
         </div>
       </div>
+    )
+  }
+
+  if (!isMemberVerified) {
+    return (
+      <form
+        onSubmit={handleVerify}
+        className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-xl"
+      >
+        <div className="space-y-6 p-6 sm:p-8 text-center">
+          <div>
+            <h3 className="font-serif text-xl font-bold text-white mb-2">Members Only Event</h3>
+            <p className="text-sm text-white/60">
+              Only verified UIUJEF members can register for {eventName}.
+            </p>
+          </div>
+          <div className="text-left">
+            <FieldLabel htmlFor="verify-id" icon={User} label="Student ID or Registered Email" />
+            <input
+              required
+              type="text"
+              id="verify-id"
+              value={verificationInput}
+              onChange={(e) => setVerificationInput(e.target.value)}
+              placeholder="e.g. 01123XXXX or email@domain.com"
+              className={inputCls}
+            />
+          </div>
+        </div>
+        <div className="border-t border-white/8 p-6 sm:px-8">
+          <button
+            disabled={isVerifying || !verificationInput.trim()}
+            type="submit"
+            className="group relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26522] py-4 text-base font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all duration-200 hover:bg-[#FF7A3D] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isVerifying ? (
+              <>
+                <Loader2 className="size-5 animate-spin" />
+                Verifying…
+              </>
+            ) : (
+              <>
+                Verify Membership
+                <ChevronRight className="size-5 transition-transform duration-150 group-hover:translate-x-1" />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     )
   }
 
@@ -465,7 +546,7 @@ export function DynamicEventForm({
         </div>
 
         {/* Team Name */}
-        {config.isTeamBased && config.requireTeamName && (
+        {!config.is_custom_form && config.isTeamBased && config.requireTeamName && (
           <div>
             <FieldLabel htmlFor="team-name" icon={Users} label="Team Name" />
             <input
@@ -481,27 +562,29 @@ export function DynamicEventForm({
         )}
 
         {/* Member blocks */}
-        <div className="space-y-4">
-          {config.isTeamBased && (
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
-              Team Members ({members.length}/{config.maxTeamMembers})
-            </p>
-          )}
-          {(config.isTeamBased ? members : [members[0]]).map((member, i) => (
-            <MemberBlock
-              key={i}
-              index={i}
-              member={member}
-              config={config}
-              onChange={handleMemberChange}
-              onRemove={removeMember}
-              canRemove={!!config.isTeamBased && members.length > 1}
-            />
-          ))}
-        </div>
+        {!config.is_custom_form && (
+          <div className="space-y-4">
+            {config.isTeamBased && (
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+                Team Members ({members.length}/{config.maxTeamMembers})
+              </p>
+            )}
+            {(config.isTeamBased ? members : [members[0]]).map((member, i) => (
+              <MemberBlock
+                key={i}
+                index={i}
+                member={member}
+                config={config}
+                onChange={handleMemberChange}
+                onRemove={removeMember}
+                canRemove={!!config.isTeamBased && members.length > 1}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Add member button */}
-        {config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
+        {!config.is_custom_form && config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
           <button
             type="button"
             onClick={addMember}

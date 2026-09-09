@@ -167,6 +167,7 @@ export default function EventsArchive() {
               eventLevel: d.event_level,
               is_members_only: d.is_members_only,
               custom_form_fields: d.custom_form_fields,
+              is_custom_form: d.is_custom_form,
             } : undefined,
             registrationFee: d.registration_fee,
             extendedDetails: d.extendedDetails || d.extended_details,
