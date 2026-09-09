@@ -3,7 +3,7 @@
 import { useState, useCallback, useId, useEffect } from 'react'
 import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
-import emailjs from '@emailjs/browser'
+
 import { supabase } from '@/lib/supabase'
 import type { EventRegistrationConfig } from '@/types'
 import { cn } from '@/lib/utils'
@@ -421,21 +421,23 @@ export function DynamicEventForm({
         // Send email only after successful insert
         if (leadEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail.trim())) {
           try {
-            await emailjs.send(
-              process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-              process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-              {
-                to_name: leadName,
-                to_email: leadEmail,
-                application_id: newId,
-              },
-              {
-                publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-              }
-            )
-            console.log(`[EmailJS] Sent confirmation email to ${leadEmail}. Application ID: ${newId}`)
+            const res = await fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: leadName,
+                email: leadEmail,
+                applicationId: newId,
+              }),
+            })
+            
+            if (!res.ok) {
+              throw new Error('Failed to send email via API')
+            }
+            
+            console.log(`[Resend] Sent confirmation email to ${leadEmail}. Application ID: ${newId}`)
           } catch (emailErr) {
-            console.error('[EmailJS Error]:', emailErr)
+            console.error('[Resend Error]:', emailErr)
             toast.error("Registration successful, but failed to send confirmation email.")
           }
         }
