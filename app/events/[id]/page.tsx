@@ -11,11 +11,16 @@ const supabase = createClient(
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const resolvedParams = await params
-  const { data: event } = await supabase
-    .from('events')
-    .select('title, excerpt, image')
-    .eq('id', resolvedParams.id)
-    .single()
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedParams.id)
+  
+  let query = supabase.from('events').select('title, excerpt, image')
+  if (isUUID) {
+    query = query.eq('id', resolvedParams.id)
+  } else {
+    query = query.ilike('app_id_prefix', resolvedParams.id)
+  }
+  
+  const { data: event } = await query.single()
 
   if (!event) {
     return {
@@ -45,7 +50,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const resolvedParams = await params
 
   return (
-    <div className="relative bg-background min-h-screen flex flex-col">
+    <div className="relative bg-[#0B1120] min-h-screen flex flex-col">
       <SiteNav />
       <main className="flex-1">
         <EventDetailsClient eventId={resolvedParams.id} />

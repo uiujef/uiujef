@@ -91,24 +91,24 @@ function EventCard({
           {event.requiresRegistration && (
             event.isRegistrationOpen ? (
               <Link
-                href={`/events/${event.id}#registration-section`}
+                href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}#registration-section`}
                 className="group/btn inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-[#F26522]/20 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/40"
               >
                 Register Now
                 <ChevronRight className="size-4 transition-transform duration-150 group-hover/btn:translate-x-0.5" />
               </Link>
             ) : (
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-5 py-2.5 text-sm font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/50 px-5 py-2.5 text-sm font-bold text-muted-foreground">
                 Registration Closed
               </span>
             )
           )}
-          
           <Link
-            href={`/events/${event.id}`}
-            className="inline-flex items-center gap-2 rounded-full border border-navy/20 bg-transparent px-5 py-2.5 text-sm font-bold text-navy transition-all hover:bg-navy/5"
+            href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}`}
+            className="group/link inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-navy transition-colors hover:bg-secondary/50"
           >
             Read More
+            <ChevronRight className="size-4 transition-transform duration-150 group-hover/link:translate-x-0.5" />
           </Link>
         </div>
       </div>

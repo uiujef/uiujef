@@ -17,11 +17,15 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
   useEffect(() => {
     async function fetchEvent() {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('events')
-          .select('*')
-          .eq('id', eventId)
-          .single()
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)
+        let query = supabase.from('events').select('*')
+        if (isUUID) {
+          query = query.eq('id', eventId)
+        } else {
+          query = query.ilike('app_id_prefix', eventId)
+        }
+        
+        const { data, error: fetchError } = await query.single()
 
         if (fetchError || !data) {
           setError('Event not found or failed to load.')
@@ -82,9 +86,9 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="relative w-full overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col">
+      <div className="relative w-full overflow-hidden rounded-3xl bg-white/5 border border-white/10 shadow-2xl flex flex-col">
         {event.image && (
-          <div className="relative w-full shrink-0 bg-navy-deep/5 border-b border-slate-100 mb-6 flex justify-center items-center">
+          <div className="relative w-full shrink-0 bg-black/20 border-b border-white/10 mb-6 flex justify-center items-center">
             <img
               src={event.image}
               alt={event.title}
@@ -93,9 +97,9 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           </div>
         )}
         <div className="flex flex-col p-6 sm:p-10 pt-0 sm:pt-0">
-          <h2 className="font-serif text-4xl font-bold text-navy">{event.title}</h2>
+          <h2 className="font-serif text-4xl font-bold text-white">{event.title}</h2>
           <div className="mt-4 mb-8 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/5 px-4 py-1.5 text-sm font-semibold text-navy/70">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold text-white/70">
               <CalendarDays className="size-4" />
               {event.dateLabel}
             </span>
@@ -117,8 +121,8 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
 
           <div className="space-y-8">
             <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-navy/40">About the Event</h3>
-              <div className="prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-navy prose-a:text-[#F26522] prose-img:rounded-xl">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-white/40">About the Event</h3>
+              <div className="prose prose-invert max-w-none prose-headings:font-serif prose-headings:text-white prose-a:text-[#F26522] prose-img:rounded-xl">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {event.description}
                 </ReactMarkdown>
@@ -129,25 +133,25 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
               <>
                 {event.extendedDetails.speakers && event.extendedDetails.speakers.length > 0 && (
                   <div>
-                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-navy/40">
-                      <span className="flex size-6 items-center justify-center rounded-full bg-navy/5 text-navy/60">🎤</span> 
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white/40">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-white/10 text-white/60">🎤</span> 
                       Speakers
                     </h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {event.extendedDetails.speakers.map((speaker: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-4 rounded-2xl border border-border p-4">
-                          <div className="size-12 shrink-0 overflow-hidden rounded-full bg-navy/5">
+                        <div key={idx} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <div className="size-12 shrink-0 overflow-hidden rounded-full bg-white/10">
                             {speaker.image ? (
                               <img src={speaker.image} alt={speaker.name} className="size-full object-cover" />
                             ) : (
-                              <div className="flex size-full items-center justify-center text-xl font-bold text-navy/20">
+                              <div className="flex size-full items-center justify-center text-xl font-bold text-white/20">
                                 {speaker.name.charAt(0)}
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-navy">{speaker.name}</p>
-                            <p className="text-sm text-slate-500">{speaker.role}</p>
+                            <p className="font-bold text-white">{speaker.name}</p>
+                            <p className="text-sm text-white/60">{speaker.role}</p>
                           </div>
                         </div>
                       ))}
@@ -156,15 +160,15 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
                 )}
 
                 {event.extendedDetails.rules && event.extendedDetails.rules.length > 0 && (
-                  <div className="rounded-2xl border border-navy/10 bg-navy/4 p-6">
-                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-navy">
-                      <span className="flex size-6 items-center justify-center rounded-full bg-navy/10 text-navy">📜</span> 
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-white/10 text-white">📜</span> 
                       Rules & Guidelines
                     </h3>
-                    <ul className="space-y-2 text-sm text-slate-700">
+                    <ul className="space-y-2 text-sm text-white/80">
                       {event.extendedDetails.rules.map((rule: string, idx: number) => (
                         <li key={idx} className="flex gap-2">
-                          <span className="text-navy/40 mt-1">•</span>
+                          <span className="text-white/40 mt-1">•</span>
                           <span>{rule}</span>
                         </li>
                       ))}
@@ -175,10 +179,10 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
             )}
 
             {event.requiresRegistration && (
-              <div id="registration-section" className="pt-8 border-t border-border mt-10">
+              <div id="registration-section" className="pt-8 border-t border-white/10 mt-10">
                 {event.isRegistrationOpen ? (
-                  <div className="bg-navy-deep/5 rounded-3xl p-6 md:p-10 border border-slate-100 shadow-sm">
-                    <h3 className="font-serif text-2xl font-bold text-navy mb-6 text-center">Event Registration</h3>
+                  <div className="bg-white/5 rounded-3xl p-6 md:p-10 border border-white/10 shadow-sm">
+                    <h3 className="font-serif text-2xl font-bold text-white mb-6 text-center">Event Registration</h3>
                     <DynamicEventForm
                       eventId={event.id}
                       eventName={event.title}
@@ -192,7 +196,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
                     />
                   </div>
                 ) : (
-                  <div className="bg-slate-100 text-slate-500 rounded-full px-8 py-4 font-bold text-center">
+                  <div className="bg-white/10 text-white/60 rounded-full px-8 py-4 font-bold text-center">
                     Registration Closed
                   </div>
                 )}
