@@ -208,6 +208,7 @@ interface DynamicEventFormProps {
   eventId: string
   eventName: string
   eventDescription?: string
+  appIdPrefix?: string
   config: EventRegistrationConfig
   registrationFee?: number
   onSuccess?: (payload: EventRegistrationPayload) => void
@@ -217,6 +218,7 @@ export function DynamicEventForm({
   eventId,
   eventName,
   eventDescription,
+  appIdPrefix = 'EVENT',
   config,
   registrationFee,
   onSuccess,
@@ -348,7 +350,7 @@ export function DynamicEventForm({
     const { count, error: countError } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true })
-      .like('type', 'Event:%')
+      .eq('event_id', eventId)
       
     if (countError) {
       console.error('[Event Registration Error]: Failed to fetch count', countError)
@@ -357,7 +359,7 @@ export function DynamicEventForm({
       return
     }
     
-    const newId = `JEF-EVENT-N${(count || 0) + 1}`
+    const newId = `JEF-${appIdPrefix}-N${(count || 0) + 1}`
     setApplicationId(newId)
 
     const payload: EventRegistrationPayload = {
@@ -429,8 +431,8 @@ export function DynamicEventForm({
     } catch (err: any) {
       console.error('[Event Registration Error]:', err, JSON.stringify(err, null, 2))
       setIsSubmitting(false)
-      const errorMessage = err.message || err.details || err.hint || (typeof err === 'string' ? err : 'An unknown error occurred during registration.')
-      toast.error(`Registration Failed: ${errorMessage}`)
+      const errorMessage = err.message || JSON.stringify(err)
+      toast.error(errorMessage)
       // Return early to prevent success screen on error
       return
     }

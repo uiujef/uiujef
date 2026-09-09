@@ -30,6 +30,7 @@ type Event = {
   is_members_only?: boolean
   custom_form_fields?: any[]
   is_custom_form?: boolean
+  app_id_prefix?: string
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -65,6 +66,7 @@ export function EventsManager() {
   const [isMembersOnly, setIsMembersOnly] = useState(false)
   const [customFormFields, setCustomFormFields] = useState<any[]>([])
   const [isCustomForm, setIsCustomForm] = useState(false)
+  const [appIdPrefix, setAppIdPrefix] = useState('EVENT')
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<string | null>(null)
@@ -133,6 +135,7 @@ export function EventsManager() {
       setIsMembersOnly(event.is_members_only || false)
       setCustomFormFields(event.custom_form_fields || [])
       setIsCustomForm(event.is_custom_form || false)
+      setAppIdPrefix(event.app_id_prefix || 'EVENT')
     } else {
       setEditingEvent(null)
       setTitle('')
@@ -153,6 +156,7 @@ export function EventsManager() {
       setStatus('draft')
       setIsMembersOnly(false)
       setIsCustomForm(isCustom || false)
+      setAppIdPrefix('EVENT')
       if (isCustom) {
         setCustomFormFields([
           { id: 'email', label: 'Email', type: 'email', required: true }
@@ -210,7 +214,8 @@ export function EventsManager() {
         status,
         is_members_only: isMembersOnly,
         custom_form_fields: processedCustomFields,
-        is_custom_form: isCustomForm
+        is_custom_form: isCustomForm,
+        app_id_prefix: appIdPrefix || 'EVENT'
       }
 
       if (isFeatured) {
@@ -494,6 +499,11 @@ export function EventsManager() {
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Event Title *</label>
                     <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Code Samurai 2024" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-slate-500">Application ID Prefix</label>
+                    <input type="text" value={appIdPrefix} onChange={e => setAppIdPrefix(e.target.value.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase())} placeholder="e.g. EVENT" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                    <p className="text-[10px] text-slate-400 pl-1 mt-1">Generates: JEF-{appIdPrefix || 'EVENT'}-N...</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-slate-500">Event Date & Time *</label>

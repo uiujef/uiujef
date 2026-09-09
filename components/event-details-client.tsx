@@ -53,6 +53,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           } : undefined,
           registrationFee: data.registration_fee,
           extendedDetails: data.extendedDetails || data.extended_details,
+          appIdPrefix: data.app_id_prefix || 'EVENT',
         }
         setEvent(mappedEvent)
       } catch (err: any) {

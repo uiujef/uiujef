@@ -173,6 +173,7 @@ export default function EventsArchive() {
             extendedDetails: d.extendedDetails || d.extended_details,
             isPinned: d.is_pinned,
             pinnedAt: d.pinned_at,
+            appIdPrefix: d.app_id_prefix || 'EVENT',
           }))
           setEvents(mappedEvents)
         }
