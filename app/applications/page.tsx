@@ -7,7 +7,6 @@ import { Search, Loader2, CheckCircle2, Clock, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
 
 import { supabase } from '@/lib/supabase'
 
@@ -18,8 +17,6 @@ export default function ApplicationsTrackingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [result, setResult] = useState<AppResult | null>(null)
-  
-  const pdfRef = useRef<HTMLDivElement>(null)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,52 +70,90 @@ export default function ApplicationsTrackingPage() {
     setIsLoading(false)
   }
 
-  const handleDownloadPDF = async () => {
-    if (!pdfRef.current || result === 'not-found' || !result?.fullData) return
-    setIsDownloading(true)
+  const handleDownloadPDF = () => {
+    if (result === 'not-found' || !result?.fullData) return;
+    setIsDownloading(true);
     try {
-      const element = pdfRef.current;
-      if (!element) throw new Error("PDF template not found in DOM");
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-      // Wait a brief moment to ensure all styles and fonts are painted
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 1. Watermark (Background)
+      doc.setFontSize(65);
+      doc.setTextColor(240, 245, 240); // Very light grey/green
+      doc.text("APPROVED", pageWidth / 2, pageHeight / 2, { angle: 45, align: "center" });
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        windowWidth: 800,
-        logging: false
-      });
+      // 2. Header
+      doc.setTextColor(11, 17, 32);
+      doc.setFontSize(26);
+      doc.setFont("helvetica", "bold");
+      doc.text("UIUJEF", pageWidth / 2, 25, { align: "center" });
 
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [canvas.width / 2, canvas.height / 2]
-      });
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "normal");
+      doc.text("Official Event Application Record", pageWidth / 2, 33, { align: "center" });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`UIUJEF_Application_${result?.fullData?.application_id || 'Document'}.pdf`);
+      doc.setDrawColor(242, 101, 34); // Brand Orange
+      doc.setLineWidth(1);
+      doc.line(20, 40, pageWidth - 20, 40);
+
+      // 3. Body Content
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(12);
+      let yPos = 55;
+      const leftCol = 25;
+      const rightCol = 70;
+
+      const addRow = (label: string, value: any) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, leftCol, yPos);
+        doc.setFont("helvetica", "normal");
+        const splitValue = doc.splitTextToSize(String(value || 'N/A'), pageWidth - rightCol - 20);
+        doc.text(splitValue, rightCol, yPos);
+        yPos += 8 * splitValue.length;
+      };
+
+      const email = result.fullData.email || (result.fullData.team_members && result.fullData.team_members[0]?.email);
+      const phone = result.fullData.phone || (result.fullData.team_members && result.fullData.team_members[0]?.phone);
+      const studentId = result.fullData.student_id || (result.fullData.team_members && result.fullData.team_members[0]?.student_id);
+
+      addRow("Application ID", result.fullData.application_id);
+      addRow("Status", result.status);
+      addRow("Applicant Name", result.name);
+      if (email) addRow("Email Address", email);
+      if (phone) addRow("Phone Number", phone);
+      if (studentId) addRow("Student ID", studentId);
+
+      // Map Custom Responses
+      if (result.fullData.custom_responses && Object.keys(result.fullData.custom_responses).length > 0) {
+        yPos += 5;
+        doc.setFont("helvetica", "bold");
+        doc.text("Additional Information:", leftCol, yPos);
+        yPos += 10;
+        
+        Object.entries(result.fullData.custom_responses).forEach(([key, value]) => {
+          const displayVal = Array.isArray(value) ? value.join(', ') : value;
+          addRow(key, displayVal);
+        });
+      }
+
+      // 4. Footer
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 20, { align: "center" });
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 15, { align: "center" });
+
+      doc.save(`UIUJEF_Application_${result.fullData.application_id}.pdf`);
       toast.success("PDF downloaded successfully!");
     } catch (error) {
-      console.error("PDF Error:", error);
+      console.error("PDF Generation Error:", error);
       toast.error("Failed to generate PDF. Please try again.");
     } finally {
-      setIsDownloading(false)
+      setIsDownloading(false);
     }
   }
 
-  const renderCustomResponses = (responses: any) => {
-    if (!responses || Object.keys(responses).length === 0) return null
-    return Object.entries(responses).map(([key, val]: any) => (
-      <div key={key} className="mb-2">
-        <div className="font-bold text-gray-700 text-[14px]">{key}</div>
-        <div className="text-gray-900 text-[14px]">{Array.isArray(val) ? val.join(', ') : String(val)}</div>
-      </div>
-    ))
-  }
+
 
   return (
     <div className="relative min-h-screen bg-navy-deep flex flex-col">
@@ -216,93 +251,6 @@ export default function ApplicationsTrackingPage() {
 
       <SiteFooter />
 
-      {/* Hidden PDF Template */}
-      {result !== 'not-found' && result !== null && result.status === 'Approved' && result.fullData && (
-        <div className="fixed top-0 left-[-9999px] w-[800px] bg-white z-[-50]">
-          <div ref={pdfRef} style={{ padding: '40px', position: 'relative', fontFamily: 'sans-serif' }}>
-            {/* Watermark */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%) rotate(-45deg)',
-              fontSize: '100px',
-              fontWeight: 'bold',
-              color: '#F26522',
-              opacity: 0.05,
-              whiteSpace: 'nowrap',
-              zIndex: 0
-            }}>
-              APPROVED
-            </div>
-
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              {/* Header */}
-              <div style={{ textAlign: 'center', marginBottom: '40px', borderBottom: '2px solid #f1f5f9', paddingBottom: '20px' }}>
-                {/* Fallback empty alt for generated PDF */}
-                <img src="/logo.png" alt="UIUJEF" crossOrigin="anonymous" style={{ height: '50px', marginBottom: '15px' }} />
-                <h1 style={{ margin: '0', color: '#0f172a', fontSize: '24px' }}>Official Event Application Record</h1>
-                <p style={{ margin: '5px 0 0', color: '#64748b', fontSize: '14px' }}>United International University Junior Economists' Forum</p>
-              </div>
-
-              {/* Body Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Application ID</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{result.fullData.application_id}</div>
-                </div>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Application Date</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{new Date(result.fullData.created_at).toLocaleDateString()}</div>
-                </div>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Applicant Name</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{result.fullData.name || (result.fullData.team_members && result.fullData.team_members[0]?.name)}</div>
-                </div>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Email Address</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{result.fullData.email || (result.fullData.team_members && result.fullData.team_members[0]?.email)}</div>
-                </div>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Phone Number</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{result.fullData.phone || (result.fullData.team_members && result.fullData.team_members[0]?.phone)}</div>
-                </div>
-                <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Student ID</div>
-                  <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>{result.fullData.student_id || (result.fullData.team_members && result.fullData.team_members[0]?.student_id) || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Custom Responses */}
-              {result.fullData.custom_responses && Object.keys(result.fullData.custom_responses).length > 0 && (
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{ fontSize: '16px', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', marginBottom: '16px' }}>Additional Information</h3>
-                  {renderCustomResponses(result.fullData.custom_responses)}
-                </div>
-              )}
-
-              {/* Team Members */}
-              {result.fullData.team_members && result.fullData.team_members.length > 1 && (
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{ fontSize: '16px', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', marginBottom: '16px' }}>Team Members</h3>
-                  {result.fullData.team_members.map((member: any, i: number) => (
-                    <div key={i} style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{member.name}</span>
-                      <span style={{ color: '#64748b', marginLeft: '10px' }}>ID: {member.student_id} | Email: {member.email}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Footer */}
-              <div style={{ marginTop: '50px', textAlign: 'center', color: '#94a3b8', fontSize: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
-                <p style={{ margin: '0 0 4px' }}>This is an electronically generated official document by UIUJEF.</p>
-                <p style={{ margin: '0' }}>Generated on: {new Date().toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
