@@ -20,7 +20,8 @@ type Application = {
   student_id?: string
   transaction_id?: string
   team_name?: string
-  events?: { title: string }
+  event_id?: string
+  event_title?: string
 }
 
 const isMemberApp = (type?: string) => type === 'Member' || type === 'Membership'
@@ -39,7 +40,7 @@ export function ApplicationsManager() {
     setIsLoading(true)
     setApplications([])
     try {
-      let query = supabase.from('applications').select('*, events(title)').order('created_at', { ascending: false })
+      let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
       
       query = query.neq('status', 'archived')
 
@@ -51,11 +52,25 @@ export function ApplicationsManager() {
 
       const { data, error } = await query
       if (error) throw error
+      
+      let enrichedApps: Application[] = []
+      
       if (data) {
-        setApplications(data as Application[])
-      } else {
-        setApplications([])
+        if (tab === 'Event') {
+          // Fetch all events for client-side join to avoid schema cache issues with foreign keys
+          const { data: eventList } = await supabase.from('events').select('id, title')
+          const eventMap = Object.fromEntries(eventList?.map(e => [e.id, e.title]) || [])
+          
+          enrichedApps = data.map(app => ({
+            ...app,
+            event_title: app.event_id ? eventMap[app.event_id] : undefined
+          })) as Application[]
+        } else {
+          enrichedApps = data as Application[]
+        }
       }
+      
+      setApplications(enrichedApps)
     } catch (err: any) {
       const errorMsg = err.message === 'Failed to fetch' 
         ? 'Network error: Supabase could not be reached. Please check your internet or ad-blocker.'
@@ -394,8 +409,8 @@ export function ApplicationsManager() {
                       
                       {activeTab === 'Event' && (
                         <td className="px-5 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-100 max-w-[200px] truncate" title={app.events?.title || app.type.replace('Event: ', '')}>
-                            {app.events?.title || app.type.replace('Event: ', '')}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-100 max-w-[200px] truncate" title={app.event_title || app.type.replace('Event: ', '')}>
+                            {app.event_title || app.type.replace('Event: ', '')}
                           </span>
                         </td>
                       )}
@@ -585,7 +600,7 @@ export function ApplicationsManager() {
                     <div>
                       <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Primary Details</h5>
                       <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Event</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.events?.title || selectedApp.type.replace('Event: ', '')}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Event</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.event_title || selectedApp.type.replace('Event: ', '')}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Team Name</dt><dd className="font-medium text-slate-800">{selectedApp.team_name || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Primary Email</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.email || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
