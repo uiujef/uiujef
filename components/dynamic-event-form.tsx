@@ -371,8 +371,10 @@ export function DynamicEventForm({
     if (!config.allowMultipleRegistrations) {
       const { data: existingApps, error: existingErr } = await supabase
         .from('applications')
-        .select('name, email, student_id, team_members, custom_responses')
-        .eq('event_id', eventId);
+        .select('name, email, student_id, team_members, custom_responses, status')
+        .eq('event_id', eventId)
+        .neq('status', 'archived')
+        .neq('status', 'Rejected');
         
       if (!existingErr && existingApps && existingApps.length > 0) {
         let isDuplicate = false;
