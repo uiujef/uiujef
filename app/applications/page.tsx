@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { Search, Loader2, CheckCircle2, Clock, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import jsPDF from 'jspdf'
+import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 
 import { supabase } from '@/lib/supabase'
@@ -75,23 +75,36 @@ export default function ApplicationsTrackingPage() {
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current || result === 'not-found' || !result?.fullData) return
-    
     setIsDownloading(true)
     try {
-      const canvas = await html2canvas(pdfRef.current, { useCORS: true, allowTaint: true, scale: 2, logging: false })
-      const imgData = canvas.toDataURL('image/png')
+      const element = pdfRef.current;
+      if (!element) throw new Error("PDF template not found in DOM");
+
+      // Wait a brief moment to ensure all styles and fonts are painted
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        windowWidth: 800,
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
-        format: [canvas.width, canvas.height]
-      })
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
-      pdf.save(`UIUJEF_Application_${result.fullData.application_id}.pdf`)
-      toast.success('PDF Downloaded successfully!')
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`UIUJEF_Application_${result?.fullData?.application_id || 'Document'}.pdf`);
+      toast.success("PDF downloaded successfully!");
     } catch (error) {
-      console.error('PDF generation error:', error)
-      toast.error('Failed to generate PDF. Please try again.')
+      console.error("PDF Error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsDownloading(false)
     }
@@ -204,8 +217,8 @@ export default function ApplicationsTrackingPage() {
       <SiteFooter />
 
       {/* Hidden PDF Template */}
-      {result !== 'not-found' && result !== null && result.fullData && (
-        <div style={{ position: 'absolute', left: '-9999px', top: '0', width: '800px', zIndex: -10, backgroundColor: 'white' }}>
+      {result !== 'not-found' && result !== null && result.status === 'Approved' && result.fullData && (
+        <div className="fixed top-0 left-[-9999px] w-[800px] bg-white z-[-50]">
           <div ref={pdfRef} style={{ padding: '40px', position: 'relative', fontFamily: 'sans-serif' }}>
             {/* Watermark */}
             <div style={{
