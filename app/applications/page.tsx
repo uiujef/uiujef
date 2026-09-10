@@ -301,9 +301,9 @@ export default function ApplicationsTrackingPage() {
 
           {/* Search Card */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
-            <form onSubmit={handleSearch} className="relative flex flex-col sm:block gap-4">
+            <form onSubmit={handleSearch} className="w-full flex flex-col sm:block relative">
               <div className="relative w-full">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/40" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/40"/>
                 <input
                   type="text"
                   placeholder="Enter Application ID"
@@ -312,13 +312,22 @@ export default function ApplicationsTrackingPage() {
                   className="w-full rounded-full border border-white/10 bg-white/5 pl-12 pr-6 sm:pr-40 py-4 text-white placeholder:text-white/30 focus:border-[#F26522]/50 focus:outline-none focus:ring-1 focus:ring-[#F26522]/40 transition-colors font-mono tracking-wider uppercase"
                   required
                 />
+                {/* Desktop Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading || !appId.trim()}
+                  className="hidden sm:flex absolute right-2 top-2 bottom-2 rounded-full bg-[#F26522] px-6 text-sm font-bold text-white transition-all hover:bg-[#F26522]/90 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center min-w-[140px]"
+                >
+                  {isLoading ? <Loader2 className="size-4 animate-spin"/> : 'Check Status'}
+                </button>
               </div>
+              {/* Mobile Button */}
               <button
                 type="submit"
                 disabled={isLoading || !appId.trim()}
-                className="w-full sm:absolute sm:right-2 sm:top-2 sm:bottom-2 rounded-full bg-[#F26522] py-4 sm:py-0 sm:px-8 text-sm font-bold text-white transition-all hover:bg-[#F26522]/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center sm:min-w-[140px]"
+                className="sm:hidden mt-4 w-full rounded-full bg-[#F26522] py-4 px-6 text-sm font-bold text-white transition-all hover:bg-[#F26522]/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {isLoading ? <Loader2 className="size-4 animate-spin" /> : 'Check Status'}
+                {isLoading ? <Loader2 className="size-4 animate-spin"/> : 'Check Status'}
               </button>
             </form>
 
