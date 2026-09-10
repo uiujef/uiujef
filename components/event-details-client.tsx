@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { CalendarDays, ChevronRight, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { DynamicEventForm } from '@/components/dynamic-event-form'
+
 
 export default function EventDetailsClient({ eventId }: { eventId: string }) {
   const router = useRouter()
@@ -120,15 +120,13 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
               {event.category}
             </span>
             {event.requiresRegistration && event.isRegistrationOpen && (
-              <button
-                onClick={() => {
-                  document.getElementById('registration-section')?.scrollIntoView({ behavior: 'smooth' })
-                }}
+              <Link
+                href={`/events/${eventId}/register`}
                 className="ml-auto inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#FF7A3D]"
               >
                 Register Now
                 <ChevronRight className="size-4" />
-              </button>
+              </Link>
             )}
           </div>
 
@@ -191,30 +189,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
               </>
             )}
 
-            {event.requiresRegistration && (
-              <div id="registration-section" className="pt-8 border-t border-white/10 mt-10">
-                {event.isRegistrationOpen ? (
-                  <div className="bg-white/5 rounded-3xl p-6 md:p-10 border border-white/10 shadow-sm">
-                    <h3 className="font-serif text-2xl font-bold text-white mb-6 text-center">Event Registration</h3>
-                    <DynamicEventForm
-                      eventId={event.id}
-                      eventName={event.title}
-                      eventDescription={event.description}
-                      appIdPrefix={event.appIdPrefix}
-                      config={event.registration}
-                      registrationFee={event.registrationFee}
-                      onSuccess={() => {
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="bg-white/10 text-white/60 rounded-full px-8 py-4 font-bold text-center">
-                    Registration Closed
-                  </div>
-                )}
-              </div>
-            )}
+
           </div>
         </div>
       </div>

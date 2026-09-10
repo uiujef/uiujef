@@ -12,64 +12,102 @@ export async function POST(req: Request) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'UIUJEF <no-reply@uiujef.org>', // Make sure this domain is verified in Resend, otherwise use 'onboarding@resend.dev' if testing. 
-      // Actually, if we don't have a verified domain, we can use a fallback or the user will configure it. Let's use a placeholder that they can change, or 'noreply@uiujef.org'.
-      // Better to use a standard address.
+      from: 'UIUJEF <events@uiujef.org>',
       to: email,
-      subject: 'Event Registration Confirmation - UIUJEF',
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <style>
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
-          .email-container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-          .header { background-image: url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; padding: 60px 20px; text-align: center; position: relative; }
-          .header-overlay { position: absolute; inset: 0; background-color: rgba(11, 17, 32, 0.75); }
-          .header-content { position: relative; z-index: 10; color: #ffffff; }
-          .logo { width: 80px; margin-bottom: 20px; }
-          .title { margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px; }
-          .body-content { padding: 40px 30px; color: #334155; line-height: 1.6; font-size: 16px; }
-          .greeting { font-size: 20px; font-weight: bold; color: #0f172a; margin-bottom: 20px; }
-          .id-box { background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; margin: 32px 0; }
-          .id-label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin: 0 0 8px 0; }
-          .id-value { font-size: 28px; font-family: monospace; font-weight: bold; color: #f26522; margin: 0; letter-spacing: 2px; }
-          .footer { background-color: #f1f5f9; padding: 24px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
-          .btn { display: inline-block; background-color: #f26522; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 50px; font-weight: bold; margin-top: 20px; }
-        </style>
-        </head>
-        <body>
-          <div class="email-container">
-            <div class="header">
-              <div class="header-overlay"></div>
-              <div class="header-content">
-                <img src="https://uiujef.org/logo.png" alt="UIUJEF Logo" class="logo" />
-                <h1 class="title">Registration Confirmed!</h1>
+      subject: 'Application Received — UIUJEF',
+      html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Received - UIUJEF</title>
+  <style type="text/css">
+    body { margin: 0 !important; padding: 0 !important; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .btn-primary:hover { background-color: #d9551c !important; }
+    .btn-secondary:hover { background-color: #e2e8f0 !important; color: #0f172a !important; }
+    @media screen and (max-width: 650px) {
+      .email-wrapper { padding: 20px 10px !important; }
+      .email-container { width: 100% !important; }
+      .mobile-btn { display: block !important; width: 100% !important; margin-bottom: 15px !important; }
+      .mobile-btn a { display: block !important; width: 100% !important; box-sizing: border-box !important; }
+      .app-id-text { font-size: 26px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f1f5f9;">
+    <tr>
+      <td class="email-wrapper" align="center" style="padding: 40px 15px; background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); background-size: cover; background-position: center;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);" class="email-container">
+          <tr>
+            <td style="background-color: #0f172a; padding: 40px 20px; text-align: center; border-bottom: 4px solid #F26522;">
+              <a href="https://uiujef.org" target="_blank" style="text-decoration: none; display: inline-block;">
+                <img src="https://uiujef.org/logo.png" alt="UIUJEF Official Logo" width="260" style="width: 260px; max-width: 100%; height: auto; display: block; margin: 0 auto;">
+              </a>
+              <h1 style="margin: 20px 0 0 0; font-size: 26px; color: #ffffff; font-weight: 800; letter-spacing: 1px;">
+                Application <span style="color: #F26522;">Received</span>
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 35px 25px 35px; background-color: #ffffff;">
+              <h2 style="margin: 0 0 16px 0; font-size: 22px; color: #0f172a; font-weight: 700;">Hello ${name},</h2>
+              <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.7; color: #475569;">
+                Thank you for submitting your application to the <strong>United International University Junior Economists' Forum (UIUJEF)</strong>. We have successfully received your submission and our team is currently verifying your records.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(145deg, #fffaf8, #ffffff); border: 2px dashed #F26522; border-radius: 12px; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 25px 15px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Official Application ID</p>
+                    <h2 class="app-id-text" style="margin: 0; font-family: monospace, 'Courier New'; font-size: 32px; color: #F26522; font-weight: 900; letter-spacing: 2px;">${applicationId}</h2>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 35px 0; font-size: 13px; line-height: 1.6; color: #64748b; text-align: center;">
+                <em>Please keep this ID safe. You will need it to track your real-time status and access event resources.</em>
+              </p>
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 30px; text-align: center;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="display: inline-block;" class="mobile-btn">
+                  <tr>
+                    <td style="border-radius: 8px; background: #F26522; text-align: center;">
+                      <a href="https://www.uiujef.org/applications" target="_blank" class="btn-primary" style="background: #F26522; font-size: 14px; text-decoration: none; padding: 14px 28px; color: #ffffff; font-weight: 700; display: block; border-radius: 8px;">
+                        Track Application
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <span style="display: inline-block; width: 12px; height: 12px;"></span>
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="display: inline-block;" class="mobile-btn">
+                  <tr>
+                    <td style="border-radius: 8px; background: #ffffff; text-align: center; border: 1px solid #cbd5e1;">
+                      <a href="https://uiujef.org" target="_blank" class="btn-secondary" style="background: #ffffff; font-size: 14px; text-decoration: none; padding: 14px 28px; color: #0f172a; font-weight: 600; display: block; border-radius: 8px;">
+                        Visit Website
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </div>
-            </div>
-            <div class="body-content">
-              <div class="greeting">Hello ${name},</div>
-              <p>Thank you for registering for our upcoming event. Your application has been successfully received and recorded in our system.</p>
-              
-              <div class="id-box">
-                <p class="id-label">Your Application ID</p>
-                <p class="id-value">${applicationId}</p>
-              </div>
-              
-              <p>Please keep this Application ID safe. You will need it to track your registration status and for entry to the event venue.</p>
-              
-              <div style="text-align: center;">
-                <a href="https://uiujef.org" class="btn">Visit Website</a>
-              </div>
-            </div>
-            <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} UIU Junior Economists' Forum. All rights reserved.</p>
-              <p>United International University</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #0f172a; padding: 35px 25px; text-align: center;">
+              <p style="margin: 0 0 10px 0; font-size: 15px; color: #ffffff; font-weight: 700;">
+                United International University<br><span style="color: #F26522;">Junior Economists' Forum</span>
+              </p>
+              <p style="margin: 0 0 20px 0; font-size: 12px; color: #94a3b8;">
+                Empowering future leaders, innovators, and strategic thinkers.<br>Contact: <a href="mailto:uiujef7@gmail.com" style="color: #F26522; text-decoration: none;">uiujef7@gmail.com</a>
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 20px;">
+                &copy; 2026 UIUJEF. All Rights Reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
     })
 
     if (error) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, RefreshCw, Trash2, ShieldAlert } from 'lucide-react'
+import { Loader2, RefreshCw, Trash2, ShieldAlert, Eye } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
@@ -13,6 +13,9 @@ export function ArchiveManager() {
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: string } | null>(null)
+  
+  const [itemToView, setItemToView] = useState<any>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
   const loadArchivedItems = async (tab: string) => {
     setIsLoading(true)
@@ -146,6 +149,16 @@ export function ArchiveManager() {
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => {
+                              setItemToView(item)
+                              setIsViewModalOpen(true)
+                            }}
+                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="size-4" />
+                          </button>
+                          <button
                             onClick={() => handleRestore(id, activeTab)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Restore"
@@ -180,6 +193,89 @@ export function ArchiveManager() {
           setItemToDelete(null)
         }}
       />
+
+      {isViewModalOpen && itemToView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+              <h3 className="font-bold text-lg text-slate-800 capitalize">{activeTab.slice(0, -1)} Details</h3>
+              <div className="text-xs font-mono text-slate-400">{itemToView.id || itemToView.application_id}</div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-4 text-sm text-slate-600">
+              {activeTab === 'events' && (
+                <>
+                  <div><strong className="text-slate-800">Title:</strong> {itemToView.title}</div>
+                  <div><strong className="text-slate-800">Category:</strong> {itemToView.category}</div>
+                  <div><strong className="text-slate-800">Date:</strong> {itemToView.date} {itemToView.time && `at ${itemToView.time}`}</div>
+                  <div><strong className="text-slate-800">Event Level:</strong> {itemToView.event_level}</div>
+                  <div><strong className="text-slate-800 flex items-start gap-1">Description:</strong> <p className="mt-1 whitespace-pre-wrap text-slate-500">{itemToView.description}</p></div>
+                </>
+              )}
+              {activeTab === 'applications' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><strong className="text-slate-800">Name:</strong> {itemToView.name}</div>
+                    <div><strong className="text-slate-800">Email:</strong> {itemToView.email}</div>
+                    <div><strong className="text-slate-800">Student ID:</strong> {itemToView.student_id}</div>
+                    <div><strong className="text-slate-800">Phone:</strong> {itemToView.phone}</div>
+                  </div>
+                  {(itemToView.custom_responses && Object.keys(itemToView.custom_responses).length > 0) && (
+                    <div className="mt-6 border-t pt-4">
+                      <strong className="text-slate-800 mb-2 block">Custom Responses:</strong>
+                      <div className="space-y-3">
+                        {Object.entries(itemToView.custom_responses).map(([key, val]: any) => (
+                          <div key={key} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div className="text-xs font-bold text-slate-700 mb-1">{key}</div>
+                            <div className="text-sm text-slate-600">{Array.isArray(val) ? val.join(', ') : String(val)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(itemToView.team_members && itemToView.team_members.length > 0) && (
+                    <div className="mt-6 border-t pt-4">
+                      <strong className="text-slate-800 mb-2 block">Team Members:</strong>
+                      <div className="space-y-2">
+                        {itemToView.team_members.map((tm: any, i: number) => (
+                          <div key={i} className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
+                            <span className="font-semibold text-slate-800">{tm.name}</span> ({tm.student_id}) - {tm.email}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              {activeTab === 'members' && (
+                <div className="space-y-2">
+                  <div><strong className="text-slate-800">Name:</strong> {itemToView.name}</div>
+                  <div><strong className="text-slate-800">Email:</strong> {itemToView.email}</div>
+                  <div><strong className="text-slate-800">Student ID:</strong> {itemToView.student_id}</div>
+                  <div><strong className="text-slate-800">University:</strong> {itemToView.university}</div>
+                  <div><strong className="text-slate-800">Phone:</strong> {itemToView.phone}</div>
+                </div>
+              )}
+              {activeTab === 'news' && (
+                <>
+                  <div><strong className="text-slate-800">Title:</strong> {itemToView.title}</div>
+                  <div><strong className="text-slate-800">Published:</strong> {new Date(itemToView.published_at).toLocaleDateString()}</div>
+                  <div><strong className="text-slate-800">Excerpt:</strong> <p className="mt-1">{itemToView.excerpt}</p></div>
+                </>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end shrink-0">
+              <button 
+                onClick={() => setIsViewModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

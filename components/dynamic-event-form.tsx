@@ -323,10 +323,10 @@ export function DynamicEventForm({
 
     // On-Submit Membership Verification
     if (config.is_members_only) {
-      const idOrEmailMatch = leadStudentId ? `student_id.eq.${leadStudentId},email.eq.${leadEmail}` : `email.eq.${leadEmail}`
+      const idOrEmailMatch = leadStudentId 
+        ? `student_id.ilike.${leadStudentId},email.ilike.${leadEmail}` 
+        : `email.ilike.${leadEmail}`
       
-      // Using ilike for rough name matching, but it's safer to just require an exact match on email/student_id and rough match on name
-      // We will first find the member by ID or Email.
       const { data: memberData, error: memberError } = await supabase
         .from('members')
         .select('name')
@@ -340,12 +340,20 @@ export function DynamicEventForm({
         return
       }
 
-      // Roughly verify the name matches (case-insensitive)
+      // Roughly verify the name matches (case-insensitive and fuzzy)
       const officialName = memberData[0].name.trim().toLowerCase()
       const providedName = leadName.trim().toLowerCase()
       
-      // We can check if one includes the other, to handle "Md. Shafiqul" vs "Shafiqul"
-      if (!officialName.includes(providedName) && !providedName.includes(officialName) && officialName !== providedName) {
+      const officialParts = officialName.split(/[\s.]+/)
+      const providedParts = providedName.split(/[\s.]+/)
+      
+      const hasFuzzyMatch = 
+        officialName.includes(providedName) || 
+        providedName.includes(officialName) ||
+        officialParts.some((part: string) => part.length >= 3 && providedName.includes(part)) ||
+        providedParts.some((part: string) => part.length >= 3 && officialName.includes(part))
+
+      if (!hasFuzzyMatch) {
         setVerificationErrorMsg("Your Name does not match the official member record for this ID/Email. Only verified members can register for this event.")
         setShowVerificationModal(true)
         setIsSubmitting(false)
