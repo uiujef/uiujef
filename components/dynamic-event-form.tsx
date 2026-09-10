@@ -3,6 +3,7 @@
 import { useState, useCallback, useId, useEffect } from 'react'
 import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 import { supabase } from '@/lib/supabase'
 import type { EventRegistrationConfig } from '@/types'
@@ -223,6 +224,7 @@ export function DynamicEventForm({
   registrationFee,
   onSuccess,
 }: DynamicEventFormProps) {
+  const router = useRouter()
   const [teamName, setTeamName] = useState('')
   const [members, setMembers] = useState<MemberEntry[]>([{ ...EMPTY_MEMBER }])
   const [paymentMethod, setPaymentMethod] = useState('')
@@ -510,7 +512,11 @@ export function DynamicEventForm({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => {
-              onSuccess?.({} as any)
+              if (onSuccess) {
+                onSuccess({} as any)
+              } else {
+                router.push('/events')
+              }
             }}
             className="w-full sm:w-auto rounded-full bg-[#F26522] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D]"
           >
