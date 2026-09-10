@@ -463,9 +463,7 @@ export function DynamicEventForm({
       leadStudentId = members[0].student_id
     }
 
-    const timestampSuffix = Date.now().toString().slice(-4)
-    const randomSuffix = Math.floor(100 + Math.random() * 900)
-    const newId = `JEF-${appIdPrefix}-${timestampSuffix}${randomSuffix}`
+    const newId = `JEF-${appIdPrefix}-N${Math.floor(1000 + Math.random() * 9000)}`
     setApplicationId(newId)
 
     try {

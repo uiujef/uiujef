@@ -195,27 +195,22 @@ export function ApplicationsManager() {
   const handleExport = async (approvedOnly: boolean) => {
     const toastId = toast.loading('Exporting data...')
     try {
-      let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
-      
-      if (activeTab === 'Member') {
-        query = query.in('type', ['Member', 'Membership'])
-      } else {
-        query = query.not('type', 'in', '("Member","Membership")')
-        if (selectedEventFilter !== 'All Events') {
-          query = query.eq('event_title', selectedEventFilter)
-        }
-      }
-
+      let processedData = [...filteredApps];
       if (approvedOnly) {
-        query = query.eq('status', 'Approved')
+        processedData = processedData.filter(a => a.status === 'Approved');
+      }
+      if (processedData.length === 0) {
+        toast.dismiss(toastId)
+        return toast.error("No applications to export.");
       }
 
-      const { data, error } = await query
-      if (error) throw error
-
-      const dataToExport = data as Application[]
+      if (approvedOnly && activeTab === 'Event') {
+        processedData.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+        processedData = processedData.map((app, index) => ({ ...app, serial_no: `SL-${index + 1}` }));
+      }
 
       const columns = [
+        ...(approvedOnly && activeTab === 'Event' ? [{ header: 'Serial No', key: (r: any) => r.serial_no || '' }] : []),
         { header: 'App ID', key: (r: Application) => r.application_id },
         { header: 'Type', key: (r: Application) => r.type },
         { header: 'Status', key: (r: Application) => r.status },
@@ -252,7 +247,7 @@ export function ApplicationsManager() {
         { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
       ]
 
-      exportToCsv(`UIUJEF_${activeTab}_Applications_${approvedOnly ? 'Approved' : 'All'}`, dataToExport, columns)
+      exportToCsv(`UIUJEF_${activeTab}_Applications_${approvedOnly ? 'Approved' : 'All'}`, processedData, columns)
       toast.success('Export complete', { id: toastId })
     } catch (err: any) {
       toast.error('Export Failed: ' + err.message, { id: toastId })
@@ -327,7 +322,7 @@ export function ApplicationsManager() {
             >
               <option value="All Events">All Events</option>
               {eventTypes.map(type => (
-                <option key={type} value={type}>{type.replace('Event: ', '')}</option>
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
           </div>

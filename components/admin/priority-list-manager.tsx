@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Search, Download, Star } from 'lucide-react'
+import { Loader2, Search, Download, Star, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -15,11 +15,15 @@ type Application = {
   application_id: string
   name: string
   email: string
+  phone: string
   student_id: string
   status: string
   transaction_id: string
   event_id: string
   created_at: string
+  team_name: string
+  team_members: any[]
+  custom_responses: any
 }
 
 export function PriorityListManager() {
@@ -28,6 +32,7 @@ export function PriorityListManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedEventId, setSelectedEventId] = useState<string>('All')
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
 
   const loadData = async () => {
     setIsLoading(true)
@@ -168,6 +173,7 @@ export function PriorityListManager() {
                       <th className="px-6 py-4 font-bold">Contact</th>
                       <th className="px-6 py-4 font-bold">TrxID</th>
                       <th className="px-6 py-4 font-bold">Status</th>
+                      <th className="px-6 py-4 font-bold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -196,6 +202,14 @@ export function PriorityListManager() {
                             {app.status}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => setSelectedApp(app)}
+                            className="p-1.5 bg-white border border-slate-200 text-slate-500 rounded-md hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                          >
+                            <Eye className="size-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -203,6 +217,139 @@ export function PriorityListManager() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedApp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                Application Details
+              </h3>
+              <button 
+                onClick={() => setSelectedApp(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">App ID</div>
+                  <div className="font-mono font-medium text-slate-800">{selectedApp.application_id}</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</div>
+                  <div className={cn(
+                    "font-bold",
+                    selectedApp.status === 'Approved' ? "text-green-600" :
+                    selectedApp.status === 'Pending' ? "text-orange-500" : "text-red-600"
+                  )}>{selectedApp.status}</div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Applicant Info</h4>
+                  <div className="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100">
+                    <div className="p-4 flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Name</span>
+                      <span className="text-sm font-bold text-slate-800">{selectedApp.name}</span>
+                    </div>
+                    {selectedApp.email && (
+                      <div className="p-4 flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Email</span>
+                        <span className="text-sm font-bold text-slate-800">{selectedApp.email}</span>
+                      </div>
+                    )}
+                    {selectedApp.phone && (
+                      <div className="p-4 flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Phone</span>
+                        <span className="text-sm font-bold text-slate-800">{selectedApp.phone}</span>
+                      </div>
+                    )}
+                    {selectedApp.student_id && (
+                      <div className="p-4 flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Student ID</span>
+                        <span className="text-sm font-bold text-slate-800">{selectedApp.student_id}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedApp.team_name && (
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Team Info</h4>
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
+                      <div className="p-4 flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Team Name</span>
+                        <span className="text-sm font-bold text-slate-800">{selectedApp.team_name}</span>
+                      </div>
+                      {selectedApp.team_members && selectedApp.team_members.length > 0 && (
+                        <div className="p-4 bg-slate-50">
+                          <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Members ({selectedApp.team_members.length})</h5>
+                          <div className="space-y-3">
+                            {selectedApp.team_members.map((member: any, idx: number) => (
+                              <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200">
+                                <div className="font-bold text-slate-800 text-sm mb-1">{member.name} {idx === 0 && '(Leader)'}</div>
+                                <div className="text-xs text-slate-500 grid grid-cols-2 gap-1">
+                                  <div><span className="font-medium text-slate-400">ID:</span> {member.student_id || '-'}</div>
+                                  <div><span className="font-medium text-slate-400">Email:</span> {member.email || '-'}</div>
+                                  <div><span className="font-medium text-slate-400">Phone:</span> {member.phone || '-'}</div>
+                                  <div><span className="font-medium text-slate-400">Uni:</span> {member.university || '-'}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Additional Info</h4>
+                    <div className="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100">
+                      {Object.entries(selectedApp.custom_responses).map(([key, value]) => {
+                        if (/^[a-z0-9]{8,12}$/.test(key)) return null; // Skip raw IDs if any leak
+                        const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
+                        if (!displayVal) return null;
+                        return (
+                          <div key={key} className="p-4 flex flex-col gap-1">
+                            <span className="text-xs font-bold text-slate-400 uppercase">{key}</span>
+                            <span className="text-sm font-medium text-slate-800">{displayVal}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {selectedApp.transaction_id && (
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Payment Info</h4>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Transaction ID</span>
+                      <span className="text-sm font-mono font-bold text-slate-800">{selectedApp.transaction_id}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end">
+              <button
+                onClick={() => setSelectedApp(null)}
+                className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-100 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

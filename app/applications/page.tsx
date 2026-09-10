@@ -96,6 +96,21 @@ export default function ApplicationsTrackingPage() {
       const statusText = isApproved ? 'Approved' : 'Pending Review';
       const docTitle = isApproved ? 'Official Event Application Record' : 'Official Submission Receipt';
 
+      let serialNo = '';
+      if (isApproved && result.type === 'Event' && result.fullData.event_id) {
+        const { data: approvedApps } = await supabase
+          .from('applications')
+          .select('application_id')
+          .eq('event_id', result.fullData.event_id)
+          .eq('status', 'Approved')
+          .order('created_at', { ascending: true });
+        
+        if (approvedApps) {
+          const index = approvedApps.findIndex(a => a.application_id === result.fullData.application_id);
+          if (index !== -1) serialNo = `SL-${index + 1}`;
+        }
+      }
+
       const addPageDesign = () => {
         doc.setFillColor(11, 17, 32); 
         doc.rect(0, 0, pageWidth, 35, 'F');
@@ -176,6 +191,9 @@ export default function ApplicationsTrackingPage() {
       yPos = 60;
 
       addRow("Application ID", result.fullData.application_id, true);
+      if (serialNo) {
+        addRow("Serial No", serialNo, true, [34, 197, 94]);
+      }
       addRow("Status", statusText, true, isApproved ? [34, 197, 94] : [242, 101, 34]);
       if (result.fullData.team_name) addRow("Team Name", result.fullData.team_name, true);
 
