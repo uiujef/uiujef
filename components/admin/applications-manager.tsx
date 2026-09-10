@@ -186,7 +186,7 @@ export function ApplicationsManager() {
       (app.email || '').toLowerCase().includes(searchQuery.toLowerCase())
       
     const matchesEvent = activeTab === 'Event' && selectedEventFilter !== 'All Events' 
-      ? app.type === selectedEventFilter 
+      ? app.event_title === selectedEventFilter 
       : true;
       
     return matchesSearch && matchesEvent
@@ -201,6 +201,9 @@ export function ApplicationsManager() {
         query = query.in('type', ['Member', 'Membership'])
       } else {
         query = query.not('type', 'in', '("Member","Membership")')
+        if (selectedEventFilter !== 'All Events') {
+          query = query.eq('event_title', selectedEventFilter)
+        }
       }
 
       if (approvedOnly) {
@@ -256,7 +259,7 @@ export function ApplicationsManager() {
     }
   }
 
-  const eventTypes = Array.from(new Set(applications.filter(a => !isMemberApp(a.type)).map(a => a.type)))
+  const eventTypes = Array.from(new Set(applications.filter(a => !isMemberApp(a.type) && a.event_title).map(a => a.event_title as string)))
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -39,7 +39,7 @@ export default function ApplicationsTrackingPage() {
       .from('applications')
       .select('*')
       .neq('status', 'archived')
-      .ilike('application_id', `%${cleanId}%`) // Re-added % for bulletproof fuzzy matching
+      .ilike('application_id', cleanId)
       .limit(1)
       .maybeSingle()
 
@@ -59,7 +59,7 @@ export default function ApplicationsTrackingPage() {
       .from('members')
       .select('*')
       .neq('status', 'archived')
-      .ilike('application_id', `%${cleanId}%`)
+      .ilike('application_id', cleanId)
       .limit(1)
       .maybeSingle()
       

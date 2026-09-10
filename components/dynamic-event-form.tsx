@@ -463,20 +463,9 @@ export function DynamicEventForm({
       leadStudentId = members[0].student_id
     }
 
-    // Fetch count of all event applications
-    const { count, error: countError } = await supabase
-      .from('applications')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', eventId)
-      
-    if (countError) {
-      console.error('[Event Registration Error]: Failed to fetch count', countError)
-      toast.error('Failed to generate application ID. Please try again.')
-      setIsSubmitting(false)
-      return
-    }
-    
-    const newId = `JEF-${appIdPrefix}-N${(count || 0) + 1}`
+    const timestampSuffix = Date.now().toString().slice(-4)
+    const randomSuffix = Math.floor(100 + Math.random() * 900)
+    const newId = `JEF-${appIdPrefix}-${timestampSuffix}${randomSuffix}`
     setApplicationId(newId)
 
     try {
