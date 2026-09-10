@@ -463,7 +463,22 @@ export function DynamicEventForm({
       leadStudentId = members[0].student_id
     }
 
-    const newId = `JEF-${appIdPrefix}-N${Math.floor(1000 + Math.random() * 9000)}`
+    // Safely generate the next sequential ID
+    const { data: existingApps } = await supabase
+      .from('applications')
+      .select('application_id')
+      .ilike('application_id', `JEF-${appIdPrefix}-N%`);
+
+    let nextNum = 1;
+    if (existingApps && existingApps.length > 0) {
+      const nums = existingApps.map(a => {
+        const match = a.application_id.match(/-N(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      nextNum = Math.max(...nums, 0) + 1;
+    }
+
+    const newId = `JEF-${appIdPrefix}-N${nextNum}`;
     setApplicationId(newId)
 
     try {
