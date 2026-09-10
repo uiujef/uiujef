@@ -557,7 +557,7 @@ export function DynamicEventForm({
     // Note: Deliberately removed auto onSuccess call here so the modal stays open until user clicks Close
   }
 
-  const handleDownloadPDF = async () => {
+      const handleDownloadPDF = async () => {
     setIsDownloading(true);
     try {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -571,6 +571,10 @@ export function DynamicEventForm({
         img.onerror = resolve;
       });
 
+      const isApproved = false; // Always pending for new submissions
+      const statusText = isApproved ? 'Approved' : 'Pending Review';
+      const docTitle = isApproved ? 'Official Event Application Record' : 'Official Submission Receipt';
+
       const addPageDesign = () => {
         doc.setFillColor(11, 17, 32); 
         doc.rect(0, 0, pageWidth, 35, 'F');
@@ -579,15 +583,23 @@ export function DynamicEventForm({
           const imgHeight = (img.height * imgWidth) / img.width;
           doc.addImage(img, 'PNG', pageWidth / 2 - (imgWidth / 2), 17.5 - (imgHeight / 2), imgWidth, imgHeight);
         }
-        doc.setFillColor(242, 101, 34); 
+        
+        // Header bottom border
+        if (isApproved) {
+          doc.setFillColor(34, 197, 94); // Green
+        } else {
+          doc.setFillColor(242, 101, 34); // Amber
+        }
         doc.rect(0, 35, pageWidth, 2, 'F');
 
-        doc.setFontSize(70);
-        doc.setTextColor(242, 101, 34);
-        doc.setFont("helvetica", "bold");
-        doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
-        doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 30, { angle: 45, align: "center" });
-        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+        if (isApproved) {
+          doc.setFontSize(70);
+          doc.setTextColor(34, 197, 94);
+          doc.setFont("helvetica", "bold");
+          doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
+          doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 30, { angle: 45, align: "center" });
+          doc.setGState(new (doc as any).GState({ opacity: 1 }));
+        }
 
         doc.setDrawColor(200, 200, 200);
         doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
@@ -610,7 +622,7 @@ export function DynamicEventForm({
         }
       };
 
-      const addRow = (label: string, value: any, isHighlight = false) => {
+      const addRow = (label: string, value: any, isHighlight = false, highlightColor?: [number, number, number]) => {
         checkPageBreak(10);
         doc.setFontSize(11);
         doc.setTextColor(100, 100, 100);
@@ -618,7 +630,11 @@ export function DynamicEventForm({
         doc.text(`${label}:`, leftCol, yPos);
         
         if (isHighlight) {
-          doc.setTextColor(242, 101, 34);
+          if (highlightColor) {
+            doc.setTextColor(highlightColor[0], highlightColor[1], highlightColor[2]);
+          } else {
+            doc.setTextColor(242, 101, 34); // Default amber
+          }
           doc.setFont("helvetica", "bold");
         } else {
           doc.setTextColor(30, 30, 30);
@@ -635,11 +651,11 @@ export function DynamicEventForm({
       doc.setTextColor(11, 17, 32);
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
-      doc.text("Official Event Application Record", pageWidth / 2, 48, { align: "center" });
+      doc.text(docTitle, pageWidth / 2, 48, { align: "center" });
       yPos = 60;
 
       addRow("Application ID", applicationId, true);
-      addRow("Status", "Pending", true);
+      addRow("Status", statusText, true, isApproved ? [34, 197, 94] : [242, 101, 34]);
       
       const isTeam = config.isTeamBased
       
