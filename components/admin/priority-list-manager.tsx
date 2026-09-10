@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Search, Download, Star, Eye, X } from 'lucide-react'
+import { Loader2, Search, Download, Star, Eye, X, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 
 type Event = {
   id: string
@@ -33,6 +34,23 @@ export function PriorityListManager() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedEventId, setSelectedEventId] = useState<string>('All')
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [eventToRemove, setEventToRemove] = useState<string | null>(null)
+
+  const handleRemoveEvent = async () => {
+    if (!eventToRemove) return;
+    try {
+      const { error } = await supabase.from('events').update({ is_priority: false }).eq('id', eventToRemove);
+      if (error) throw error;
+      toast.success("Event removed from priority list.");
+      loadData(); // Refresh the list
+    } catch (err: any) {
+      toast.error("Error: " + err.message);
+    } finally {
+      setIsConfirmOpen(false);
+      setEventToRemove(null);
+    }
+  }
 
   const loadData = async () => {
     setIsLoading(true)
@@ -96,7 +114,12 @@ export function PriorityListManager() {
     if (!acc[eventName]) acc[eventName] = []
     acc[eventName].push(app)
     return acc
-  }, {} as Record<string, Application[]>)
+  }, Object.keys(eventsMap).reduce((acc, id) => {
+    if (selectedEventId === 'All' || id === selectedEventId) {
+      acc[eventsMap[id]] = [];
+    }
+    return acc;
+  }, {} as Record<string, Application[]>))
 
   if (isLoading) {
     return (
@@ -160,9 +183,24 @@ export function PriorityListManager() {
                   <Star className="size-4 text-purple-500" />
                   {eventName}
                 </h3>
-                <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 shadow-sm">
-                  {apps.length} Applications
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 shadow-sm">
+                    {apps.length} Applications
+                  </span>
+                  <button
+                    onClick={() => {
+                      const eventId = apps[0]?.event_id || Object.keys(eventsMap).find(key => eventsMap[key] === eventName);
+                      if (eventId) {
+                        setEventToRemove(eventId);
+                        setIsConfirmOpen(true);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    title="Remove from Priority List"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600">
@@ -177,7 +215,13 @@ export function PriorityListManager() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {apps.map((app) => (
+                    {apps.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-slate-400 font-medium text-sm">
+                          No applications found for this priority event.
+                        </td>
+                      </tr>
+                    ) : apps.map((app) => (
                       <tr key={app.application_id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4 font-mono text-xs font-medium text-slate-500">
                           {app.application_id}
@@ -352,6 +396,20 @@ export function PriorityListManager() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Remove Priority Event"
+        message="Are you sure you want to remove this event from the priority list? The applications will still remain in the database."
+        confirmText="Remove"
+        onConfirm={handleRemoveEvent}
+        onCancel={() => {
+          setIsConfirmOpen(false);
+          setEventToRemove(null);
+        }}
+        isDestructive={true}
+        requireText="delete"
+      />
     </div>
   )
 }
