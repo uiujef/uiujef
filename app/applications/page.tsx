@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { Search, Loader2, CheckCircle2, Clock, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { jsPDF } from 'jspdf'
+import confetti from 'canvas-confetti'
 
 import { supabase } from '@/lib/supabase'
 
@@ -17,6 +18,12 @@ export default function ApplicationsTrackingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [result, setResult] = useState<AppResult | null>(null)
+
+  useEffect(() => {
+    if (result !== 'not-found' && result !== null && result.status === 'Approved') {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
+    }
+  }, [result])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,48 +85,59 @@ export default function ApplicationsTrackingPage() {
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
 
-      // 1. Load UIUJEF Logo (from public folder)
+      // Load UIUJEF Logo
       const img = new Image();
       img.src = '/logo.png';
       await new Promise((resolve) => {
         img.onload = resolve;
-        img.onerror = resolve; // Continue even if logo fails
+        img.onerror = resolve;
       });
 
-      // 2. Colored Header (Navy Blue)
-      doc.setFillColor(11, 17, 32); 
-      doc.rect(0, 0, pageWidth, 35, 'F');
-      
-      if (img.width) {
-        const imgWidth = 55;
-        const imgHeight = (img.height * imgWidth) / img.width;
-        doc.addImage(img, 'PNG', pageWidth / 2 - (imgWidth / 2), 17.5 - (imgHeight / 2), imgWidth, imgHeight);
-      }
+      // Page Design Wrapper (Header, Footer, Watermark)
+      const addPageDesign = () => {
+        // Header
+        doc.setFillColor(11, 17, 32); 
+        doc.rect(0, 0, pageWidth, 35, 'F');
+        if (img.width) {
+          const imgWidth = 55;
+          const imgHeight = (img.height * imgWidth) / img.width;
+          doc.addImage(img, 'PNG', pageWidth / 2 - (imgWidth / 2), 17.5 - (imgHeight / 2), imgWidth, imgHeight);
+        }
+        doc.setFillColor(242, 101, 34); 
+        doc.rect(0, 35, pageWidth, 2, 'F');
 
-      // Orange Accent Line
-      doc.setFillColor(242, 101, 34); 
-      doc.rect(0, 35, pageWidth, 2, 'F');
+        // Fixed Watermark (Smaller & Pushed Down)
+        doc.setFontSize(70);
+        doc.setTextColor(242, 101, 34);
+        doc.setFont("helvetica", "bold");
+        doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
+        doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 30, { angle: 45, align: "center" });
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
-      // 3. Huge Transparent Watermark
-      doc.setFontSize(85);
-      doc.setTextColor(242, 101, 34);
-      doc.setFont("helvetica", "bold");
-      doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
-      doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 10, { angle: 45, align: "center" });
-      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+        // Footer
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.setFont("helvetica", "italic");
+        doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 17, { align: "center" });
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 12, { align: "center" });
+      };
 
-      // 4. Document Title
-      doc.setTextColor(11, 17, 32);
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text("Official Event Application Record", pageWidth / 2, 55, { align: "center" });
-
-      // 5. Core Details Section
-      let yPos = 75;
+      let yPos = 55;
       const leftCol = 25;
       const rightCol = 70;
 
+      const checkPageBreak = (neededHeight: number) => {
+        if (yPos + neededHeight > pageHeight - 35) {
+          doc.addPage();
+          addPageDesign();
+          yPos = 55;
+        }
+      };
+
       const addRow = (label: string, value: any, isHighlight = false) => {
+        checkPageBreak(10);
         doc.setFontSize(11);
         doc.setTextColor(100, 100, 100);
         doc.setFont("helvetica", "bold");
@@ -138,22 +156,57 @@ export default function ApplicationsTrackingPage() {
         yPos += 8 * splitValue.length + 2;
       };
 
-      const email = result.fullData.email || (result.fullData.team_members && result.fullData.team_members[0]?.email);
-      const phone = result.fullData.phone || (result.fullData.team_members && result.fullData.team_members[0]?.phone);
-      const studentId = result.fullData.student_id || (result.fullData.team_members && result.fullData.team_members[0]?.student_id);
+      // Draw initial design
+      addPageDesign();
 
+      // Document Title
+      doc.setTextColor(11, 17, 32);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Official Event Application Record", pageWidth / 2, 48, { align: "center" });
+      yPos = 60;
+
+      // Core Details
       addRow("Application ID", result.fullData.application_id, true);
       addRow("Status", result.status, true);
-      addRow("Applicant Name", result.name);
-      if (email) addRow("Email Address", email);
-      if (phone) addRow("Phone Number", phone);
-      if (studentId) addRow("Student ID", studentId);
+      if (result.fullData.team_name) addRow("Team Name", result.fullData.team_name, true);
 
-      // 6. Cleaned Additional Information
+      // Print Team Members or Individual
+      if (result.fullData.team_members && Array.isArray(result.fullData.team_members) && result.fullData.team_members.length > 0) {
+        result.fullData.team_members.forEach((member: any, i: number) => {
+          checkPageBreak(15);
+          yPos += 4;
+          doc.setFillColor(242, 101, 34);
+          doc.rect(20, yPos - 4, 3, 6, 'F');
+          doc.setFontSize(12);
+          doc.setTextColor(11, 17, 32);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Member ${i + 1} ${i === 0 ? '(Team Leader)' : ''}`, 26, yPos);
+          yPos += 8;
+
+          if (member.name) addRow("Name", member.name);
+          if (member.father_name) addRow("Father's Name", member.father_name);
+          if (member.email) addRow("Email Address", member.email);
+          if (member.phone) addRow("Phone Number", member.phone);
+          if (member.university) addRow("University", member.university);
+          if (member.student_id) addRow("Student ID", member.student_id);
+        });
+      } else {
+        const email = result.fullData.email;
+        const phone = result.fullData.phone;
+        const studentId = result.fullData.student_id;
+        
+        addRow("Applicant Name", result.name);
+        if (email) addRow("Email Address", email);
+        if (phone) addRow("Phone Number", phone);
+        if (studentId) addRow("Student ID", studentId);
+      }
+
+      // Cleaned Additional Information
       if (result.fullData.custom_responses && Object.keys(result.fullData.custom_responses).length > 0) {
-        const standardValues = [result.name, email, phone, studentId]
-          .filter(Boolean)
-          .map(v => String(v).toLowerCase().trim());
+        const standardValues = [result.name, result.fullData.email, result.fullData.phone, result.fullData.student_id]
+          .concat(result.fullData.team_members ? result.fullData.team_members.flatMap((m: any) => [m.name, m.email, m.phone, m.student_id, m.university, m.father_name]) : [])
+          .filter(Boolean).map(v => String(v).toLowerCase().trim());
           
         const validData = Object.entries(result.fullData.custom_responses).filter(([key, value]) => {
           const strVal = String(value).toLowerCase().trim();
@@ -161,6 +214,7 @@ export default function ApplicationsTrackingPage() {
         });
 
         if (validData.length > 0) {
+          checkPageBreak(20);
           yPos += 8;
           doc.setFillColor(245, 247, 250);
           doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
@@ -175,6 +229,7 @@ export default function ApplicationsTrackingPage() {
             const isRandomKey = /^[a-z0-9]{8,12}$/.test(key);
             
             if (isRandomKey) {
+              checkPageBreak(10);
               doc.setFont("helvetica", "bold");
               doc.setTextColor(242, 101, 34);
               doc.text("•", leftCol, yPos);
@@ -189,16 +244,6 @@ export default function ApplicationsTrackingPage() {
           });
         }
       }
-
-      // 7. Professional Footer
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
-      
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.setFont("helvetica", "italic");
-      doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 17, { align: "center" });
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 12, { align: "center" });
 
       doc.save(`UIUJEF_Application_${result.fullData.application_id}.pdf`);
       toast.success("Official PDF downloaded successfully!");
@@ -261,12 +306,15 @@ export default function ApplicationsTrackingPage() {
 
                 {result !== 'not-found' && result !== null && (
                   <div className={cn(
-                    "flex flex-col sm:flex-row items-center justify-between gap-5 p-6 rounded-2xl text-left border",
-                    result.status === 'Approved' ? "bg-green-500/10 border-green-500/30" :
+                    "flex flex-col sm:flex-row items-center justify-between gap-5 p-6 rounded-2xl text-left border relative overflow-hidden",
+                    result.status === 'Approved' ? "bg-green-500/10 border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.15)]" :
                     result.status === 'Rejected' ? "bg-red-500/10 border-red-500/30" :
                     "bg-[#F26522]/10 border-[#F26522]/30"
                   )}>
-                    <div className="flex items-center gap-5">
+                    {result.status === 'Approved' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent animate-shimmer" />
+                    )}
+                    <div className="flex items-center gap-5 relative z-10">
                       <div className={cn(
                         "size-14 rounded-full flex items-center justify-center shrink-0",
                         result.status.includes('Approved') ? "bg-green-500/20" :
@@ -276,12 +324,15 @@ export default function ApplicationsTrackingPage() {
                         {result.status.includes('Approved') ? <CheckCircle2 className="size-6 text-green-500" /> : <Clock className={cn("size-6", result.status === 'Rejected' ? "text-red-500" : "text-[#F26522]")} />}
                       </div>
                       <div>
+                        {result.status === 'Approved' && (
+                          <div className="text-green-400 font-bold mb-1 tracking-wide uppercase text-xs">🎉 Congratulations! You're In!</div>
+                        )}
                         <h3 className="text-lg font-bold text-white">
                           {result.type} Application: {result.status}
                         </h3>
                         <p className="text-sm text-white/70 mt-1">
                           <span className="font-semibold text-white">Applicant:</span> {result.name}<br/>
-                          {result.status.includes('Approved') ? "Congratulations! Check your email for further instructions or welcome to the club!" :
+                          {result.status.includes('Approved') ? "Check your email for further instructions or welcome to the club!" :
                            result.status === 'Rejected' ? "Unfortunately, your application was not approved at this time." :
                            "Your application is currently under review. You will receive an email once a decision is made."}
                         </p>
@@ -292,7 +343,7 @@ export default function ApplicationsTrackingPage() {
                       <button
                         onClick={handleDownloadPDF}
                         disabled={isDownloading}
-                        className="shrink-0 flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/40 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative z-10 shrink-0 flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/40 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isDownloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
                         Download Copy

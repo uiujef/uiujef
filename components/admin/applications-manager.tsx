@@ -19,6 +19,8 @@ type Application = {
   custom_responses?: any
   student_id?: string
   transaction_id?: string
+  team_name?: string
+  events?: { title: string }
 }
 
 const isMemberApp = (type?: string) => type === 'Member' || type === 'Membership'
@@ -37,7 +39,7 @@ export function ApplicationsManager() {
     setIsLoading(true)
     setApplications([])
     try {
-      let query = supabase.from('applications').select('*').order('created_at', { ascending: false })
+      let query = supabase.from('applications').select('*, events(title)').order('created_at', { ascending: false })
       
       query = query.neq('status', 'archived')
 
@@ -363,7 +365,7 @@ export function ApplicationsManager() {
                 {filteredApps.map((app, index) => {
                   const memberCount = app.team_members ? app.team_members.length : 1
                   const leadMember = app.team_members && app.team_members.length > 0 ? app.team_members[0] : null
-                  const teamName = leadMember && app.team_members && app.team_members.length > 1 ? (app as any).team_name || 'Team' : '-'
+                  const teamName = app.team_name || '-'
                   const university = leadMember?.university || '-'
                   const contactPhone = leadMember?.phone || '-'
 
@@ -392,8 +394,8 @@ export function ApplicationsManager() {
                       
                       {activeTab === 'Event' && (
                         <td className="px-5 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-100">
-                            {app.type.replace('Event: ', '')}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-100 max-w-[200px] truncate" title={app.events?.title || app.type.replace('Event: ', '')}>
+                            {app.events?.title || app.type.replace('Event: ', '')}
                           </span>
                         </td>
                       )}
@@ -576,26 +578,16 @@ export function ApplicationsManager() {
 
             {/* Content */}
             <div className="p-8 space-y-8">
-              {selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0 ? (
-                <div className="space-y-6 pb-8 print-break-inside-avoid">
-                  <div className="flex items-start gap-4 mb-8">
-                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
-                      1
-                    </div>
-                    <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                      <div>
-                        <h4 className="text-xl font-bold text-slate-800">{selectedApp.name || 'Custom Application'}</h4>
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{selectedApp.type}</span>
-                      </div>
-                    </div>
-                  </div>
-
+              {!isMemberApp(selectedApp.type) ? (
+                // EVENT APPLICATION LAYOUT
+                <div className="space-y-8 print-break-inside-avoid">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Primary Details</h5>
                       <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Email</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.email || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{selectedApp.student_id || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Event</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.events?.title || selectedApp.type.replace('Event: ', '')}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Team Name</dt><dd className="font-medium text-slate-800">{selectedApp.team_name || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Primary Email</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.email || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
                       </dl>
                     </div>
@@ -609,110 +601,142 @@ export function ApplicationsManager() {
                     </div>
                   </div>
 
+                  {selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0 && (
+                    <div className="mt-8">
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Custom Responses</h5>
+                      <dl className="grid grid-cols-1 gap-6 text-sm">
+                        {Object.entries(selectedApp.custom_responses).map(([key, value]) => (
+                          <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
+                            <dd className="text-slate-800 font-medium whitespace-pre-wrap">
+                              {Array.isArray(value) ? value.join(', ') : (value as string) || '-'}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  )}
+
                   <div className="mt-8">
-                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Custom Responses</h5>
-                    <dl className="grid grid-cols-1 gap-6 text-sm">
-                      {Object.entries(selectedApp.custom_responses).map(([key, value]) => (
-                        <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
-                          <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
-                          <dd className="text-slate-800 font-medium whitespace-pre-wrap">
-                            {Array.isArray(value) ? value.join(', ') : (value as string) || '-'}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
+                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Team Members</h5>
+                    {selectedApp.team_members && selectedApp.team_members.length > 0 ? (
+                      <div className="space-y-6">
+                        {selectedApp.team_members.map((member: any, index: number) => (
+                          <div key={index} className="bg-white/30 p-4 rounded-xl border border-slate-200">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="size-6 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-xs">
+                                {index + 1}
+                              </div>
+                              <h6 className="font-bold text-slate-800">{member.full_name || member.name} {index === 0 ? '(Leader)' : ''}</h6>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm ml-9">
+                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Email</dt><dd className="font-medium text-slate-800">{member.email || '-'}</dd></div>
+                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Phone</dt><dd className="font-medium text-slate-800">{member.phone || '-'}</dd></div>
+                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">University / Dept</dt><dd className="font-medium text-slate-800">{member.university || member.department || '-'}</dd></div>
+                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{member.student_id || '-'}</dd></div>
+                              <div className="flex flex-col sm:col-span-2"><dt className="text-slate-500 text-[10px] uppercase font-bold">Address</dt><dd className="font-medium text-slate-800">{member.address || member.student_address || '-'}</dd></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-sm">No member details provided.</p>
+                    )}
                   </div>
                 </div>
-              ) : selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
-                <div key={index} className="space-y-6 pb-8 border-b border-slate-200 last:border-0 print-break-inside-avoid">
-                  <div className="flex items-start gap-4 mb-8">
-                    <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                      <div>
-                        <h4 className="text-xl font-bold text-slate-800">{member.full_name || member.name}</h4>
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{selectedApp.type}</span>
+              ) : (
+                // MEMBER APPLICATION LAYOUT
+                selectedApp.team_members && selectedApp.team_members.map((member: any, index: number) => (
+                  <div key={index} className="space-y-6 pb-8 border-b border-slate-200 last:border-0 print-break-inside-avoid">
+                    <div className="flex items-start gap-4 mb-8">
+                      <div className="size-10 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-lg shrink-0 mt-2">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                        <div>
+                          <h4 className="text-xl font-bold text-slate-800">{member.full_name || member.name}</h4>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{selectedApp.type}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Identity & Contact */}
-                    <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Identity & Contact</h5>
-                      
-                      {member.photo_url && (
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-white/30 p-4 rounded-xl border border-slate-200 mb-6">
-                          <img 
-                            src={member.photo_url} 
-                            alt={`${member.full_name || member.name}'s profile photo`} 
-                            className="w-24 h-24 object-cover rounded-2xl shadow-md border-2 border-white" 
-                          />
-                          <div className="flex flex-col justify-center sm:h-24">
-                            <h6 className="font-bold text-slate-800 text-sm mb-2 text-center sm:text-left">Applicant Photo</h6>
-                            <a
-                              href={member.photo_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download={`Applicant_${member.full_name || member.name}_Photo`}
-                              className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-sm no-print"
-                            >
-                              <Printer className="size-4" />
-                              Download
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                      <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Email</dt><dd className="font-medium text-slate-800 break-all">{member.email || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Phone</dt><dd className="font-medium text-slate-800">{member.phone || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{member.student_id || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">University / Department</dt><dd className="font-medium text-slate-800">{member.university || member.department || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Blood Group</dt><dd className="font-medium text-slate-800">{member.blood_group || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Date of Birth</dt><dd className="font-medium text-slate-800">{member.date_of_birth || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Address</dt><dd className="font-medium text-slate-800 break-words">{member.address || member.student_address || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Parents</dt><dd className="font-medium text-slate-800">Father: {member.father_name || '-'} <br/> Mother: {member.mother_name || '-'}</dd></div>
-                      </dl>
-                    </div>
-
-                    {/* Socials & Roles */}
-                    <div>
-                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Socials & Roles</h5>
-                      <dl className="space-y-3 text-sm">
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-slate-800">{member.interested_roles || member.interested_role || '-'}</dd></div>
-                        {member.other_role && <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-slate-800">{member.other_role}</dd></div>}
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-slate-800">{member.payment_method || (selectedApp.transaction_id ? 'Paid' : '-')}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
-                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-slate-800">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
+  
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Identity & Contact */}
+                      <div>
+                        <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Identity & Contact</h5>
                         
-                        <div className="pt-3 flex flex-col gap-2">
-                          <dt className="text-slate-500 text-xs uppercase font-bold">Social Links</dt>
-                          <dd className="space-y-1">
-                            {member.facebook_url && <a href={member.facebook_url} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline break-all">FB: {member.facebook_url}</a>}
-                            {member.instagram_url && <a href={member.instagram_url} target="_blank" rel="noreferrer" className="block text-pink-600 hover:underline break-all">IG: {member.instagram_url}</a>}
-                            {member.linkedin_url && <a href={member.linkedin_url} target="_blank" rel="noreferrer" className="block text-blue-800 hover:underline break-all">IN: {member.linkedin_url}</a>}
-                            {(!member.facebook_url && !member.instagram_url && !member.linkedin_url) && <span className="text-slate-500">No links provided</span>}
-                          </dd>
-                        </div>
+                        {member.photo_url && (
+                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-white/30 p-4 rounded-xl border border-slate-200 mb-6">
+                            <img 
+                              src={member.photo_url} 
+                              alt={`${member.full_name || member.name}'s profile photo`} 
+                              className="w-24 h-24 object-cover rounded-2xl shadow-md border-2 border-white" 
+                            />
+                            <div className="flex flex-col justify-center sm:h-24">
+                              <h6 className="font-bold text-slate-800 text-sm mb-2 text-center sm:text-left">Applicant Photo</h6>
+                              <a
+                                href={member.photo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download={`Applicant_${member.full_name || member.name}_Photo`}
+                                className="text-xs bg-[#F26522] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#F26522]/90 transition-all flex items-center justify-center gap-2 shadow-sm no-print"
+                              >
+                                <Printer className="size-4" />
+                                Download
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        <dl className="space-y-3 text-sm">
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Email</dt><dd className="font-medium text-slate-800 break-all">{member.email || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Phone</dt><dd className="font-medium text-slate-800">{member.phone || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{member.student_id || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">University / Department</dt><dd className="font-medium text-slate-800">{member.university || member.department || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Blood Group</dt><dd className="font-medium text-slate-800">{member.blood_group || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Date of Birth</dt><dd className="font-medium text-slate-800">{member.date_of_birth || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Address</dt><dd className="font-medium text-slate-800 break-words">{member.address || member.student_address || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Parents</dt><dd className="font-medium text-slate-800">Father: {member.father_name || '-'} <br/> Mother: {member.mother_name || '-'}</dd></div>
+                        </dl>
+                      </div>
+  
+                      {/* Socials & Roles */}
+                      <div>
+                        <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Socials & Roles</h5>
+                        <dl className="space-y-3 text-sm">
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Interested Role</dt><dd className="font-semibold text-slate-800">{member.interested_roles || member.interested_role || '-'}</dd></div>
+                          {member.other_role && <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Other Role</dt><dd className="font-medium text-slate-800">{member.other_role}</dd></div>}
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Payment Method</dt><dd className="font-medium text-slate-800">{member.payment_method || (selectedApp.transaction_id ? 'Paid' : '-')}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
+                          <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Application Time</dt><dd className="font-medium text-slate-800">{selectedApp.created_at ? new Date(selectedApp.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</dd></div>
+                          
+                          <div className="pt-3 flex flex-col gap-2">
+                            <dt className="text-slate-500 text-xs uppercase font-bold">Social Links</dt>
+                            <dd className="space-y-1">
+                              {member.facebook_url && <a href={member.facebook_url} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline break-all">FB: {member.facebook_url}</a>}
+                              {member.instagram_url && <a href={member.instagram_url} target="_blank" rel="noreferrer" className="block text-pink-600 hover:underline break-all">IG: {member.instagram_url}</a>}
+                              {member.linkedin_url && <a href={member.linkedin_url} target="_blank" rel="noreferrer" className="block text-blue-800 hover:underline break-all">IN: {member.linkedin_url}</a>}
+                              {(!member.facebook_url && !member.instagram_url && !member.linkedin_url) && <span className="text-slate-500">No links provided</span>}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+                    </div>
+  
+                    {/* Story & Bio (Full Width) */}
+                    <div className="mt-8">
+                      <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Biography & Experience</h5>
+                      <dl className="space-y-6 text-sm">
+                        <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.bio || '-'}</dd></div>
+                        <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.why_join || '-'}</dd></div>
+                        <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Expectations from JEF</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.expect_from_jef || '-'}</dd></div>
+                        <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Extracurricular Activities</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.extracurricular || '-'}</dd></div>
+                        <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">What do you know about JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.know_about_jef || '-'}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Heard about us from</dt><dd className="font-medium text-slate-800">{member.heard_about || '-'}</dd></div>
                       </dl>
                     </div>
                   </div>
-
-                  {/* Story & Bio (Full Width) */}
-                  <div className="mt-8">
-                    <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Biography & Experience</h5>
-                    <dl className="space-y-6 text-sm">
-                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Short Bio</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.bio || '-'}</dd></div>
-                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Why join JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.why_join || '-'}</dd></div>
-                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Expectations from JEF</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.expect_from_jef || '-'}</dd></div>
-                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">Extracurricular Activities</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.extracurricular || '-'}</dd></div>
-                      <div className="flex flex-col bg-white/30 p-4 rounded-2xl"><dt className="text-slate-800 text-xs uppercase font-bold mb-2">What do you know about JEF?</dt><dd className="text-slate-800 whitespace-pre-wrap">{member.know_about_jef || '-'}</dd></div>
-                      <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Heard about us from</dt><dd className="font-medium text-slate-800">{member.heard_about || '-'}</dd></div>
-                    </dl>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

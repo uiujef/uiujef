@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useCallback, useId, useEffect } from 'react'
-import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet, Copy, Check } from 'lucide-react'
+import { Users, User, Hash, Mail, ChevronRight, Loader2, CheckCircle2, X, Building2, Wallet, Copy, Check, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { jsPDF } from 'jspdf'
 
 import { supabase } from '@/lib/supabase'
 import type { EventRegistrationConfig } from '@/types'
@@ -241,6 +242,7 @@ export function DynamicEventForm({
   const [showEmailConfirm, setShowEmailConfirm] = useState(false)
   const [pendingEmail, setPendingEmail] = useState('')
   
+  const [isDownloading, setIsDownloading] = useState(false)
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
 
@@ -555,6 +557,196 @@ export function DynamicEventForm({
     // Note: Deliberately removed auto onSuccess call here so the modal stays open until user clicks Close
   }
 
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const img = new Image();
+      img.src = '/logo.png';
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+
+      const addPageDesign = () => {
+        doc.setFillColor(11, 17, 32); 
+        doc.rect(0, 0, pageWidth, 35, 'F');
+        if (img.width) {
+          const imgWidth = 55;
+          const imgHeight = (img.height * imgWidth) / img.width;
+          doc.addImage(img, 'PNG', pageWidth / 2 - (imgWidth / 2), 17.5 - (imgHeight / 2), imgWidth, imgHeight);
+        }
+        doc.setFillColor(242, 101, 34); 
+        doc.rect(0, 35, pageWidth, 2, 'F');
+
+        doc.setFontSize(70);
+        doc.setTextColor(242, 101, 34);
+        doc.setFont("helvetica", "bold");
+        doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
+        doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 30, { angle: 45, align: "center" });
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.setFont("helvetica", "italic");
+        doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 17, { align: "center" });
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 12, { align: "center" });
+      };
+
+      let yPos = 55;
+      const leftCol = 25;
+      const rightCol = 70;
+
+      const checkPageBreak = (neededHeight: number) => {
+        if (yPos + neededHeight > pageHeight - 35) {
+          doc.addPage();
+          addPageDesign();
+          yPos = 55;
+        }
+      };
+
+      const addRow = (label: string, value: any, isHighlight = false) => {
+        checkPageBreak(10);
+        doc.setFontSize(11);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, leftCol, yPos);
+        
+        if (isHighlight) {
+          doc.setTextColor(242, 101, 34);
+          doc.setFont("helvetica", "bold");
+        } else {
+          doc.setTextColor(30, 30, 30);
+          doc.setFont("helvetica", "normal");
+        }
+        
+        const splitValue = doc.splitTextToSize(String(value || 'N/A'), pageWidth - rightCol - 20);
+        doc.text(splitValue, rightCol, yPos);
+        yPos += 8 * splitValue.length + 2;
+      };
+
+      addPageDesign();
+
+      doc.setTextColor(11, 17, 32);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Official Event Application Record", pageWidth / 2, 48, { align: "center" });
+      yPos = 60;
+
+      addRow("Application ID", applicationId, true);
+      addRow("Status", "Pending", true);
+      
+      const isTeam = config.isTeamBased
+      
+      if (isTeam && teamName) {
+        addRow("Team Name", teamName, true);
+      }
+
+      let leadEmail = ''
+      let leadName = 'Custom Application'
+      let leadStudentId = ''
+      let leadPhone = ''
+      
+      if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+        const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
+        if (emailField) leadEmail = customResponses[emailField.id] || ''
+        const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
+        if (studentIdField) leadStudentId = customResponses[studentIdField.id] || ''
+        const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
+        if (nameField) leadName = customResponses[nameField.id] || 'Custom Application'
+        const phoneField = config.custom_form_fields.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone'))
+        if (phoneField) leadPhone = customResponses[phoneField.id] || ''
+      } else {
+        leadEmail = members[0].email
+        leadName = members[0].name
+        leadStudentId = members[0].student_id
+        leadPhone = members[0].phone
+      }
+
+      if (!config.is_custom_form && isTeam && members.length > 0) {
+        members.forEach((member, i) => {
+          checkPageBreak(15);
+          yPos += 4;
+          doc.setFillColor(242, 101, 34);
+          doc.rect(20, yPos - 4, 3, 6, 'F');
+          doc.setFontSize(12);
+          doc.setTextColor(11, 17, 32);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Member ${i + 1} ${i === 0 ? '(Team Leader)' : ''}`, 26, yPos);
+          yPos += 8;
+
+          if (member.name) addRow("Name", member.name);
+          if (member.father_name) addRow("Father's Name", member.father_name);
+          if (member.email) addRow("Email Address", member.email);
+          if (member.phone) addRow("Phone Number", member.phone);
+          if (member.university) addRow("University", member.university);
+          if (member.student_id) addRow("Student ID", member.student_id);
+        });
+      } else {
+        addRow("Applicant Name", leadName);
+        if (leadEmail) addRow("Email Address", leadEmail);
+        if (leadPhone) addRow("Phone Number", leadPhone);
+        if (leadStudentId) addRow("Student ID", leadStudentId);
+      }
+
+      if (config.is_custom_form && Object.keys(customResponses).length > 0) {
+        const standardValues = [leadName, leadEmail, leadPhone, leadStudentId]
+          .filter(Boolean).map(v => String(v).toLowerCase().trim());
+          
+        const validData = Object.entries(customResponses).filter(([key, value]) => {
+          const strVal = String(value).toLowerCase().trim();
+          return !standardValues.includes(strVal) && strVal !== "";
+        });
+
+        if (validData.length > 0) {
+          checkPageBreak(20);
+          yPos += 8;
+          doc.setFillColor(245, 247, 250);
+          doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
+          doc.setTextColor(11, 17, 32);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text("Additional Information", 25, yPos);
+          yPos += 10;
+          
+          validData.forEach(([key, value]) => {
+            const displayVal = Array.isArray(value) ? value.join(', ') : value;
+            const isRandomKey = /^[a-z0-9]{8,12}$/.test(key);
+            
+            if (isRandomKey) {
+              checkPageBreak(10);
+              doc.setFont("helvetica", "bold");
+              doc.setTextColor(242, 101, 34);
+              doc.text("•", leftCol, yPos);
+              doc.setTextColor(30, 30, 30);
+              doc.setFont("helvetica", "normal");
+              const splitValue = doc.splitTextToSize(String(displayVal), pageWidth - 40);
+              doc.text(splitValue, leftCol + 5, yPos);
+              yPos += 8 * splitValue.length;
+            } else {
+              const field = config.custom_form_fields?.find(f => f.id === key);
+              const label = field ? field.label : key;
+              addRow(label, displayVal);
+            }
+          });
+        }
+      }
+
+      doc.save(`UIUJEF_Application_${applicationId}.pdf`);
+      toast.success("Official PDF downloaded successfully!");
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (isSuccess) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
@@ -597,6 +789,15 @@ export function DynamicEventForm({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-green-500/20 px-6 py-2.5 text-sm font-bold text-green-400 border border-green-500/40 transition-all hover:bg-green-500/30 disabled:opacity-50"
+          >
+            {isDownloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+            Download Application Copy
+          </button>
+          
           <button
             onClick={() => {
               if (onSuccess) {
