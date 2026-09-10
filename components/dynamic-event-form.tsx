@@ -365,6 +365,68 @@ export function DynamicEventForm({
       }
     }
 
+    // DUPLICATE REGISTRATION PREVENTION
+    if (!config.allowMultipleRegistrations) {
+      const { data: existingApps, error: existingErr } = await supabase
+        .from('applications')
+        .select('name, email, student_id, team_members, custom_responses')
+        .eq('event_id', eventId);
+        
+      if (!existingErr && existingApps && existingApps.length > 0) {
+        let isDuplicate = false;
+        
+        let leadPhone = '';
+        if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+          const phoneField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
+          if (phoneField) {
+            leadPhone = customResponses[phoneField.id] || '';
+          }
+        } else {
+          leadPhone = members[0].phone || '';
+        }
+        
+        for (const app of existingApps) {
+          const matchesName = Boolean(leadName && app.name?.toLowerCase().trim() === leadName.toLowerCase().trim());
+          
+          if (matchesName) {
+            if (config.eventLevel === 'National') {
+              let appPhone = '';
+              if (app.custom_responses) {
+                const phoneFieldId = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'))?.id;
+                if (phoneFieldId) {
+                  appPhone = app.custom_responses[phoneFieldId] || '';
+                }
+              } else if (app.team_members && app.team_members.length > 0) {
+                appPhone = app.team_members[0].phone || '';
+              }
+              
+              const matchesEmail = Boolean(leadEmail && app.email?.toLowerCase().trim() === leadEmail.toLowerCase().trim());
+              const matchesPhone = Boolean(appPhone && leadPhone && appPhone === leadPhone);
+              
+              if (matchesEmail || matchesPhone) {
+                isDuplicate = true;
+                break;
+              }
+            } else {
+              const matchesEmail = Boolean(leadEmail && app.email?.toLowerCase().trim() === leadEmail.toLowerCase().trim());
+              const matchesStudentId = Boolean(leadStudentId && app.student_id?.toLowerCase().trim() === leadStudentId.toLowerCase().trim());
+              
+              if (matchesEmail || matchesStudentId) {
+                isDuplicate = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (isDuplicate) {
+          toast.error("You have already registered for this event!")
+          setIsSubmitting(false)
+          return
+        }
+      }
+    }
+
     setPendingEmail(leadEmail)
     setShowEmailConfirm(true)
     setIsSubmitting(false)

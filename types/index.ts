@@ -57,6 +57,27 @@ export type Event = {
   isPinned?: boolean
   pinnedAt?: string
   registrationFee?: number
+  requires_payment?: boolean
+  requires_registration?: boolean
+  is_registration_open?: boolean
+  max_team_size?: number
+  max_team_members?: number
+  registration_fee?: number
+  is_featured?: boolean
+  is_pinned?: boolean
+  is_priority?: boolean
+  participation_type?: string
+  is_team_based?: boolean
+  require_team_name?: boolean
+  require_team_icon?: boolean
+  require_university_id?: boolean
+  event_level?: string
+  registration_deadline?: string
+  is_members_only?: boolean
+  is_custom_form?: boolean
+  allow_multiple_registrations?: boolean
+  app_id_prefix?: string
+  custom_form_fields?: Array<any>
   registration?: {
     price?: number
     maxCapacity?: number
@@ -130,4 +151,5 @@ export type EventRegistrationConfig = {
     allow_multiple?: boolean
     raw_options?: string
   }>
+  allowMultipleRegistrations?: boolean
 }

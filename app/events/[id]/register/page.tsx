@@ -56,6 +56,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
     is_members_only: event.is_members_only ?? false,
     custom_form_fields: event.custom_form_fields || [],
     is_custom_form: event.is_custom_form ?? false,
+    allowMultipleRegistrations: event.allow_multiple_registrations ?? false,
   }
 
   return (

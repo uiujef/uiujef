@@ -32,6 +32,7 @@ type Event = {
   custom_form_fields?: any[]
   is_custom_form?: boolean
   app_id_prefix?: string
+  allow_multiple_registrations?: boolean
 }
 
 const CATEGORIES = ['Competition', 'Summit', 'Workshop', 'Seminar', 'Social', 'Other']
@@ -68,6 +69,7 @@ export function EventsManager() {
   const [isMembersOnly, setIsMembersOnly] = useState(false)
   const [customFormFields, setCustomFormFields] = useState<any[]>([])
   const [isCustomForm, setIsCustomForm] = useState(false)
+  const [allowMultiple, setAllowMultiple] = useState(false)
   const [appIdPrefix, setAppIdPrefix] = useState('EVENT')
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -138,6 +140,7 @@ export function EventsManager() {
       setIsMembersOnly(event.is_members_only || false)
       setCustomFormFields(event.custom_form_fields || [])
       setIsCustomForm(event.is_custom_form || false)
+      setAllowMultiple(event.allow_multiple_registrations || false)
       setAppIdPrefix(event.app_id_prefix || 'EVENT')
     } else {
       setEditingEvent(null)
@@ -160,6 +163,7 @@ export function EventsManager() {
       setStatus('draft')
       setIsMembersOnly(false)
       setIsCustomForm(isCustom || false)
+      setAllowMultiple(false)
       setAppIdPrefix('EVENT')
       if (isCustom) {
         setCustomFormFields([
@@ -220,6 +224,7 @@ export function EventsManager() {
         is_members_only: isMembersOnly,
         custom_form_fields: processedCustomFields,
         is_custom_form: isCustomForm,
+        allow_multiple_registrations: allowMultiple,
         app_id_prefix: appIdPrefix || 'EVENT'
       }
 
@@ -721,6 +726,17 @@ export function EventsManager() {
                         <div>
                           <span className="text-sm font-bold text-slate-800 group-hover:text-[#F26522] transition-colors">Members Only</span>
                           <p className="text-xs text-slate-500">Only verified UIUJEF members can register.</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 cursor-pointer group mt-4">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={allowMultiple} onChange={e => setAllowMultiple(e.target.checked)} className="peer sr-only" />
+                          <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F26522]"></div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-slate-800 group-hover:text-[#F26522] transition-colors">Allow Multiple Registrations (Same User)</span>
+                          <p className="text-xs text-slate-500">Allow a single user to submit multiple applications.</p>
                         </div>
                       </label>
 

@@ -78,7 +78,7 @@ export default function ApplicationsTrackingPage() {
     
     setIsDownloading(true)
     try {
-      const canvas = await html2canvas(pdfRef.current, { scale: 2 })
+      const canvas = await html2canvas(pdfRef.current, { useCORS: true, allowTaint: true, scale: 2, logging: false })
       const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -205,7 +205,7 @@ export default function ApplicationsTrackingPage() {
 
       {/* Hidden PDF Template */}
       {result !== 'not-found' && result !== null && result.fullData && (
-        <div className="absolute top-0 -left-[9999px] w-[800px] bg-white text-black z-[-1]">
+        <div style={{ position: 'absolute', left: '-9999px', top: '0', width: '800px', zIndex: -10, backgroundColor: 'white' }}>
           <div ref={pdfRef} style={{ padding: '40px', position: 'relative', fontFamily: 'sans-serif' }}>
             {/* Watermark */}
             <div style={{
@@ -227,7 +227,7 @@ export default function ApplicationsTrackingPage() {
               {/* Header */}
               <div style={{ textAlign: 'center', marginBottom: '40px', borderBottom: '2px solid #f1f5f9', paddingBottom: '20px' }}>
                 {/* Fallback empty alt for generated PDF */}
-                <img src="/logo.png" alt="UIUJEF" style={{ height: '50px', marginBottom: '15px' }} />
+                <img src="/logo.png" alt="UIUJEF" crossOrigin="anonymous" style={{ height: '50px', marginBottom: '15px' }} />
                 <h1 style={{ margin: '0', color: '#0f172a', fontSize: '24px' }}>Official Event Application Record</h1>
                 <p style={{ margin: '5px 0 0', color: '#64748b', fontSize: '14px' }}>United International University Junior Economists' Forum</p>
               </div>
