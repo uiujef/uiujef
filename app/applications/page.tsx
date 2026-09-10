@@ -70,7 +70,7 @@ export default function ApplicationsTrackingPage() {
     setIsLoading(false)
   }
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (result === 'not-found' || !result?.fullData) return;
     setIsDownloading(true);
     try {
@@ -78,80 +78,137 @@ export default function ApplicationsTrackingPage() {
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
 
-      // 1. Watermark (Background)
-      doc.setFontSize(65);
-      doc.setTextColor(240, 245, 240); // Very light grey/green
-      doc.text("APPROVED", pageWidth / 2, pageHeight / 2, { angle: 45, align: "center" });
+      // 1. Load UIUJEF Logo (from public folder)
+      const img = new Image();
+      img.src = '/logo.png';
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve; // Continue even if logo fails
+      });
 
-      // 2. Header
-      doc.setTextColor(11, 17, 32);
-      doc.setFontSize(26);
+      // 2. Colored Header (Navy Blue)
+      doc.setFillColor(11, 17, 32); 
+      doc.rect(0, 0, pageWidth, 35, 'F');
+      
+      if (img.width) {
+        const imgWidth = 55;
+        const imgHeight = (img.height * imgWidth) / img.width;
+        doc.addImage(img, 'PNG', pageWidth / 2 - (imgWidth / 2), 17.5 - (imgHeight / 2), imgWidth, imgHeight);
+      }
+
+      // Orange Accent Line
+      doc.setFillColor(242, 101, 34); 
+      doc.rect(0, 35, pageWidth, 2, 'F');
+
+      // 3. Huge Transparent Watermark
+      doc.setFontSize(85);
+      doc.setTextColor(242, 101, 34);
       doc.setFont("helvetica", "bold");
-      doc.text("UIUJEF", pageWidth / 2, 25, { align: "center" });
+      doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+      doc.text("APPROVED", pageWidth / 2, pageHeight / 2 + 10, { angle: 45, align: "center" });
+      doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "normal");
-      doc.text("Official Event Application Record", pageWidth / 2, 33, { align: "center" });
+      // 4. Document Title
+      doc.setTextColor(11, 17, 32);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Official Event Application Record", pageWidth / 2, 55, { align: "center" });
 
-      doc.setDrawColor(242, 101, 34); // Brand Orange
-      doc.setLineWidth(1);
-      doc.line(20, 40, pageWidth - 20, 40);
-
-      // 3. Body Content
-      doc.setTextColor(50, 50, 50);
-      doc.setFontSize(12);
-      let yPos = 55;
+      // 5. Core Details Section
+      let yPos = 75;
       const leftCol = 25;
       const rightCol = 70;
 
-      const addRow = (label: string, value: any) => {
+      const addRow = (label: string, value: any, isHighlight = false) => {
+        doc.setFontSize(11);
+        doc.setTextColor(100, 100, 100);
         doc.setFont("helvetica", "bold");
         doc.text(`${label}:`, leftCol, yPos);
-        doc.setFont("helvetica", "normal");
+        
+        if (isHighlight) {
+          doc.setTextColor(242, 101, 34);
+          doc.setFont("helvetica", "bold");
+        } else {
+          doc.setTextColor(30, 30, 30);
+          doc.setFont("helvetica", "normal");
+        }
+        
         const splitValue = doc.splitTextToSize(String(value || 'N/A'), pageWidth - rightCol - 20);
         doc.text(splitValue, rightCol, yPos);
-        yPos += 8 * splitValue.length;
+        yPos += 8 * splitValue.length + 2;
       };
 
       const email = result.fullData.email || (result.fullData.team_members && result.fullData.team_members[0]?.email);
       const phone = result.fullData.phone || (result.fullData.team_members && result.fullData.team_members[0]?.phone);
       const studentId = result.fullData.student_id || (result.fullData.team_members && result.fullData.team_members[0]?.student_id);
 
-      addRow("Application ID", result.fullData.application_id);
-      addRow("Status", result.status);
+      addRow("Application ID", result.fullData.application_id, true);
+      addRow("Status", result.status, true);
       addRow("Applicant Name", result.name);
       if (email) addRow("Email Address", email);
       if (phone) addRow("Phone Number", phone);
       if (studentId) addRow("Student ID", studentId);
 
-      // Map Custom Responses
+      // 6. Cleaned Additional Information
       if (result.fullData.custom_responses && Object.keys(result.fullData.custom_responses).length > 0) {
-        yPos += 5;
-        doc.setFont("helvetica", "bold");
-        doc.text("Additional Information:", leftCol, yPos);
-        yPos += 10;
-        
-        Object.entries(result.fullData.custom_responses).forEach(([key, value]) => {
-          const displayVal = Array.isArray(value) ? value.join(', ') : value;
-          addRow(key, displayVal);
+        const standardValues = [result.name, email, phone, studentId]
+          .filter(Boolean)
+          .map(v => String(v).toLowerCase().trim());
+          
+        const validData = Object.entries(result.fullData.custom_responses).filter(([key, value]) => {
+          const strVal = String(value).toLowerCase().trim();
+          return !standardValues.includes(strVal) && strVal !== "";
         });
+
+        if (validData.length > 0) {
+          yPos += 8;
+          doc.setFillColor(245, 247, 250);
+          doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
+          doc.setTextColor(11, 17, 32);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text("Additional Information", 25, yPos);
+          yPos += 10;
+          
+          validData.forEach(([key, value]) => {
+            const displayVal = Array.isArray(value) ? value.join(', ') : value;
+            const isRandomKey = /^[a-z0-9]{8,12}$/.test(key);
+            
+            if (isRandomKey) {
+              doc.setFont("helvetica", "bold");
+              doc.setTextColor(242, 101, 34);
+              doc.text("•", leftCol, yPos);
+              doc.setTextColor(30, 30, 30);
+              doc.setFont("helvetica", "normal");
+              const splitValue = doc.splitTextToSize(String(displayVal), pageWidth - 40);
+              doc.text(splitValue, leftCol + 5, yPos);
+              yPos += 8 * splitValue.length;
+            } else {
+              addRow(key, displayVal);
+            }
+          });
+        }
       }
 
-      // 4. Footer
+      // 7. Professional Footer
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+      
       doc.setFontSize(9);
       doc.setTextColor(150, 150, 150);
-      doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 20, { align: "center" });
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 15, { align: "center" });
+      doc.setFont("helvetica", "italic");
+      doc.text("This is an electronically generated official document.", pageWidth / 2, pageHeight - 17, { align: "center" });
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 12, { align: "center" });
 
       doc.save(`UIUJEF_Application_${result.fullData.application_id}.pdf`);
-      toast.success("PDF downloaded successfully!");
+      toast.success("Official PDF downloaded successfully!");
     } catch (error) {
       console.error("PDF Generation Error:", error);
       toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsDownloading(false);
     }
-  }
+  };
 
 
 
