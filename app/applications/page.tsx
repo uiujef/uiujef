@@ -205,8 +205,8 @@ export default function ApplicationsTrackingPage() {
 
       {/* Hidden PDF Template */}
       {result !== 'not-found' && result !== null && result.fullData && (
-        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
-          <div ref={pdfRef} style={{ width: '800px', backgroundColor: '#ffffff', padding: '40px', position: 'relative', fontFamily: 'sans-serif' }}>
+        <div className="absolute top-0 -left-[9999px] w-[800px] bg-white text-black z-[-1]">
+          <div ref={pdfRef} style={{ padding: '40px', position: 'relative', fontFamily: 'sans-serif' }}>
             {/* Watermark */}
             <div style={{
               position: 'absolute',

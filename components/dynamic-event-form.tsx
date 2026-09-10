@@ -238,6 +238,8 @@ export function DynamicEventForm({
   const [otherText, setOtherText] = useState<Record<string, string>>({})
   const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [verificationErrorMsg, setVerificationErrorMsg] = useState('')
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState('')
   
   const [copiedId, setCopiedId] = useState(false)
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
@@ -363,6 +365,40 @@ export function DynamicEventForm({
       }
     }
 
+    setPendingEmail(leadEmail)
+    setShowEmailConfirm(true)
+    setIsSubmitting(false)
+  }
+
+  const executeFinalSubmission = async () => {
+    setIsSubmitting(true)
+    setShowEmailConfirm(false)
+
+    let leadEmail = ''
+    let leadName = 'Custom Application'
+    let leadStudentId = ''
+    
+    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
+      const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
+      if (emailField) {
+        leadEmail = customResponses[emailField.id] || ''
+      }
+      
+      const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
+      if (studentIdField) {
+        leadStudentId = customResponses[studentIdField.id] || ''
+      }
+
+      const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
+      if (nameField) {
+        leadName = customResponses[nameField.id] || 'Custom Application'
+      }
+    } else {
+      leadEmail = members[0].email
+      leadName = members[0].name
+      leadStudentId = members[0].student_id
+    }
+
     // Fetch count of all event applications
     const { count, error: countError } = await supabase
       .from('applications')
@@ -378,17 +414,6 @@ export function DynamicEventForm({
     
     const newId = `JEF-${appIdPrefix}-N${(count || 0) + 1}`
     setApplicationId(newId)
-
-    const payload: EventRegistrationPayload = {
-      application_id: newId,
-      event_id: eventId,
-      team_name: config.requireTeamName && !config.is_custom_form ? teamName : null,
-      members: config.is_custom_form ? [] : (config.isTeamBased ? members : [members[0]]),
-      payment_method: config.requiresPayment ? paymentMethod : undefined,
-      transaction_id: config.requiresPayment ? transactionId : undefined,
-      status: 'pending',
-      submitted_at: new Date().toISOString(),
-    }
 
     try {
       // Process custom responses to include 'Other' text
@@ -559,6 +584,34 @@ export function DynamicEventForm({
           </div>
         </div>
       )}
+      {showEmailConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#0B1120]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full mx-auto text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="font-serif text-2xl font-bold text-white mb-3">Confirm Your Email</h3>
+            <p className="mb-8 text-sm leading-relaxed text-white/70">
+              Please confirm that we should send your Application ID to: <strong className="text-white">{pendingEmail}</strong>
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={executeFinalSubmission}
+                disabled={isSubmitting}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#F26522] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all hover:bg-[#FF7A3D] disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : 'Confirm & Register'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEmailConfirm(false)}
+                disabled={isSubmitting}
+                className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-all hover:bg-white/10 disabled:opacity-50"
+              >
+                Edit Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         onFocusCapture={() => telemetryStore.startFocus(`Event Registration: ${eventName}`)}
@@ -572,10 +625,15 @@ export function DynamicEventForm({
       <div className="space-y-6 p-6 sm:p-8">
         <div>
           <h3 className="font-serif text-xl font-bold text-white">{eventName}</h3>
-          {eventDescription && (
-            <p className="mt-2 text-sm text-white/70 whitespace-pre-wrap">{eventDescription}</p>
-          )}
-          <p className="mt-1 text-xs font-semibold text-white/50 uppercase tracking-wider">
+          
+          <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <span className="text-xl leading-none">⚠️</span>
+            <p className="text-sm font-medium leading-relaxed text-amber-200/90">
+              <strong className="text-amber-400">Important:</strong> Please double-check your email address carefully. Your unique Application ID and further instructions will be sent there.
+            </p>
+          </div>
+
+          <p className="mt-4 text-xs font-semibold text-white/50 uppercase tracking-wider">
             {config.isTeamBased
               ? `Team registration — up to ${config.maxTeamMembers} members`
               : 'Individual registration'}

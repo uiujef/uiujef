@@ -20,28 +20,25 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     query = query.ilike('app_id_prefix', resolvedParams.id)
   }
   
-  const { data: event } = await query.single()
+  const { data: event } = await query.maybeSingle()
+  const fallbackName = isUUID ? 'Event' : resolvedParams.id.toUpperCase();
 
-  if (!event) {
-    return {
-      title: 'Event Not Found — UIUJEF',
-      description: 'The event you are looking for does not exist.',
-    }
-  }
+  const title = event?.title ? `${event.title} — UIUJEF` : `${fallbackName} — UIUJEF`;
+  const description = event?.excerpt || 'Join us for this exciting event hosted by UIUJEF.';
 
   return {
-    title: `${event.title} — UIUJEF`,
-    description: event.excerpt || 'Join us for this exciting event hosted by UIUJEF.',
+    title,
+    description,
     openGraph: {
-      title: event.title,
-      description: event.excerpt || 'Join us for this exciting event hosted by UIUJEF.',
-      images: event.image ? [{ url: event.image }] : [],
+      title: event?.title || fallbackName,
+      description,
+      images: event?.image ? [{ url: event.image }] : [],
     },
     twitter: {
       card: 'summary_large_image',
-      title: event.title,
-      description: event.excerpt || 'Join us for this exciting event hosted by UIUJEF.',
-      images: event.image ? [event.image] : [],
+      title: event?.title || fallbackName,
+      description,
+      images: event?.image ? [event.image] : [],
     },
   }
 }

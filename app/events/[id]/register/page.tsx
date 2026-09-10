@@ -22,9 +22,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   
   const { data: event } = await query.maybeSingle()
+  const fallbackName = isUUID ? 'Event' : resolvedParams.id.toUpperCase();
 
-  if (!event) return { title: 'Event Not Found — UIUJEF' }
-  return { title: `Register: ${event.title} — UIUJEF` }
+  return { title: event?.title ? `Register: ${event.title} — UIUJEF` : `Register: ${fallbackName} — UIUJEF` }
 }
 
 export default async function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
@@ -67,7 +67,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
             <h1 className="text-3xl sm:text-4xl font-serif font-bold text-white mb-2">Event Registration</h1>
             <p className="text-white/60">Fill out the form below to secure your spot.</p>
           </div>
-          <DynamicEventForm eventId={event.id} eventName={event.title} eventDescription={event.description} appIdPrefix={event.app_id_prefix || 'EVENT'} config={formConfig} registrationFee={event.registration_fee} />
+          <DynamicEventForm eventId={event.id} eventName={event.title} appIdPrefix={event.app_id_prefix || 'EVENT'} config={formConfig} registrationFee={event.registration_fee} />
         </div>
       </main>
       <SiteFooter/>
