@@ -91,7 +91,7 @@ function EventCard({
           {event.requiresRegistration && (
             event.isRegistrationOpen ? (
               <Link
-                href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}#registration-section`}
+                href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}/register`}
                 className="group/btn inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-[#F26522]/20 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/40"
               >
                 Register Now
