@@ -261,6 +261,7 @@ export function DynamicEventForm({
 }: DynamicEventFormProps) {
   const router = useRouter()
   const [teamName, setTeamName] = useState('')
+  const [teamPhoto, setTeamPhoto] = useState('')
   const [members, setMembers] = useState<MemberEntry[]>([{ ...EMPTY_MEMBER }])
   const [paymentMethod, setPaymentMethod] = useState('')
   const [transactionId, setTransactionId] = useState('')
@@ -343,10 +344,11 @@ export function DynamicEventForm({
 
     setIsSubmitting(true)
 
-    let leadEmail = members[0]?.email || '';
-    let leadName = members[0]?.name || '';
-    let leadStudentId = members[0]?.student_id || '';
-    let leadPhone = members[0]?.phone || '';
+    let leadEmail = '';
+    let leadName = '';
+    let leadStudentId = '';
+    let leadPhone = '';
+
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
@@ -356,6 +358,11 @@ export function DynamicEventForm({
       if (sidField) leadStudentId = customResponses[sidField.id] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
       if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+    } else {
+      leadEmail = members[0]?.email || '';
+      leadName = members[0]?.name || '';
+      leadStudentId = members[0]?.student_id || '';
+      leadPhone = members[0]?.phone || '';
     }
 
     // On-Submit Membership Verification
@@ -460,10 +467,11 @@ export function DynamicEventForm({
     setIsSubmitting(true)
     setShowEmailConfirm(false)
 
-    let leadEmail = members[0]?.email || '';
-    let leadName = members[0]?.name || '';
-    let leadStudentId = members[0]?.student_id || '';
-    let leadPhone = members[0]?.phone || '';
+    let leadEmail = '';
+    let leadName = '';
+    let leadStudentId = '';
+    let leadPhone = '';
+
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
@@ -473,6 +481,11 @@ export function DynamicEventForm({
       if (sidField) leadStudentId = customResponses[sidField.id] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
       if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+    } else {
+      leadEmail = members[0]?.email || '';
+      leadName = members[0]?.name || '';
+      leadStudentId = members[0]?.student_id || '';
+      leadPhone = members[0]?.phone || '';
     }
 
     // Safely generate the next sequential ID
@@ -504,6 +517,10 @@ export function DynamicEventForm({
             processedCustomResponses[field.id] = otherText[field.id]
           }
         }
+      }
+
+      if (config.isTeamBased && teamPhoto) {
+        processedCustomResponses['Team Photo Link'] = teamPhoto;
       }
 
       // Supabase Insertion
@@ -677,10 +694,11 @@ export function DynamicEventForm({
         addRow("Team Name", teamName, true);
       }
 
-    let leadEmail = members[0]?.email || '';
-    let leadName = members[0]?.name || '';
-    let leadStudentId = members[0]?.student_id || '';
-    let leadPhone = members[0]?.phone || '';
+    let leadEmail = '';
+    let leadName = '';
+    let leadStudentId = '';
+    let leadPhone = '';
+
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
@@ -690,6 +708,11 @@ export function DynamicEventForm({
       if (sidField) leadStudentId = customResponses[sidField.id] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
       if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+    } else {
+      leadEmail = members[0]?.email || '';
+      leadName = members[0]?.name || '';
+      leadStudentId = members[0]?.student_id || '';
+      leadPhone = members[0]?.phone || '';
     }
 
       if (isTeam && members.length > 0) {
@@ -927,19 +950,32 @@ export function DynamicEventForm({
           </p>
         </div>
 
-        {/* Team Name */}
-        {config.isTeamBased && config.requireTeamName && (
-          <div>
-            <FieldLabel htmlFor="team-name" icon={Users} label="Team Name" />
-            <input
-              required
-              type="text"
-              id="team-name"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              placeholder="e.g. The Keynesians"
-              className={inputCls}
-            />
+        {/* Team Details */}
+        {config.isTeamBased && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <FieldLabel htmlFor="team-name" icon={Users} label="Team Name" />
+              <input
+                required={config.requireTeamName}
+                type="text"
+                id="team-name"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                placeholder="e.g. The Keynesians"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="team-photo" icon={Users} label="Team Photo Link (Optional)" />
+              <input
+                type="url"
+                id="team-photo"
+                value={teamPhoto}
+                onChange={(e) => setTeamPhoto(e.target.value)}
+                placeholder="Google Drive/Photos Link"
+                className={inputCls}
+              />
+            </div>
           </div>
         )}
 
