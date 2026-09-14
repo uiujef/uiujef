@@ -43,6 +43,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           category: data.category,
           isRegistrationOpen: data.is_registration_open ?? data.isRegistrationOpen,
           requiresRegistration: data.requires_registration ?? data.requiresRegistration,
+          registrationDeadline: data.registration_deadline ?? data.registrationDeadline,
           extendedDetails: data.extendedDetails || data.extended_details,
           registrationFee: data.registration_fee,
           appIdPrefix: data.app_id_prefix || 'EVENT',
@@ -97,6 +98,8 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
     )
   }
 
+  const isExpired = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() < Date.now() : false;
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="relative w-full overflow-hidden rounded-3xl bg-white/5 border border-white/10 shadow-2xl flex flex-col">
@@ -119,7 +122,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 border border-gold/30 px-4 py-1.5 text-sm font-semibold text-gold-soft">
               {event.category}
             </span>
-            {event.requiresRegistration && event.isRegistrationOpen && (
+            {event.requiresRegistration && event.isRegistrationOpen && !isExpired && (
               <Link
                 href={`/events/${eventId}/register`}
                 className="ml-auto inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#FF7A3D]"

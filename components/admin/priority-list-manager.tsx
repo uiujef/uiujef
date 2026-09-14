@@ -36,6 +36,8 @@ export function PriorityListManager() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [eventToRemove, setEventToRemove] = useState<string | null>(null)
+  const [isAppConfirmOpen, setIsAppConfirmOpen] = useState(false)
+  const [appToRemove, setAppToRemove] = useState<string | null>(null)
 
   const handleRemoveEvent = async () => {
     if (!eventToRemove) return;
@@ -49,6 +51,21 @@ export function PriorityListManager() {
     } finally {
       setIsConfirmOpen(false);
       setEventToRemove(null);
+    }
+  }
+
+  const handleRemoveApp = async () => {
+    if (!appToRemove) return;
+    try {
+      const { error } = await supabase.from('applications').update({ status: 'archived' }).eq('application_id', appToRemove);
+      if (error) throw error;
+      toast.success("Application removed successfully.");
+      loadData();
+    } catch (err: any) {
+      toast.error("Error: " + err.message);
+    } finally {
+      setIsAppConfirmOpen(false);
+      setAppToRemove(null);
     }
   }
 
@@ -253,6 +270,9 @@ export function PriorityListManager() {
                           >
                             <Eye className="size-4" />
                           </button>
+                          <button onClick={() => { setAppToRemove(app.application_id); setIsAppConfirmOpen(true); }} className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ml-2" title="Delete Application">
+                            <Trash2 className="size-4"/>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -409,6 +429,14 @@ export function PriorityListManager() {
         }}
         isDestructive={true}
         requireText="delete"
+      />
+      <ConfirmModal 
+        isOpen={isAppConfirmOpen} 
+        message="Are you sure you want to delete this application? It will be archived and removed from this list." 
+        onCancel={() => { setIsAppConfirmOpen(false); setAppToRemove(null); }} 
+        onConfirm={handleRemoveApp} 
+        requireText="delete" 
+        title="Delete Application" 
       />
     </div>
   )

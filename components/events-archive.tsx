@@ -35,6 +35,8 @@ function EventCard({
 }: {
   event: Event
 }) {
+  const isExpired = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() < Date.now() : false;
+
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#F26522]/10 hover:border-[#F26522]/30">
       {/* Cover */}
@@ -89,7 +91,7 @@ function EventCard({
         {/* CTA */}
         <div className="mt-5 flex flex-wrap items-center gap-3">
           {event.requiresRegistration && (
-            event.isRegistrationOpen ? (
+            event.isRegistrationOpen && !isExpired ? (
               <Link
                 href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}/register`}
                 className="group/btn inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-[#F26522]/20 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/40"
