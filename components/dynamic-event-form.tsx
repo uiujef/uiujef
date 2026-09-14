@@ -348,16 +348,15 @@ export function DynamicEventForm({
     let leadName = '';
     let leadStudentId = '';
     let leadPhone = '';
-
-    if (config.is_custom_form && !config.isTeamBased) {
+    if (config.is_custom_form) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[emailField.id] || '';
+      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
       const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[nameField.id] || 'Custom Application';
+      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
       const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[sidField.id] || '';
+      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
     } else {
       leadEmail = members[0]?.email || '';
       leadName = members[0]?.name || '';
@@ -471,16 +470,15 @@ export function DynamicEventForm({
     let leadName = '';
     let leadStudentId = '';
     let leadPhone = '';
-
-    if (config.is_custom_form && !config.isTeamBased) {
+    if (config.is_custom_form) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[emailField.id] || '';
+      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
       const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[nameField.id] || 'Custom Application';
+      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
       const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[sidField.id] || '';
+      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
     } else {
       leadEmail = members[0]?.email || '';
       leadName = members[0]?.name || '';
@@ -507,24 +505,42 @@ export function DynamicEventForm({
     setApplicationId(newId)
 
     try {
-      // Process custom responses to include 'Other' text
-      const processedCustomResponses = { ...customResponses }
-      for (const field of config.custom_form_fields || []) {
-        if (otherToggled[field.id] && otherText[field.id]) {
-          if (field.allow_multiple) {
-            processedCustomResponses[field.id] = [...(processedCustomResponses[field.id] || []), otherText[field.id]]
+      let finalMembers: any[] | null = null;
+      let finalCustomResponses: any = {};
+      
+      if (config.is_custom_form) {
+        finalMembers = [];
+        for (let i = 0; i < members.length; i++) {
+          let memberData: any = {};
+          for (const field of config.custom_form_fields || []) {
+            const fKey = `${i}-${field.id}`;
+            let val = customResponses[fKey] || '';
+            if (otherToggled[fKey] && otherText[fKey]) {
+              if (field.allow_multiple) val = [...(val || []), otherText[fKey]];
+              else val = otherText[fKey];
+            }
+            const fName = field.label.toLowerCase();
+            if (fName.includes('name') && !fName.includes('father')) memberData.name = val;
+            else if (fName.includes('email')) memberData.email = val;
+            else if (fName.includes('phone') || fName.includes('mobile')) memberData.phone = val;
+            else if (fName.includes('student id')) memberData.student_id = val;
+            else if (fName.includes('university') || fName.includes('uni')) memberData.university = val;
+            else memberData[field.label] = val;
+          }
+          finalMembers.push(memberData);
+        }
+        if (config.isTeamBased && teamPhoto) finalCustomResponses['Team Photo Link'] = teamPhoto;
+      } else {
+        finalMembers = config.isTeamBased ? members : [members[0]];
+        for (const field of config.custom_form_fields || []) {
+          if (otherToggled[field.id] && otherText[field.id]) {
+            if (field.allow_multiple) finalCustomResponses[field.id] = [...(customResponses[field.id] || []), otherText[field.id]];
+            else finalCustomResponses[field.id] = otherText[field.id];
           } else {
-            processedCustomResponses[field.id] = otherText[field.id]
+            finalCustomResponses[field.id] = customResponses[field.id];
           }
         }
       }
-
-      if (config.isTeamBased && teamPhoto) {
-        processedCustomResponses['Team Photo Link'] = teamPhoto;
-      }
-
-      // Supabase Insertion
-      const finalMembers = (config.is_custom_form && !config.isTeamBased) ? null : (config.isTeamBased ? members : [members[0]]);
       
       const { error: dbError } = await supabase
         .from('applications')
@@ -539,7 +555,7 @@ export function DynamicEventForm({
             team_members: finalMembers,
             transaction_id: config.requiresPayment ? transactionId : null,
             event_id: eventId,
-            custom_responses: Object.keys(processedCustomResponses).length > 0 ? processedCustomResponses : null,
+            custom_responses: Object.keys(finalCustomResponses).length > 0 ? finalCustomResponses : null,
           }
         ])
         
@@ -698,16 +714,15 @@ export function DynamicEventForm({
     let leadName = '';
     let leadStudentId = '';
     let leadPhone = '';
-
-    if (config.is_custom_form && !config.isTeamBased) {
+    if (config.is_custom_form) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[emailField.id] || '';
+      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
       const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[nameField.id] || 'Custom Application';
+      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
       const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[sidField.id] || '';
+      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[phoneField.id] || '';
+      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
     } else {
       leadEmail = members[0]?.email || '';
       leadName = members[0]?.name || '';
@@ -1014,172 +1029,83 @@ export function DynamicEventForm({
           </>
         )}
 
-        {/* Custom Event Team Roster (Only if Team Based) */}
-        {config.is_custom_form && config.isTeamBased && (
-          <>
-            <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
-                Team Roster ({members.length}/{config.maxTeamMembers})
-              </p>
-              {members.map((member, i) => (
-                <CustomTeamMemberBlock
-                  key={i}
-                  index={i}
-                  member={member}
-                  onChange={handleMemberChange}
-                  onRemove={removeMember}
-                  canRemove={members.length > 1}
-                />
-              ))}
-            </div>
+        {config.custom_form_fields && config.custom_form_fields.length > 0 && (
+          <div className="space-y-6">
+            {config.is_custom_form && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">{config.isTeamBased ? `Team Roster (${members.length}/${config.maxTeamMembers})` : 'Application Details'}</p>}
             
-            {members.length < (config.maxTeamMembers || 0) && (
-              <button
-                type="button"
-                onClick={addMember}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/50 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]"
-              >
+            {(config.is_custom_form ? members : [members[0]]).map((_, mIndex) => (
+              <div key={mIndex} className={cn("relative", config.is_custom_form ? "rounded-2xl border border-white/10 bg-white/3 p-5" : "")}>
+                {config.is_custom_form && (
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex size-7 items-center justify-center rounded-full bg-[#F26522]/15 text-xs font-bold text-[#F26522]">{mIndex + 1}</div>
+                      <span className="text-sm font-semibold text-white/70">{!config.isTeamBased ? 'Applicant' : mIndex === 0 ? 'Team Leader' : `Member ${mIndex + 1}`}</span>
+                    </div>
+                    {config.isTeamBased && members.length > 1 && (
+                      <button type="button" onClick={() => removeMember(mIndex)} className="flex size-7 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/10 hover:text-white/70"><X className="size-4" /></button>
+                    )}
+                  </div>
+                )}
+                
+                <div className={cn("grid gap-4 sm:grid-cols-2", !config.is_custom_form ? "rounded-2xl border border-white/10 bg-white/3 p-5" : "")}>
+                  {!config.is_custom_form && <div className="sm:col-span-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35 mb-2">Additional Information</div>}
+                  {config.custom_form_fields?.map((field) => {
+                    const fieldKey = config.is_custom_form ? `${mIndex}-${field.id}` : field.id;
+                    return (
+                      <div key={field.id} className="sm:col-span-2 lg:col-span-1 space-y-2">
+                        <FieldLabel htmlFor={`custom-${fieldKey}`} icon={Hash} label={field.label} />
+                        {field.type === 'dropdown' || field.type === 'select' || field.type === 'radio' ? (
+                          <div className="space-y-3">
+                            {field.allow_multiple ? (
+                              <div className="flex flex-col gap-2">
+                                {field.options?.map((opt, idx) => (
+                                  <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                                    <input type="checkbox" name={`custom-${fieldKey}`} value={opt} checked={(customResponses[fieldKey] || []).includes(opt)} onChange={(e) => { const checked = e.target.checked; setCustomResponses(prev => { const current = prev[fieldKey] || []; const updated = checked ? [...current, opt] : current.filter((v: string) => v !== opt); return { ...prev, [fieldKey]: updated }; }); }} className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20 rounded" /> {opt}
+                                  </label>
+                                ))}
+                                {field.allow_other && (
+                                  <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                                    <input type="checkbox" name={`custom-${fieldKey}-other`} checked={otherToggled[fieldKey] || false} onChange={(e) => setOtherToggled(prev => ({ ...prev, [fieldKey]: e.target.checked }))} className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20 rounded" /> Other
+                                  </label>
+                                )}
+                              </div>
+                            ) : field.type === 'radio' ? (
+                              <div className="flex flex-col gap-2">
+                                {field.options?.map((opt, idx) => (
+                                  <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                                    <input type="radio" name={`custom-${fieldKey}`} required={field.required && !otherToggled[fieldKey] && !customResponses[fieldKey]} value={opt} checked={!otherToggled[fieldKey] && customResponses[fieldKey] === opt} onChange={(e) => { setOtherToggled(prev => ({ ...prev, [fieldKey]: false })); setCustomResponses(prev => ({ ...prev, [fieldKey]: e.target.value })); }} className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20" /> {opt}
+                                  </label>
+                                ))}
+                                {field.allow_other && (
+                                  <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
+                                    <input type="radio" name={`custom-${fieldKey}`} required={field.required && !otherToggled[fieldKey] && !customResponses[fieldKey]} value="__other__" checked={otherToggled[fieldKey] || false} onChange={(e) => { setOtherToggled(prev => ({ ...prev, [fieldKey]: true })); setCustomResponses(prev => ({ ...prev, [fieldKey]: '' })); }} className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20" /> Other
+                                  </label>
+                                )}
+                              </div>
+                            ) : (
+                              <select id={`custom-${fieldKey}`} required={field.required && !otherToggled[fieldKey]} value={otherToggled[fieldKey] ? '__other__' : (customResponses[fieldKey] || '')} onChange={(e) => { const val = e.target.value; if (val === '__other__') { setOtherToggled(prev => ({ ...prev, [fieldKey]: true })); setCustomResponses(prev => ({ ...prev, [fieldKey]: '' })); } else { setOtherToggled(prev => ({ ...prev, [fieldKey]: false })); setCustomResponses(prev => ({ ...prev, [fieldKey]: val })); } }} className={cn(inputCls, 'bg-[#1B2A4A]/60')}>
+                                <option value="" disabled>Select {field.label}</option>
+                                {field.options?.map((opt, idx) => <option key={idx} value={opt}>{opt}</option>)}
+                                {field.allow_other && <option value="__other__">Other</option>}
+                              </select>
+                            )}
+                            {otherToggled[fieldKey] && <input type="text" required={field.required} value={otherText[fieldKey] || ''} onChange={(e) => setOtherText(prev => ({ ...prev, [fieldKey]: e.target.value }))} placeholder="Please specify..." className={cn(inputCls, 'mt-2')} />}
+                          </div>
+                        ) : (
+                          <input type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : 'text'} id={`custom-${fieldKey}`} required={field.required} value={customResponses[fieldKey] || ''} onChange={(e) => setCustomResponses(prev => ({ ...prev, [fieldKey]: e.target.value }))} placeholder={field.label} className={inputCls} />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+            
+            {config.is_custom_form && config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
+              <button type="button" onClick={addMember} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/50 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]">
                 + Add Member {members.length + 1}
               </button>
             )}
-          </>
-        )}
-
-        {/* Custom Fields */}
-        {config.custom_form_fields && config.custom_form_fields.length > 0 && (
-          <div className="space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Additional Information</p>
-            <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-white/10 bg-white/3 p-5">
-              {config.custom_form_fields.map((field) => (
-                <div key={field.id} className="sm:col-span-2 lg:col-span-1 space-y-2">
-                  <FieldLabel htmlFor={`custom-${field.id}`} icon={Hash} label={field.label} />
-                  
-                  {field.type === 'dropdown' || field.type === 'select' || field.type === 'radio' ? (
-                    <div className="space-y-3">
-                      {field.allow_multiple ? (
-                        <div className="flex flex-col gap-2">
-                          {field.options?.map((opt, idx) => (
-                            <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
-                              <input
-                                type="checkbox"
-                                name={`custom-${field.id}`}
-                                value={opt}
-                                checked={(customResponses[field.id] || []).includes(opt)}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  setCustomResponses(prev => {
-                                    const current = prev[field.id] || [];
-                                    const updated = checked ? [...current, opt] : current.filter((v: string) => v !== opt);
-                                    return { ...prev, [field.id]: updated };
-                                  });
-                                }}
-                                className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20 rounded"
-                              />
-                              {opt}
-                            </label>
-                          ))}
-                          {field.allow_other && (
-                            <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
-                              <input
-                                type="checkbox"
-                                name={`custom-${field.id}-other`}
-                                checked={otherToggled[field.id] || false}
-                                onChange={(e) => {
-                                  setOtherToggled(prev => ({ ...prev, [field.id]: e.target.checked }));
-                                }}
-                                className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20 rounded"
-                              />
-                              Other
-                            </label>
-                          )}
-                        </div>
-                      ) : field.type === 'radio' ? (
-                        <div className="flex flex-col gap-2">
-                          {field.options?.map((opt, idx) => (
-                            <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
-                              <input
-                                type="radio"
-                                name={`custom-${field.id}`}
-                                required={field.required && !otherToggled[field.id] && !customResponses[field.id]}
-                                value={opt}
-                                checked={!otherToggled[field.id] && customResponses[field.id] === opt}
-                                onChange={(e) => {
-                                  setOtherToggled(prev => ({ ...prev, [field.id]: false }));
-                                  setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }));
-                                }}
-                                className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20"
-                              />
-                              {opt}
-                            </label>
-                          ))}
-                          {field.allow_other && (
-                            <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80">
-                              <input
-                                type="radio"
-                                name={`custom-${field.id}`}
-                                required={field.required && !otherToggled[field.id] && !customResponses[field.id]}
-                                value="__other__"
-                                checked={otherToggled[field.id] || false}
-                                onChange={(e) => {
-                                  setOtherToggled(prev => ({ ...prev, [field.id]: true }));
-                                  setCustomResponses(prev => ({ ...prev, [field.id]: '' }));
-                                }}
-                                className="text-[#F26522] focus:ring-[#F26522] bg-white/10 border-white/20"
-                              />
-                              Other
-                            </label>
-                          )}
-                        </div>
-                      ) : (
-                        <select
-                          id={`custom-${field.id}`}
-                          required={field.required && !otherToggled[field.id]}
-                          value={otherToggled[field.id] ? '__other__' : (customResponses[field.id] || '')}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            if (val === '__other__') {
-                              setOtherToggled(prev => ({ ...prev, [field.id]: true }));
-                              setCustomResponses(prev => ({ ...prev, [field.id]: '' }));
-                            } else {
-                              setOtherToggled(prev => ({ ...prev, [field.id]: false }));
-                              setCustomResponses(prev => ({ ...prev, [field.id]: val }));
-                            }
-                          }}
-                          className={cn(inputCls, 'bg-[#1B2A4A]/60')}
-                        >
-                          <option value="" disabled>Select {field.label}</option>
-                          {field.options?.map((opt, idx) => (
-                            <option key={idx} value={opt}>{opt}</option>
-                          ))}
-                          {field.allow_other && <option value="__other__">Other</option>}
-                        </select>
-                      )}
-                      
-                      {otherToggled[field.id] && (
-                        <input
-                          type="text"
-                          required={field.required}
-                          value={otherText[field.id] || ''}
-                          onChange={(e) => setOtherText(prev => ({ ...prev, [field.id]: e.target.value }))}
-                          placeholder={`Please specify...`}
-                          className={cn(inputCls, 'mt-2')}
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <input
-                      type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : 'text'}
-                      id={`custom-${field.id}`}
-                      required={field.required}
-                      value={customResponses[field.id] || ''}
-                      onChange={(e) => setCustomResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      placeholder={field.label}
-                      className={inputCls}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
