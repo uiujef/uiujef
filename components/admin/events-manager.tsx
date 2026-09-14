@@ -179,6 +179,18 @@ export function EventsManager() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (isCustomForm) {
+      const hasEmailField = customFormFields.some(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
+      if (!hasEmailField) {
+        const proceed = window.confirm("Warning: You are creating a custom event without an 'Email' input field. Participants will NOT receive their Application IDs via email. Do you want to proceed anyway?");
+        if (!proceed) {
+          setIsSaving(false);
+          return;
+        }
+      }
+    }
+
     setIsSaving(true)
 
     let finalImageUrl = image

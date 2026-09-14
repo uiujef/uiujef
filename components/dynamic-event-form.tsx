@@ -457,9 +457,14 @@ export function DynamicEventForm({
       }
     }
 
-    setPendingEmail(leadEmail)
-    setShowEmailConfirm(true)
-    setIsSubmitting(false)
+    if (!leadEmail || leadEmail.trim() === '') {
+      // Bypass the email confirmation modal completely if no email exists
+      executeFinalSubmission();
+    } else {
+      setPendingEmail(leadEmail);
+      setShowEmailConfirm(true);
+      setIsSubmitting(false);
+    }
   }
 
   const executeFinalSubmission = async () => {
