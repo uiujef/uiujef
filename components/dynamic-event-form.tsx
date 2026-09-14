@@ -92,7 +92,7 @@ function MemberBlock({
             {index + 1}
           </div>
           <span className="text-sm font-semibold text-white/70">
-            {index === 0 ? 'Team Leader (Member 1)' : `Member ${index + 1}`}
+            {!config.isTeamBased ? 'Applicant Details' : index === 0 ? 'Team Leader (Member 1)' : `Member ${index + 1}`}
           </span>
         </div>
         {canRemove && (

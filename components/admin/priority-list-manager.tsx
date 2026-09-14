@@ -25,6 +25,8 @@ type Application = {
   team_name: string
   team_members: any[]
   custom_responses: any
+  is_system_deleted?: boolean
+  priority_hidden?: boolean
 }
 
 export function PriorityListManager() {
@@ -36,6 +38,9 @@ export function PriorityListManager() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [eventToRemove, setEventToRemove] = useState<string | null>(null)
+
+  const [isAppConfirmOpen, setIsAppConfirmOpen] = useState(false)
+  const [appToRemove, setAppToRemove] = useState<string | null>(null)
 
   const handleRemoveEvent = async () => {
     if (!eventToRemove) return;
@@ -49,6 +54,21 @@ export function PriorityListManager() {
     } finally {
       setIsConfirmOpen(false);
       setEventToRemove(null);
+    }
+  }
+
+  const handleRemoveApp = async () => {
+    if (!appToRemove) return;
+    try {
+      const { error } = await supabase.from('applications').update({ priority_hidden: true }).eq('application_id', appToRemove);
+      if (error) throw error;
+      toast.success("Application removed from priority list.");
+      loadData(); // Refresh the list
+    } catch (err: any) {
+      toast.error("Error: " + err.message);
+    } finally {
+      setIsAppConfirmOpen(false);
+      setAppToRemove(null);
     }
   }
 
@@ -80,6 +100,7 @@ export function PriorityListManager() {
         .from('applications')
         .select('*')
         .in('event_id', eventIds)
+        .neq('priority_hidden', true)
         .order('created_at', { ascending: false })
 
       if (appsError) throw appsError
@@ -239,20 +260,32 @@ export function PriorityListManager() {
                         <td className="px-6 py-4">
                           <span className={cn(
                             "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider",
+                            app.is_system_deleted ? "bg-red-950 text-red-400" :
                             app.status === 'Approved' ? "bg-green-100 text-green-700" :
                             app.status === 'Pending' ? "bg-orange-100 text-orange-700" :
                             app.status.toLowerCase() === 'archived' ? "bg-slate-200 text-slate-700" :
                             "bg-red-100 text-red-700"
                           )}>
-                            {app.status}
+                            {app.is_system_deleted ? "Deleted from System" : app.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                           <button
                             onClick={() => setSelectedApp(app)}
                             className="p-1.5 bg-white border border-slate-200 text-slate-500 rounded-md hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                            title="View Details"
                           >
                             <Eye className="size-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAppToRemove(app.application_id);
+                              setIsAppConfirmOpen(true);
+                            }}
+                            className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                            title="Delete from Priority List"
+                          >
+                            <Trash2 className="size-4"/>
                           </button>
                         </td>
                       </tr>
@@ -407,6 +440,19 @@ export function PriorityListManager() {
         onCancel={() => {
           setIsConfirmOpen(false);
           setEventToRemove(null);
+        }}
+        isDestructive={true}
+        requireText="delete"
+      />
+      <ConfirmModal
+        isOpen={isAppConfirmOpen}
+        title="Delete Application"
+        message="Are you sure you want to remove this application from the Priority List? It will still be accessible in the main system."
+        confirmText="Remove"
+        onConfirm={handleRemoveApp}
+        onCancel={() => {
+          setIsAppConfirmOpen(false);
+          setAppToRemove(null);
         }}
         isDestructive={true}
         requireText="delete"

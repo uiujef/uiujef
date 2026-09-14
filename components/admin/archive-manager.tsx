@@ -34,11 +34,16 @@ export function ArchiveManager() {
         orderBy = 'date'
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from(table)
         .select('*')
         .eq('status', 'archived')
-        .order(orderBy, { ascending: false })
+        
+      if (table === 'applications') {
+        query = query.neq('is_system_deleted', true)
+      }
+      
+      const { data, error } = await query.order(orderBy, { ascending: false })
 
       if (error) throw error
       if (data) setItems(data)
@@ -64,7 +69,14 @@ export function ArchiveManager() {
     const idCol = type === 'applications' ? 'application_id' : 'id'
 
     try {
-      const { error } = await supabase.from(type).delete().eq(idCol, id)
+      let error;
+      if (type === 'applications') {
+        const { error: updateError } = await supabase.from(type).update({ is_system_deleted: true }).eq(idCol, id)
+        error = updateError;
+      } else {
+        const { error: deleteError } = await supabase.from(type).delete().eq(idCol, id)
+        error = deleteError;
+      }
       if (error) throw error
       toast.success('Permanently deleted.')
       setItems(items.filter(item => (item.application_id || item.id) !== id))
