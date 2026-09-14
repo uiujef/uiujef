@@ -676,7 +676,6 @@ export function EventsManager() {
                         </div>
                       )}
 
-                      {!isCustomForm && (
                         <div className="pt-2 space-y-4">
                           <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-slate-500">Participation Type</label>
@@ -716,7 +715,6 @@ export function EventsManager() {
                             </div>
                           </div>
                         </div>
-                      )}
 
                       <label className="flex items-center gap-3 cursor-pointer group mt-4">
                         <div className="relative flex items-center">
