@@ -204,6 +204,40 @@ function MemberBlock({
   )
 }
 
+function CustomTeamMemberBlock({ index, member, onChange, onRemove, canRemove }: any) {
+  const uid = useId();
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+      <div className="mb-4 flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="flex size-7 items-center justify-center rounded-full bg-[#F26522]/15 text-xs font-bold text-[#F26522]">
+            {index + 1}
+          </div>
+          <span className="text-sm font-semibold text-white/70">
+            {index === 0 ? 'Team Leader' : `Member ${index + 1}`}
+          </span>
+        </div>
+        {canRemove && (
+          <button type="button" onClick={() => onRemove(index)} className="flex size-7 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/10 hover:text-white/70">
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <FieldLabel htmlFor={`${uid}-name`} icon={User} label="Full Name" />
+          <input id={`${uid}-name`} required type="text" value={member.name} onChange={(e) => onChange(index, 'name', e.target.value)} className={inputCls} placeholder="e.g. John Doe" />
+        </div>
+        <div>
+          <FieldLabel htmlFor={`${uid}-email`} icon={Mail} label="Email Address" />
+          <input id={`${uid}-email`} required type="email" value={member.email} onChange={(e) => onChange(index, 'email', e.target.value)} className={inputCls} placeholder="e.g. john@example.com" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface DynamicEventFormProps {
@@ -909,37 +943,70 @@ export function DynamicEventForm({
           </div>
         )}
 
-        {/* Member blocks */}
-        {(!config.is_custom_form || config.isTeamBased) && (
-          <div className="space-y-4">
-            {config.isTeamBased && (
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
-                Team Members ({members.length}/{config.maxTeamMembers})
-              </p>
+        {/* Standard Event Member Blocks */}
+        {!config.is_custom_form && (
+          <>
+            <div className="space-y-4">
+              {config.isTeamBased && (
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+                  Team Members ({members.length}/{config.maxTeamMembers})
+                </p>
+              )}
+              {(config.isTeamBased ? members : [members[0]]).map((member, i) => (
+                <MemberBlock
+                  key={i}
+                  index={i}
+                  member={member}
+                  config={config}
+                  onChange={handleMemberChange}
+                  onRemove={removeMember}
+                  canRemove={!!config.isTeamBased && members.length > 1}
+                />
+              ))}
+            </div>
+            
+            {/* Add member button */}
+            {config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
+              <button
+                type="button"
+                onClick={addMember}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/50 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]"
+              >
+                + Add Member {members.length + 1}
+              </button>
             )}
-            {(config.isTeamBased ? members : [members[0]]).map((member, i) => (
-              <MemberBlock
-                key={i}
-                index={i}
-                member={member}
-                config={config}
-                onChange={handleMemberChange}
-                onRemove={removeMember}
-                canRemove={!!config.isTeamBased && members.length > 1}
-              />
-            ))}
-          </div>
+          </>
         )}
 
-        {/* Add member button */}
-        {config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
-          <button
-            type="button"
-            onClick={addMember}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/50 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]"
-          >
-            + Add Member {members.length + 1}
-          </button>
+        {/* Custom Event Team Roster (Only if Team Based) */}
+        {config.is_custom_form && config.isTeamBased && (
+          <>
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+                Team Roster ({members.length}/{config.maxTeamMembers})
+              </p>
+              {members.map((member, i) => (
+                <CustomTeamMemberBlock
+                  key={i}
+                  index={i}
+                  member={member}
+                  onChange={handleMemberChange}
+                  onRemove={removeMember}
+                  canRemove={members.length > 1}
+                />
+              ))}
+            </div>
+            
+            {members.length < (config.maxTeamMembers || 0) && (
+              <button
+                type="button"
+                onClick={addMember}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/50 transition-colors hover:border-[#F26522]/40 hover:text-[#F26522]"
+              >
+                + Add Member {members.length + 1}
+              </button>
+            )}
+          </>
         )}
 
         {/* Custom Fields */}
