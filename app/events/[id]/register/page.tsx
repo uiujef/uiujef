@@ -63,7 +63,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
   return (
     <div className="relative bg-[#0B1120] min-h-screen flex flex-col">
       <SiteNav/>
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 mt-16 sm:mt-20">
+      <main className="flex-1 flex justify-center p-4 sm:p-6 lg:p-8 mt-16 sm:mt-20">
         <div className="w-full max-w-3xl">
           <div className="mb-6 text-center">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold text-white mb-2">Event Registration</h1>
