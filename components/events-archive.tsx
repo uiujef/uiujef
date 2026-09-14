@@ -154,7 +154,8 @@ export default function EventsArchive() {
             requiresRegistration: d.requires_registration ?? d.requiresRegistration,
             registrationDeadline: d.registration_deadline ?? d.registrationDeadline,
             registration: d.requires_registration ?? d.requiresRegistration ? {
-              isTeamBased: d.participation_type === 'Team' || d.is_team_based || d.isTeamBased,
+              isTeamBased: d.participation_type?.startsWith('Team') || d.is_team_based || d.isTeamBased,
+              participationType: d.participation_type || 'Individual',
               maxTeamMembers: d.max_team_size ?? d.max_team_members ?? d.maxTeamMembers,
               requireTeamName: d.require_team_name ?? d.requireTeamName ?? true, // Require by default if team
               requireTeamIcon: d.require_team_icon ?? d.requireTeamIcon ?? false,

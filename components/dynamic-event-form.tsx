@@ -309,10 +309,10 @@ export function DynamicEventForm({
 
     setIsSubmitting(true)
 
-    let leadEmail = members[0].email;
-    let leadName = members[0].name;
-    let leadStudentId = members[0].student_id;
-    let leadPhone = members[0].phone || '';
+    let leadEmail = members[0]?.email || '';
+    let leadName = members[0]?.name || '';
+    let leadStudentId = members[0]?.student_id || '';
+    let leadPhone = members[0]?.phone || '';
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
@@ -426,10 +426,10 @@ export function DynamicEventForm({
     setIsSubmitting(true)
     setShowEmailConfirm(false)
 
-    let leadEmail = members[0].email;
-    let leadName = members[0].name;
-    let leadStudentId = members[0].student_id;
-    let leadPhone = members[0].phone || '';
+    let leadEmail = members[0]?.email || '';
+    let leadName = members[0]?.name || '';
+    let leadStudentId = members[0]?.student_id || '';
+    let leadPhone = members[0]?.phone || '';
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
@@ -643,10 +643,10 @@ export function DynamicEventForm({
         addRow("Team Name", teamName, true);
       }
 
-    let leadEmail = members[0].email;
-    let leadName = members[0].name;
-    let leadStudentId = members[0].student_id;
-    let leadPhone = members[0].phone || '';
+    let leadEmail = members[0]?.email || '';
+    let leadName = members[0]?.name || '';
+    let leadStudentId = members[0]?.student_id || '';
+    let leadPhone = members[0]?.phone || '';
     if (config.is_custom_form && !config.isTeamBased) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
       if (emailField) leadEmail = customResponses[emailField.id] || '';
