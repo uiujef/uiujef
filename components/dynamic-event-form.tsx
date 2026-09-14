@@ -300,32 +300,18 @@ export function DynamicEventForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (config.isTeamBased && config.participationType === 'Team (Strict)' && members.length < (config.maxTeamMembers || 0)) {
+      toast.error(`Exactly ${config.maxTeamMembers} members are required.`)
+      setIsSubmitting(false)
+      return
+    }
+
     setIsSubmitting(true)
 
-    let leadEmail = ''
-    let leadName = 'Custom Application'
-    let leadStudentId = ''
-    
-    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-      const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
-      if (emailField) {
-        leadEmail = customResponses[emailField.id] || ''
-      }
-      
-      const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
-      if (studentIdField) {
-        leadStudentId = customResponses[studentIdField.id] || ''
-      }
-
-      const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
-      if (nameField) {
-        leadName = customResponses[nameField.id] || 'Custom Application'
-      }
-    } else {
-      leadEmail = members[0].email
-      leadName = members[0].name
-      leadStudentId = members[0].student_id
-    }
+    const leadEmail = members[0].email
+    const leadName = members[0].name
+    const leadStudentId = members[0].student_id
 
     // On-Submit Membership Verification
     if (config.is_members_only) {
@@ -379,15 +365,7 @@ export function DynamicEventForm({
       if (!existingErr && existingApps && existingApps.length > 0) {
         let isDuplicate = false;
         
-        let leadPhone = '';
-        if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-          const phoneField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-          if (phoneField) {
-            leadPhone = customResponses[phoneField.id] || '';
-          }
-        } else {
-          leadPhone = members[0].phone || '';
-        }
+        let leadPhone = members[0].phone || '';
         
         for (const app of existingApps) {
           const matchesName = Boolean(leadName && app.name?.toLowerCase().trim() === leadName.toLowerCase().trim());
@@ -440,30 +418,9 @@ export function DynamicEventForm({
     setIsSubmitting(true)
     setShowEmailConfirm(false)
 
-    let leadEmail = ''
-    let leadName = 'Custom Application'
-    let leadStudentId = ''
-    
-    if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-      const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
-      if (emailField) {
-        leadEmail = customResponses[emailField.id] || ''
-      }
-      
-      const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
-      if (studentIdField) {
-        leadStudentId = customResponses[studentIdField.id] || ''
-      }
-
-      const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
-      if (nameField) {
-        leadName = customResponses[nameField.id] || 'Custom Application'
-      }
-    } else {
-      leadEmail = members[0].email
-      leadName = members[0].name
-      leadStudentId = members[0].student_id
-    }
+    const leadEmail = members[0].email
+    const leadName = members[0].name
+    const leadStudentId = members[0].student_id
 
     // Safely generate the next sequential ID
     const { data: existingApps } = await supabase
@@ -497,7 +454,7 @@ export function DynamicEventForm({
       }
 
       // Supabase Insertion
-      const finalMembers = config.is_custom_form ? null : (config.isTeamBased ? members : [members[0]])
+      const finalMembers = config.isTeamBased ? members : [members[0]]
       
       const { error: dbError } = await supabase
         .from('applications')
@@ -667,28 +624,12 @@ export function DynamicEventForm({
         addRow("Team Name", teamName, true);
       }
 
-      let leadEmail = ''
-      let leadName = 'Custom Application'
-      let leadStudentId = ''
-      let leadPhone = ''
-      
-      if (config.is_custom_form && config.custom_form_fields && config.custom_form_fields.length > 0) {
-        const emailField = config.custom_form_fields.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'))
-        if (emailField) leadEmail = customResponses[emailField.id] || ''
-        const studentIdField = config.custom_form_fields.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'))
-        if (studentIdField) leadStudentId = customResponses[studentIdField.id] || ''
-        const nameField = config.custom_form_fields.find(f => f.label.toLowerCase().includes('name'))
-        if (nameField) leadName = customResponses[nameField.id] || 'Custom Application'
-        const phoneField = config.custom_form_fields.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone'))
-        if (phoneField) leadPhone = customResponses[phoneField.id] || ''
-      } else {
-        leadEmail = members[0].email
-        leadName = members[0].name
-        leadStudentId = members[0].student_id
-        leadPhone = members[0].phone
-      }
+      const leadEmail = members[0].email
+      const leadName = members[0].name
+      const leadStudentId = members[0].student_id
+      const leadPhone = members[0].phone
 
-      if (!config.is_custom_form && isTeam && members.length > 0) {
+      if (isTeam && members.length > 0) {
         members.forEach((member, i) => {
           checkPageBreak(15);
           yPos += 4;
@@ -924,7 +865,7 @@ export function DynamicEventForm({
         </div>
 
         {/* Team Name */}
-        {!config.is_custom_form && config.isTeamBased && config.requireTeamName && (
+        {config.isTeamBased && config.requireTeamName && (
           <div>
             <FieldLabel htmlFor="team-name" icon={Users} label="Team Name" />
             <input
@@ -940,8 +881,7 @@ export function DynamicEventForm({
         )}
 
         {/* Member blocks */}
-        {!config.is_custom_form && (
-          <div className="space-y-4">
+        <div className="space-y-4">
             {config.isTeamBased && (
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
                 Team Members ({members.length}/{config.maxTeamMembers})
@@ -959,10 +899,9 @@ export function DynamicEventForm({
               />
             ))}
           </div>
-        )}
 
         {/* Add member button */}
-        {!config.is_custom_form && config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
+        {config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
           <button
             type="button"
             onClick={addMember}

@@ -166,9 +166,7 @@ export function EventsManager() {
       setAllowMultiple(false)
       setAppIdPrefix('EVENT')
       if (isCustom) {
-        setCustomFormFields([
-          { id: 'email', label: 'Email', type: 'email', required: true }
-        ])
+        setCustomFormFields([])
       } else {
         setCustomFormFields([])
       }
@@ -365,9 +363,7 @@ export function EventsManager() {
           </button>
           <button onClick={() => { 
             setIsCustomForm(true);
-            setCustomFormFields([
-              { id: 'email', label: 'Email', type: 'email', required: true }
-            ]);
+            setCustomFormFields([]);
             openModal(undefined, true); 
           }} className="flex items-center justify-center gap-2 bg-[#1B2A4A] text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-[#1B2A4A]/20 hover:bg-[#1B2A4A]/90 hover:scale-[1.02] active:scale-[0.98] transition-all">
             <Plus className="size-5" />
@@ -680,7 +676,6 @@ export function EventsManager() {
                         </div>
                       )}
 
-                      {!isCustomForm && (
                         <div className="pt-2 space-y-4">
                           <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-slate-500">Participation Type</label>
@@ -690,8 +685,12 @@ export function EventsManager() {
                                 <span className="text-sm font-medium text-slate-800">Individual</span>
                               </label>
                               <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="participation_type" value="Team" checked={participationType === 'Team'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
-                                <span className="text-sm font-medium text-slate-800">Team</span>
+                                <input type="radio" name="participation_type" value="Team (Flexible)" checked={participationType === 'Team (Flexible)'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">Team (Flexible)</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="participation_type" value="Team (Strict)" checked={participationType === 'Team (Strict)'} onChange={e => setParticipationType(e.target.value)} className="w-4 h-4 text-[#F26522] focus:ring-[#F26522]" />
+                                <span className="text-sm font-medium text-slate-800">Team (Strict)</span>
                               </label>
                             </div>
                           </div>
@@ -716,7 +715,6 @@ export function EventsManager() {
                             </div>
                           </div>
                         </div>
-                      )}
 
                       <label className="flex items-center gap-3 cursor-pointer group mt-4">
                         <div className="relative flex items-center">

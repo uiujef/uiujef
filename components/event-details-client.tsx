@@ -48,7 +48,8 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           registrationFee: data.registration_fee,
           appIdPrefix: data.app_id_prefix || 'EVENT',
           registration: data.requires_registration ?? data.requiresRegistration ? {
-            isTeamBased: data.participation_type === 'Team' || data.is_team_based || data.isTeamBased,
+            isTeamBased: data.participation_type?.startsWith('Team') || data.is_team_based || data.isTeamBased,
+            participationType: data.participation_type || 'Individual',
             maxTeamMembers: data.max_team_size ?? data.max_team_members ?? data.maxTeamMembers,
             requireTeamName: data.require_team_name ?? data.requireTeamName ?? true,
             requireTeamIcon: data.require_team_icon ?? data.requireTeamIcon ?? false,
