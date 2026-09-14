@@ -244,6 +244,7 @@ export function ApplicationsManager() {
             return r.team_members[0].address || ''
           }
         },
+        { header: 'Team Photo', key: (r: any) => r.custom_responses?.['Team Photo Link'] || '' },
         { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
       ]
 
@@ -618,14 +619,25 @@ export function ApplicationsManager() {
                     <div className="mt-8">
                       <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Custom Responses</h5>
                       <dl className="grid grid-cols-1 gap-6 text-sm">
-                        {Object.entries(selectedApp.custom_responses).map(([key, value]) => (
-                          <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
-                            <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
-                            <dd className="text-slate-800 font-medium whitespace-pre-wrap">
-                              {Array.isArray(value) ? value.join(', ') : (value as string) || '-'}
-                            </dd>
-                          </div>
-                        ))}
+                        {Object.entries(selectedApp.custom_responses).map(([key, value]) => {
+                          if (/^[a-z0-9]{8,12}$/.test(key)) return null;
+                          const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
+                          if (!displayVal) return null;
+                          if (key === 'Team Photo Link' && displayVal.startsWith('http')) {
+                            return (
+                              <div key={key} className="p-4 flex flex-col gap-1 sm:col-span-2">
+                                <span className="text-xs font-bold text-slate-400 uppercase">{key}</span>
+                                <a href={displayVal} target="_blank" rel="noreferrer"><img src={displayVal} alt="Team" className="max-w-xs rounded-xl border border-slate-200 mt-1" /></a>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={key} className="p-4 flex flex-col gap-1">
+                              <span className="text-xs font-bold text-slate-400 uppercase">{key}</span>
+                              <span className="text-sm font-medium text-slate-800">{displayVal}</span>
+                            </div>
+                          );
+                        })}
                       </dl>
                     </div>
                   )}

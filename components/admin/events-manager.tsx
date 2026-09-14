@@ -350,6 +350,7 @@ export function EventsManager() {
             return JSON.stringify(r.custom_responses)
           }
         },
+        { header: 'Team Photo', key: (r: any) => r.custom_responses?.['Team Photo Link'] || '' },
         { header: 'TrxID', key: (r: any) => r.transaction_id || '' },
       ]
 

@@ -240,13 +240,39 @@ function CustomTeamMemberBlock({ index, member, onChange, onRemove, canRemove }:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-interface DynamicEventFormProps {
+import { CloudinaryUploader } from '@/components/cloudinary-uploader'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+/**
+ * Supabase-ready payload for `event_registrations` table.
+ * team_members is JSONB in Supabase.
+ */
+export interface EventRegistrationPayload {
+  application_id: string
+  event_id: string
+  team_name: string | null
+  members: MemberEntry[]
+  payment_method?: string
+  transaction_id?: string | null
+}
+
+export interface MemberEntry {
+  name: string
+  father_name?: string
+  student_id: string
+  email: string
+  phone: string
+  university: string
+}
+
+export interface DynamicEventFormProps {
   eventId: string
   eventName: string
   eventDescription?: string
   appIdPrefix?: string
   config: EventRegistrationConfig
-  registrationFee?: number
+  registrationFee: number
   onSuccess?: (payload: EventRegistrationPayload) => void
 }
 
@@ -262,6 +288,8 @@ export function DynamicEventForm({
   const router = useRouter()
   const [teamName, setTeamName] = useState('')
   const [teamPhoto, setTeamPhoto] = useState('')
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [finalPayload, setFinalPayload] = useState<any>(null);
   const [members, setMembers] = useState<MemberEntry[]>([{ ...EMPTY_MEMBER }])
   const [paymentMethod, setPaymentMethod] = useState('')
   const [transactionId, setTransactionId] = useState('')
@@ -405,54 +433,46 @@ export function DynamicEventForm({
     }
 
     // DUPLICATE REGISTRATION PREVENTION
+    // DUPLICATE REGISTRATION PREVENTION
     if (!config.allowMultipleRegistrations) {
-      const { data: existingApps, error: existingErr } = await supabase
-        .from('applications')
-        .select('name, email, student_id, team_members, custom_responses, status')
-        .eq('event_id', eventId)
-        .neq('status', 'archived')
-        .neq('status', 'Rejected');
-        
+      const { data: existingApps, error: existingErr } = await supabase.from('applications').select('team_members').eq('event_id', eventId).neq('status', 'archived').neq('status', 'Rejected');
       if (!existingErr && existingApps && existingApps.length > 0) {
+        let currentMembers: any[] = [];
+        if (config.is_custom_form) {
+          for (let i = 0; i < members.length; i++) {
+            let mName = '', mEmail = '';
+            config.custom_form_fields?.forEach(f => {
+              const val = customResponses[`${i}-${f.id}`];
+              const fName = f.label.toLowerCase();
+              if (fName.includes('name') && !fName.includes('father')) mName = val || '';
+              if (fName.includes('email')) mEmail = val || '';
+            });
+            currentMembers.push({ name: mName.trim().toLowerCase(), email: mEmail.trim().toLowerCase() });
+          }
+        } else {
+          currentMembers = (config.isTeamBased ? members : [members[0]]).map(m => ({ name: m.name.trim().toLowerCase(), email: m.email.trim().toLowerCase() }));
+        }
+
         let isDuplicate = false;
         for (const app of existingApps) {
-          const matchesName = Boolean(leadName && app.name?.toLowerCase().trim() === leadName.toLowerCase().trim());
-          
-          if (matchesName) {
-            if (config.eventLevel === 'National') {
-              let appPhone = '';
-              if (app.custom_responses) {
-                const phoneFieldId = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'))?.id;
-                if (phoneFieldId) {
-                  appPhone = app.custom_responses[phoneFieldId] || '';
-                }
-              } else if (app.team_members && app.team_members.length > 0) {
-                appPhone = app.team_members[0].phone || '';
-              }
-              
-              const matchesEmail = Boolean(leadEmail && app.email?.toLowerCase().trim() === leadEmail.toLowerCase().trim());
-              const matchesPhone = Boolean(appPhone && leadPhone && appPhone === leadPhone);
-              
-              if (matchesEmail || matchesPhone) {
-                isDuplicate = true;
-                break;
-              }
-            } else {
-              const matchesEmail = Boolean(leadEmail && app.email?.toLowerCase().trim() === leadEmail.toLowerCase().trim());
-              const matchesStudentId = Boolean(leadStudentId && app.student_id?.toLowerCase().trim() === leadStudentId.toLowerCase().trim());
-              
-              if (matchesEmail || matchesStudentId) {
-                isDuplicate = true;
-                break;
+          const exMembers = app.team_members || [];
+          for (const exM of exMembers) {
+            const exName = (exM.name || '').trim().toLowerCase();
+            const exEmail = (exM.email || '').trim().toLowerCase();
+            for (const curM of currentMembers) {
+              if (curM.name && curM.email && exName === curM.name && exEmail === curM.email) {
+                isDuplicate = true; break;
               }
             }
+            if (isDuplicate) break;
           }
+          if (isDuplicate) break;
         }
-        
+
         if (isDuplicate) {
-          toast.error("You have already registered for this event!")
-          setIsSubmitting(false)
-          return
+          toast.error("One or more members have already registered for this event with the exact Name and Email.");
+          setIsSubmitting(false);
+          return;
         }
       }
     }
@@ -546,6 +566,7 @@ export function DynamicEventForm({
           }
         }
       }
+      setFinalPayload({ members: finalMembers, custom_responses: finalCustomResponses });
       
       const { error: dbError } = await supabase
         .from('applications')
@@ -715,28 +736,13 @@ export function DynamicEventForm({
         addRow("Team Name", teamName, true);
       }
 
-    let leadEmail = '';
-    let leadName = '';
-    let leadStudentId = '';
-    let leadPhone = '';
-    if (config.is_custom_form) {
-      const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
-      const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
-      const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
-      const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
-    } else {
-      leadEmail = members[0]?.email || '';
-      leadName = members[0]?.name || '';
-      leadStudentId = members[0]?.student_id || '';
-      leadPhone = members[0]?.phone || '';
-    }
+      const leadEmail = finalPayload?.members?.[0]?.email || '';
+      const leadName = finalPayload?.members?.[0]?.name || '';
+      const leadStudentId = finalPayload?.members?.[0]?.student_id || '';
+      const leadPhone = finalPayload?.members?.[0]?.phone || '';
 
-      if (isTeam && members.length > 0) {
-        members.forEach((member, i) => {
+      if (isTeam && finalPayload?.members?.length > 0) {
+        finalPayload.members.forEach((member: any, i: number) => {
           checkPageBreak(15);
           yPos += 4;
           doc.setFillColor(242, 101, 34);
@@ -761,11 +767,11 @@ export function DynamicEventForm({
         if (leadStudentId) addRow("Student ID", leadStudentId);
       }
 
-      if (config.is_custom_form && Object.keys(customResponses).length > 0) {
+      if (config.is_custom_form && finalPayload?.custom_responses && Object.keys(finalPayload.custom_responses).length > 0) {
         const standardValues = [leadName, leadEmail, leadPhone, leadStudentId]
           .filter(Boolean).map(v => String(v).toLowerCase().trim());
           
-        const validData = Object.entries(customResponses).filter(([key, value]) => {
+        const validData = Object.entries(finalPayload.custom_responses).filter(([key, value]) => {
           const strVal = String(value).toLowerCase().trim();
           return !standardValues.includes(strVal) && strVal !== "";
         });
@@ -782,24 +788,8 @@ export function DynamicEventForm({
           yPos += 10;
           
           validData.forEach(([key, value]) => {
-            const displayVal = Array.isArray(value) ? value.join(', ') : value;
-            const isRandomKey = /^[a-z0-9]{8,12}$/.test(key);
-            
-            if (isRandomKey) {
-              checkPageBreak(10);
-              doc.setFont("helvetica", "bold");
-              doc.setTextColor(242, 101, 34);
-              doc.text("•", leftCol, yPos);
-              doc.setTextColor(30, 30, 30);
-              doc.setFont("helvetica", "normal");
-              const splitValue = doc.splitTextToSize(String(displayVal), pageWidth - 40);
-              doc.text(splitValue, leftCol + 5, yPos);
-              yPos += 8 * splitValue.length;
-            } else {
-              const field = config.custom_form_fields?.find(f => f.id === key);
-              const label = field ? field.label : key;
-              addRow(label, displayVal);
-            }
+            const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
+            addRow(key, displayVal);
           });
         }
       }
@@ -986,15 +976,17 @@ export function DynamicEventForm({
               />
             </div>
             <div>
-              <FieldLabel htmlFor="team-photo" icon={Users} label="Team Photo Link (Optional)" />
-              <input
-                type="url"
-                id="team-photo"
-                value={teamPhoto}
-                onChange={(e) => setTeamPhoto(e.target.value)}
-                placeholder="Google Drive/Photos Link"
-                className={inputCls}
-              />
+              <FieldLabel htmlFor="team-photo" icon={Users} label="Team Photo (Optional)" />
+              {teamPhoto ? (
+                <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 bg-white/5 mt-1">
+                  <img src={teamPhoto} alt="Team" className="object-cover w-full h-full" />
+                  <button type="button" onClick={() => setTeamPhoto('')} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600"><X className="size-4" /></button>
+                </div>
+              ) : (
+                <div className="mt-1">
+                  <CloudinaryUploader onUploadSuccess={(url) => { setTeamPhoto(url); setIsUploadingPhoto(false); }} onUploadStart={() => setIsUploadingPhoto(true)} onUploadError={() => setIsUploadingPhoto(false)} folder="/uiujef/team-photos" />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1200,7 +1192,7 @@ export function DynamicEventForm({
       {/* Submit */}
       <div className="border-t border-white/8 p-6 sm:px-8">
         <button
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingPhoto}
           type="submit"
           className="group relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26522] py-4 text-base font-bold text-white shadow-lg shadow-[#F26522]/25 transition-all duration-200 hover:bg-[#FF7A3D] disabled:cursor-not-allowed disabled:opacity-60"
         >
