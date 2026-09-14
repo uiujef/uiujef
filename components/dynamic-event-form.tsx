@@ -301,7 +301,7 @@ export function DynamicEventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (config.isTeamBased && config.participationType === 'Team (Strict)' && members.length < (config.maxTeamMembers || 0)) {
+    if (!config.is_custom_form && config.isTeamBased && config.participationType === 'Team (Strict)' && members.length < (config.maxTeamMembers || 0)) {
       toast.error(`Exactly ${config.maxTeamMembers} members are required.`)
       setIsSubmitting(false)
       return
@@ -473,7 +473,7 @@ export function DynamicEventForm({
       }
 
       // Supabase Insertion
-      const finalMembers = (config.is_custom_form && !config.isTeamBased) ? null : (config.isTeamBased ? members : [members[0]]);
+      const finalMembers = config.is_custom_form ? null : (config.isTeamBased ? members : [members[0]]);
       
       const { error: dbError } = await supabase
         .from('applications')
@@ -894,7 +894,7 @@ export function DynamicEventForm({
         </div>
 
         {/* Team Name */}
-        {(!config.is_custom_form || config.isTeamBased) && config.isTeamBased && config.requireTeamName && (
+        {!config.is_custom_form && config.isTeamBased && config.requireTeamName && (
           <div>
             <FieldLabel htmlFor="team-name" icon={Users} label="Team Name" />
             <input
@@ -910,7 +910,7 @@ export function DynamicEventForm({
         )}
 
         {/* Member blocks */}
-        {(!config.is_custom_form || config.isTeamBased) && (
+        {!config.is_custom_form && (
           <div className="space-y-4">
             {config.isTeamBased && (
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
@@ -932,7 +932,7 @@ export function DynamicEventForm({
         )}
 
         {/* Add member button */}
-        {(!config.is_custom_form || config.isTeamBased) && config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
+        {!config.is_custom_form && config.isTeamBased && members.length < (config.maxTeamMembers || 0) && (
           <button
             type="button"
             onClick={addMember}
