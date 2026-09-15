@@ -600,6 +600,7 @@ export function ApplicationsManager() {
                       <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Primary Details</h5>
                       <dl className="space-y-3 text-sm">
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Event</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.event_title || selectedApp.type.replace('Event: ', '')}</dd></div>
+                        <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Applicant Name</dt><dd className="font-medium text-slate-800">{selectedApp.name || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Team Name</dt><dd className="font-medium text-slate-800">{selectedApp.team_name || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Primary Email</dt><dd className="font-medium text-slate-800 break-all">{selectedApp.email || '-'}</dd></div>
                         <div className="flex flex-col"><dt className="text-slate-500 text-xs uppercase font-bold">Transaction ID</dt><dd className="font-medium text-slate-800 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{selectedApp.transaction_id || '-'}</dd></div>
@@ -618,23 +619,29 @@ export function ApplicationsManager() {
                   {selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0 && (
                     <div className="mt-8">
                       <h5 className="text-sm font-bold uppercase text-[#F26522] mb-4 border-b border-slate-200 pb-2">Custom Responses</h5>
-                      <dl className="grid grid-cols-1 gap-6 text-sm">
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
                         {Object.entries(selectedApp.custom_responses).map(([key, value]) => {
-                          if (/^[a-z0-9]{8,12}$/.test(key)) return null;
+                          if (/^(\d+-)?[a-z0-9]{8,12}$/.test(key)) return null; // Hide old artifacts
                           const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
                           if (!displayVal) return null;
+                          
                           if (key === 'Team Photo Link' && displayVal.startsWith('http')) {
                             return (
-                              <div key={key} className="p-4 flex flex-col gap-1 sm:col-span-2">
-                                <span className="text-xs font-bold text-slate-400 uppercase">{key}</span>
-                                <a href={displayVal} target="_blank" rel="noreferrer"><img src={displayVal} alt="Team" className="max-w-xs rounded-xl border border-slate-200 mt-1" /></a>
+                              <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm sm:col-span-2">
+                                <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">Team Photo</dt>
+                                <dd className="text-slate-800 font-medium">
+                                  <a href={displayVal} target="_blank" rel="noreferrer">
+                                    <img src={displayVal} alt="Team" className="max-w-xs rounded-xl border border-slate-200" />
+                                  </a>
+                                </dd>
                               </div>
                             );
                           }
+                          
                           return (
-                            <div key={key} className="p-4 flex flex-col gap-1">
-                              <span className="text-xs font-bold text-slate-400 uppercase">{key}</span>
-                              <span className="text-sm font-medium text-slate-800">{displayVal}</span>
+                            <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
+                              <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
+                              <dd className="text-slate-800 font-medium whitespace-pre-wrap">{displayVal}</dd>
                             </div>
                           );
                         })}
@@ -652,14 +659,19 @@ export function ApplicationsManager() {
                               <div className="size-6 rounded-full bg-[#F26522]/10 text-[#F26522] flex items-center justify-center font-bold text-xs">
                                 {index + 1}
                               </div>
-                              <h6 className="font-bold text-slate-800">{member.full_name || member.name} {index === 0 ? '(Leader)' : ''}</h6>
+                              <h6 className="font-bold text-slate-800">{member.full_name || member.name || 'Unknown'} {index === 0 ? '(Leader)' : ''}</h6>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm ml-9">
-                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Email</dt><dd className="font-medium text-slate-800">{member.email || '-'}</dd></div>
-                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Phone</dt><dd className="font-medium text-slate-800">{member.phone || '-'}</dd></div>
-                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">University / Dept</dt><dd className="font-medium text-slate-800">{member.university || member.department || '-'}</dd></div>
-                              <div className="flex flex-col"><dt className="text-slate-500 text-[10px] uppercase font-bold">Student ID</dt><dd className="font-medium text-slate-800">{member.student_id || '-'}</dd></div>
-                              <div className="flex flex-col sm:col-span-2"><dt className="text-slate-500 text-[10px] uppercase font-bold">Address</dt><dd className="font-medium text-slate-800">{member.address || member.student_address || '-'}</dd></div>
+                              {Object.entries(member).map(([k, v]) => {
+                                if (!v || v === '' || k === 'name' || k === 'full_name') return null;
+                                const label = k === 'student_id' ? 'Student ID' : k === 'father_name' ? "Father's Name" : k;
+                                return (
+                                  <div key={k} className="flex flex-col">
+                                    <dt className="text-slate-500 text-[10px] uppercase font-bold">{label}</dt>
+                                    <dd className="font-medium text-slate-800 whitespace-pre-wrap">{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
