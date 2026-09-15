@@ -446,35 +446,57 @@ export function DynamicEventForm({
     }
 
     // DUPLICATE REGISTRATION PREVENTION
-    // DUPLICATE REGISTRATION PREVENTION
     if (!config.allowMultipleRegistrations) {
-      const { data: existingApps, error: existingErr } = await supabase.from('applications').select('team_members').eq('event_id', eventId).neq('status', 'archived').neq('status', 'Rejected');
+      const { data: existingApps, error: existingErr } = await supabase
+        .from('applications')
+        .select('name, email, team_members')
+        .eq('event_id', eventId)
+        .neq('status', 'archived')
+        .neq('status', 'Rejected');
+
       if (!existingErr && existingApps && existingApps.length > 0) {
         let currentMembers: any[] = [];
-        if (config.is_custom_form) {
-          for (let i = 0; i < members.length; i++) {
-            let mName = '', mEmail = '';
-            config.custom_form_fields?.forEach(f => {
-              const val = customResponses[`${i}-${f.id}`];
-              const fName = f.label.toLowerCase();
-              if (fName.includes('name') && !fName.includes('father')) mName = val || '';
-              if (fName.includes('email')) mEmail = val || '';
-            });
-            currentMembers.push({ name: mName.trim().toLowerCase(), email: mEmail.trim().toLowerCase() });
-          }
+
+        if (config.isTeamBased) {
+          // Team Events (Custom & Standard): Basic info is in the `members` state array
+          currentMembers = members.map(m => ({
+            name: (m.name || '').trim().toLowerCase(),
+            email: (m.email || '').trim().toLowerCase()
+          }));
+        } else if (config.is_custom_form) {
+          // Individual Custom Event: Basic info is inside `customResponses`
+          let mName = '', mEmail = '';
+          config.custom_form_fields?.forEach(f => {
+            const val = customResponses[`0-${f.id}`];
+            const fName = f.label.toLowerCase();
+            if (fName.includes('name') && !fName.includes('father')) mName = val || '';
+            if (fName.includes('email')) mEmail = val || '';
+          });
+          currentMembers.push({ name: mName.trim().toLowerCase(), email: mEmail.trim().toLowerCase() });
         } else {
-          currentMembers = (config.isTeamBased ? members : [members[0]]).map(m => ({ name: m.name.trim().toLowerCase(), email: m.email.trim().toLowerCase() }));
+          // Individual Standard Event: Basic info is in `members[0]`
+          currentMembers = [{
+            name: (members[0]?.name || '').trim().toLowerCase(),
+            email: (members[0]?.email || '').trim().toLowerCase()
+          }];
         }
 
         let isDuplicate = false;
         for (const app of existingApps) {
-          const exMembers = app.team_members || [];
+          // Check team_members array, fallback to root application name/email for individual custom events
+          const exMembers = Array.isArray(app.team_members) && app.team_members.length > 0 
+            ? app.team_members 
+            : [{ name: app.name, email: app.email }];
+
           for (const exM of exMembers) {
             const exName = (exM.name || '').trim().toLowerCase();
             const exEmail = (exM.email || '').trim().toLowerCase();
+            
             for (const curM of currentMembers) {
+              // Must have both name and email to perform a strict duplicate check
               if (curM.name && curM.email && exName === curM.name && exEmail === curM.email) {
-                isDuplicate = true; break;
+                isDuplicate = true; 
+                break;
               }
             }
             if (isDuplicate) break;
