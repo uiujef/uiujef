@@ -48,6 +48,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
   const formConfig = {
     isTeamBased: event.participation_type?.startsWith('Team') || event.is_team_based || event.isTeamBased,
     participationType: event.participation_type || 'Individual',
+    minTeamMembers: event.min_team_size || 1,
     maxTeamMembers: event.max_team_size || event.max_team_members || 1,
     requireTeamName: event.require_team_name ?? true,
     requireTeamIcon: event.require_team_icon ?? false,

@@ -364,10 +364,23 @@ export function DynamicEventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (config.isTeamBased && config.participationType === 'Team (Strict)' && members.length < (config.maxTeamMembers || 0)) {
-      toast.error(`Exactly ${config.maxTeamMembers} members are required.`)
-      setIsSubmitting(false)
-      return
+    if (config.isTeamBased) {
+      if (config.participationType === 'Team (Strict)' && members.length !== (config.maxTeamMembers || 0)) {
+        toast.error(`Exactly ${config.maxTeamMembers} members are required for a Strict team.`);
+        setIsSubmitting(false);
+        return;
+      } else if (config.participationType === 'Team (Flexible)') {
+        if (members.length < (config.minTeamMembers || 1)) {
+          toast.error(`At least ${config.minTeamMembers} members are required to form this team.`);
+          setIsSubmitting(false);
+          return;
+        }
+        if (members.length > (config.maxTeamMembers || 0)) {
+          toast.error(`Maximum ${config.maxTeamMembers} members allowed.`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
     }
 
     setIsSubmitting(true)
@@ -997,7 +1010,7 @@ export function DynamicEventForm({
             <div className="space-y-4">
               {config.isTeamBased && (
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
-                  Team Members ({members.length}/{config.maxTeamMembers})
+                  Team Roster (Min: {config.minTeamMembers || 1}, Max: {config.maxTeamMembers}) — Added: {members.length}
                 </p>
               )}
               {(config.isTeamBased ? members : [members[0]]).map((member, i) => (
@@ -1028,7 +1041,7 @@ export function DynamicEventForm({
 
         {config.custom_form_fields && config.custom_form_fields.length > 0 && (
           <div className="space-y-6">
-            {config.is_custom_form && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">{config.isTeamBased ? `Team Roster (${members.length}/${config.maxTeamMembers})` : 'Application Details'}</p>}
+            {config.is_custom_form && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">{config.isTeamBased ? `Team Roster (Min: ${config.minTeamMembers || 1}, Max: ${config.maxTeamMembers}) — Added: ${members.length}` : 'Application Details'}</p>}
             
             {(config.is_custom_form ? members : [members[0]]).map((_, mIndex) => (
               <div key={mIndex} className={cn("relative", config.is_custom_form ? "rounded-2xl border border-white/10 bg-white/3 p-5" : "")}>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle, Download } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, Calendar, MapPin, Tag, Users, CheckCircle, Download, Bold, Italic, List, Table } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
@@ -19,6 +19,7 @@ type Event = {
   is_registration_open: boolean
   requires_registration: boolean
   max_team_size: number
+  min_team_size?: number
   registration_fee: number
   is_featured: boolean
   is_pinned: boolean
@@ -57,6 +58,7 @@ export function EventsManager() {
   const [requiresPayment, setRequiresPayment] = useState(false)
   const [requiresRegistration, setRequiresRegistration] = useState(false)
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
+  const [minTeamSize, setMinTeamSize] = useState<number>(1)
   const [maxTeamSize, setMaxTeamSize] = useState<number>(1)
   const [registrationFee, setRegistrationFee] = useState<number>(0)
   const [isFeatured, setIsFeatured] = useState(false)
@@ -118,6 +120,7 @@ export function EventsManager() {
       setRequiresPayment(event.requires_payment || false)
       setRequiresRegistration(event.requires_registration || false)
       setIsRegistrationOpen(event.is_registration_open || false)
+      setMinTeamSize(event.min_team_size || 1)
       setMaxTeamSize(event.max_team_size || 1)
       setRegistrationFee(event.registration_fee || 0)
       setIsFeatured(event.is_featured || false)
@@ -152,6 +155,7 @@ export function EventsManager() {
       setRequiresPayment(false)
       setRequiresRegistration(isCustom || false)
       setIsRegistrationOpen(false)
+      setMinTeamSize(1)
       setMaxTeamSize(1)
       setRegistrationFee(0)
       setIsFeatured(false)
@@ -221,6 +225,7 @@ export function EventsManager() {
         requires_payment: requiresPayment,
         requires_registration: requiresRegistration,
         is_registration_open: isRegistrationOpen,
+        min_team_size: minTeamSize,
         max_team_size: maxTeamSize,
         registration_fee: registrationFee,
         is_featured: isFeatured,
@@ -360,6 +365,46 @@ export function EventsManager() {
     } catch (err: any) {
       toast.error('Export failed: ' + err.message)
     }
+  }
+
+  const insertMarkdown = (syntax: string, isTable: boolean = false) => {
+    const textarea = document.getElementById('event-description') as HTMLTextAreaElement;
+    if (!textarea) {
+      if (isTable) {
+        setDescription(prev => prev + '\n| Column 1 | Column 2 |\n|---|---|\n| Data 1 | Data 2 |\n');
+      } else {
+        setDescription(prev => prev + `\n${syntax}text${syntax}`);
+      }
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+
+    let replacement = '';
+    if (isTable) {
+      replacement = '\n| Column 1 | Column 2 |\n|---|---|\n| Data 1 | Data 2 |\n';
+    } else if (syntax === '- ') {
+      replacement = `\n${syntax}${selectedText || 'list item'}`;
+    } else {
+      replacement = `${syntax}${selectedText || 'text'}${syntax}`;
+    }
+
+    const newValue = text.substring(0, start) + replacement + text.substring(end);
+    setDescription(newValue);
+    
+    setTimeout(() => {
+      textarea.focus();
+      if (isTable) {
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length);
+      } else if (syntax === '- ') {
+        textarea.setSelectionRange(start + 3, start + replacement.length);
+      } else {
+        textarea.setSelectionRange(start + syntax.length, start + replacement.length - syntax.length);
+      }
+    }, 0);
   }
 
   return (
@@ -593,8 +638,16 @@ export function EventsManager() {
                 <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Content</h4>
                 <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-slate-500">Description / Details {isCustomForm && <span className="lowercase font-normal ml-1">(Optional)</span>}</label>
-                      <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about?" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all" />
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase text-slate-500">Description / Details {isCustomForm && <span className="lowercase font-normal ml-1">(Optional)</span>}</label>
+                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                          <button type="button" onClick={() => insertMarkdown('**')} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors" title="Bold"><Bold className="size-4" /></button>
+                          <button type="button" onClick={() => insertMarkdown('*')} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors" title="Italic"><Italic className="size-4" /></button>
+                          <button type="button" onClick={() => insertMarkdown('- ')} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors" title="Bullet List"><List className="size-4" /></button>
+                          <button type="button" onClick={() => insertMarkdown('', true)} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors" title="Table"><Table className="size-4" /></button>
+                        </div>
+                      </div>
+                      <textarea id="event-description" rows={10} value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this event about? (Markdown supported)" className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none resize-none transition-all font-mono text-sm" />
                     </div>
 
                   <div className="space-y-2">
@@ -708,10 +761,17 @@ export function EventsManager() {
                             </div>
                           </div>
 
-                          <div className="space-y-2 max-w-[200px]">
-                            <label className="text-xs font-bold uppercase text-slate-500">Max Team Members</label>
-                            <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-white/40" />
-                            <p className="text-xs text-slate-500">Applies if Team.</p>
+                          <div className="grid grid-cols-2 gap-4 max-w-[400px]">
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase text-slate-500">Min Team Members</label>
+                              <input type="number" min="1" max="10" value={minTeamSize} onChange={e => setMinTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-white/40" />
+                              <p className="text-xs text-slate-500">Applies if Team.</p>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase text-slate-500">Max Team Members</label>
+                              <input type="number" min="1" max="10" value={maxTeamSize} onChange={e => setMaxTeamSize(Number(e.target.value))} disabled={participationType === 'Individual'} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all disabled:opacity-50 disabled:bg-white/40" />
+                              <p className="text-xs text-slate-500">Applies if Team.</p>
+                            </div>
                           </div>
 
                           <div className="space-y-2">
