@@ -197,78 +197,61 @@ export default function ApplicationsTrackingPage() {
       addRow("Status", statusText, true, isApproved ? [34, 197, 94] : [242, 101, 34]);
       if (result.fullData.team_name) addRow("Team Name", result.fullData.team_name, true);
 
-      // Print Team Members or Individual
-      if (result.fullData.team_members && Array.isArray(result.fullData.team_members) && result.fullData.team_members.length > 0) {
-        result.fullData.team_members.forEach((member: any, i: number) => {
-          checkPageBreak(15);
-          yPos += 4;
-          doc.setFillColor(242, 101, 34);
-          doc.rect(20, yPos - 4, 3, 6, 'F');
-          doc.setFontSize(12);
-          doc.setTextColor(11, 17, 32);
-          doc.setFont("helvetica", "bold");
-          doc.text(`Member ${i + 1} ${i === 0 ? '(Team Leader)' : ''}`, 26, yPos);
-          yPos += 8;
+      const printMemberData = (member: any, index: number, isTeam: boolean) => {
+        checkPageBreak(15);
+        yPos += 4;
+        doc.setFillColor(242, 101, 34);
+        doc.rect(20, yPos - 4, 3, 6, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(11, 17, 32);
+        doc.setFont("helvetica", "bold");
+        const title = isTeam ? `Member ${index + 1} ${index === 0 ? '(Team Leader)' : ''}` : 'Applicant Details';
+        doc.text(title, 26, yPos);
+        yPos += 8;
 
-          if (member.name) addRow("Name", member.name);
-          if (member.father_name) addRow("Father's Name", member.father_name);
-          if (member.email) addRow("Email Address", member.email);
-          if (member.phone) addRow("Phone Number", member.phone);
-          if (member.university) addRow("University", member.university);
-          if (member.student_id) addRow("Student ID", member.student_id);
-        });
-      } else {
-        const email = result.fullData.email;
-        const phone = result.fullData.phone;
-        const studentId = result.fullData.student_id;
+        const keyMap: Record<string, string> = { name: 'Name', email: 'Email Address', phone: 'Contact Number', student_id: 'Student ID', university: 'University', father_name: "Father's Name", address: 'Address' };
         
-        addRow("Applicant Name", result.name);
-        if (email) addRow("Email Address", email);
-        if (phone) addRow("Phone Number", phone);
-        if (studentId) addRow("Student ID", studentId);
+        Object.entries(member).forEach(([k, v]) => {
+          if (!v || v === '') return;
+          const label = keyMap[k] || k;
+          addRow(label, v);
+        });
+      };
+
+      const membersList = result.fullData.team_members || [];
+      const isTeamApp = membersList.length > 1 || result.fullData.team_name;
+
+      if (isTeamApp && membersList.length > 0) {
+        membersList.forEach((m: any, i: number) => printMemberData(m, i, true));
+      } else if (membersList.length > 0) {
+        printMemberData(membersList[0], 0, false);
+      } else {
+        printMemberData({
+          name: result.name,
+          email: result.fullData.email,
+          phone: result.fullData.phone,
+          student_id: result.fullData.student_id
+        }, 0, false);
       }
 
-      // Cleaned Additional Information
       if (result.fullData.custom_responses && Object.keys(result.fullData.custom_responses).length > 0) {
-        const standardValues = [result.name, result.fullData.email, result.fullData.phone, result.fullData.student_id]
-          .concat(result.fullData.team_members ? result.fullData.team_members.flatMap((m: any) => [m.name, m.email, m.phone, m.student_id, m.university, m.father_name]) : [])
-          .filter(Boolean).map(v => String(v).toLowerCase().trim());
+        checkPageBreak(20);
+        yPos += 8;
+        doc.setFillColor(245, 247, 250);
+        doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
+        doc.setTextColor(11, 17, 32);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Additional Information", 25, yPos);
+        yPos += 10;
+        
+        Object.entries(result.fullData.custom_responses).forEach(([key, value]) => {
+          // Hide old testing artifacts with random IDs
+          if (/^(\d+-)?[a-z0-9]{8,12}$/.test(key)) return;
           
-        const validData = Object.entries(result.fullData.custom_responses).filter(([key, value]) => {
-          const strVal = String(value).toLowerCase().trim();
-          return !standardValues.includes(strVal) && strVal !== "";
+          const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
+          if (displayVal) addRow(key, displayVal);
         });
-
-        if (validData.length > 0) {
-          checkPageBreak(20);
-          yPos += 8;
-          doc.setFillColor(245, 247, 250);
-          doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
-          doc.setTextColor(11, 17, 32);
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "bold");
-          doc.text("Additional Information", 25, yPos);
-          yPos += 10;
-          
-          validData.forEach(([key, value]) => {
-            const displayVal = Array.isArray(value) ? value.join(', ') : value;
-            const isRandomKey = /^[a-z0-9]{8,12}$/.test(key);
-            
-            if (isRandomKey) {
-              checkPageBreak(10);
-              doc.setFont("helvetica", "bold");
-              doc.setTextColor(242, 101, 34);
-              doc.text("•", leftCol, yPos);
-              doc.setTextColor(30, 30, 30);
-              doc.setFont("helvetica", "normal");
-              const splitValue = doc.splitTextToSize(String(displayVal), pageWidth - 40);
-              doc.text(splitValue, leftCol + 5, yPos);
-              yPos += 8 * splitValue.length;
-            } else {
-              addRow(key, displayVal);
-            }
-          });
-        }
       }
 
       doc.save(`UIUJEF_Application_${result.fullData.application_id}.pdf`);

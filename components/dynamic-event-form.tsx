@@ -754,57 +754,48 @@ export function DynamicEventForm({
       const leadStudentId = finalPayload?.members?.[0]?.student_id || '';
       const leadPhone = finalPayload?.members?.[0]?.phone || '';
 
-      if (isTeam && finalPayload?.members?.length > 0) {
-        finalPayload.members.forEach((member: any, i: number) => {
-          checkPageBreak(15);
-          yPos += 4;
-          doc.setFillColor(242, 101, 34);
-          doc.rect(20, yPos - 4, 3, 6, 'F');
-          doc.setFontSize(12);
-          doc.setTextColor(11, 17, 32);
-          doc.setFont("helvetica", "bold");
-          doc.text(`Member ${i + 1} ${i === 0 ? '(Team Leader)' : ''}`, 26, yPos);
-          yPos += 8;
+      const printMemberData = (member: any, index: number, isTeam: boolean) => {
+        checkPageBreak(15);
+        yPos += 4;
+        doc.setFillColor(242, 101, 34);
+        doc.rect(20, yPos - 4, 3, 6, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(11, 17, 32);
+        doc.setFont("helvetica", "bold");
+        const title = isTeam ? `Member ${index + 1} ${index === 0 ? '(Team Leader)' : ''}` : 'Applicant Details';
+        doc.text(title, 26, yPos);
+        yPos += 8;
 
-          if (member.name) addRow("Name", member.name);
-          if (member.father_name) addRow("Father's Name", member.father_name);
-          if (member.email) addRow("Email Address", member.email);
-          if (member.phone) addRow("Phone Number", member.phone);
-          if (member.university) addRow("University", member.university);
-          if (member.student_id) addRow("Student ID", member.student_id);
+        const keyMap: Record<string, string> = { name: 'Name', email: 'Email Address', phone: 'Contact Number', student_id: 'Student ID', university: 'University', father_name: "Father's Name", address: 'Address' };
+        
+        Object.entries(member).forEach(([k, v]) => {
+          if (!v || v === '') return;
+          const label = keyMap[k] || k;
+          addRow(label, v);
         });
-      } else {
-        addRow("Applicant Name", leadName);
-        if (leadEmail) addRow("Email Address", leadEmail);
-        if (leadPhone) addRow("Phone Number", leadPhone);
-        if (leadStudentId) addRow("Student ID", leadStudentId);
+      };
+
+      if (config.isTeamBased && finalPayload?.members?.length > 0) {
+        finalPayload.members.forEach((m: any, i: number) => printMemberData(m, i, true));
+      } else if (finalPayload?.members?.length > 0) {
+        printMemberData(finalPayload.members[0], 0, false);
       }
 
-      if (config.is_custom_form && finalPayload?.custom_responses && Object.keys(finalPayload.custom_responses).length > 0) {
-        const standardValues = [leadName, leadEmail, leadPhone, leadStudentId]
-          .filter(Boolean).map(v => String(v).toLowerCase().trim());
-          
-        const validData = Object.entries(finalPayload.custom_responses).filter(([key, value]) => {
-          const strVal = String(value).toLowerCase().trim();
-          return !standardValues.includes(strVal) && strVal !== "";
+      if (finalPayload?.custom_responses && Object.keys(finalPayload.custom_responses).length > 0) {
+        checkPageBreak(20);
+        yPos += 8;
+        doc.setFillColor(245, 247, 250);
+        doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
+        doc.setTextColor(11, 17, 32);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Additional Information", 25, yPos);
+        yPos += 10;
+        
+        Object.entries(finalPayload.custom_responses).forEach(([key, value]) => {
+          const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
+          if (displayVal) addRow(key, displayVal);
         });
-
-        if (validData.length > 0) {
-          checkPageBreak(20);
-          yPos += 8;
-          doc.setFillColor(245, 247, 250);
-          doc.rect(20, yPos - 6, pageWidth - 40, 8, 'F');
-          doc.setTextColor(11, 17, 32);
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "bold");
-          doc.text("Additional Information", 25, yPos);
-          yPos += 10;
-          
-          validData.forEach(([key, value]) => {
-            const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
-            addRow(key, displayVal);
-          });
-        }
       }
 
       doc.save(`UIUJEF_Application_${applicationId}.pdf`);
