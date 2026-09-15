@@ -385,25 +385,25 @@ export function DynamicEventForm({
 
     setIsSubmitting(true)
 
-    let leadEmail = '';
-    let leadName = '';
-    let leadStudentId = '';
-    let leadPhone = '';
+    let leadEmail = members[0]?.email || '';
+    let leadName = members[0]?.name || '';
+    let leadStudentId = members[0]?.student_id || '';
+    let leadPhone = members[0]?.phone || '';
+
     if (config.is_custom_form) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
+      if (emailField && !leadEmail) leadEmail = customResponses[`0-${emailField.id}`] || '';
+      
       const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
+      if (nameField && !leadName) leadName = customResponses[`0-${nameField.id}`] || '';
+      
       const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
+      if (sidField && !leadStudentId) leadStudentId = customResponses[`0-${sidField.id}`] || '';
+      
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
-    } else {
-      leadEmail = members[0]?.email || '';
-      leadName = members[0]?.name || '';
-      leadStudentId = members[0]?.student_id || '';
-      leadPhone = members[0]?.phone || '';
+      if (phoneField && !leadPhone) leadPhone = customResponses[`0-${phoneField.id}`] || '';
     }
+    if (!leadName) leadName = 'Custom Applicant';
 
     // On-Submit Membership Verification
     if (config.is_members_only) {
@@ -526,25 +526,25 @@ export function DynamicEventForm({
     setIsSubmitting(true)
     setShowEmailConfirm(false)
 
-    let leadEmail = '';
-    let leadName = '';
-    let leadStudentId = '';
-    let leadPhone = '';
+    let leadEmail = members[0]?.email || '';
+    let leadName = members[0]?.name || '';
+    let leadStudentId = members[0]?.student_id || '';
+    let leadPhone = members[0]?.phone || '';
+
     if (config.is_custom_form) {
       const emailField = config.custom_form_fields?.find(f => f.type === 'email' || f.label.toLowerCase().includes('email'));
-      if (emailField) leadEmail = customResponses[`0-${emailField.id}`] || '';
+      if (emailField && !leadEmail) leadEmail = customResponses[`0-${emailField.id}`] || '';
+      
       const nameField = config.custom_form_fields?.find(f => f.label.toLowerCase().includes('name'));
-      if (nameField) leadName = customResponses[`0-${nameField.id}`] || 'Custom Applicant';
+      if (nameField && !leadName) leadName = customResponses[`0-${nameField.id}`] || '';
+      
       const sidField = config.custom_form_fields?.find(f => f.id === 'student_id' || f.label.toLowerCase().includes('student id'));
-      if (sidField) leadStudentId = customResponses[`0-${sidField.id}`] || '';
+      if (sidField && !leadStudentId) leadStudentId = customResponses[`0-${sidField.id}`] || '';
+      
       const phoneField = config.custom_form_fields?.find(f => f.type === 'tel' || f.label.toLowerCase().includes('phone') || f.label.toLowerCase().includes('mobile'));
-      if (phoneField) leadPhone = customResponses[`0-${phoneField.id}`] || '';
-    } else {
-      leadEmail = members[0]?.email || '';
-      leadName = members[0]?.name || '';
-      leadStudentId = members[0]?.student_id || '';
-      leadPhone = members[0]?.phone || '';
+      if (phoneField && !leadPhone) leadPhone = customResponses[`0-${phoneField.id}`] || '';
     }
+    if (!leadName) leadName = 'Custom Applicant';
 
     // Safely generate the next sequential ID
     const { data: existingApps } = await supabase
@@ -567,25 +567,29 @@ export function DynamicEventForm({
     try {
       let finalMembers: any[] | null = null;
       let finalCustomResponses: any = {};
-      
+
       if (config.is_custom_form) {
         finalMembers = [];
-        for (let i = 0; i < members.length; i++) {
+        const loopCount = config.isTeamBased ? members.length : 1;
+        for (let i = 0; i < loopCount; i++) {
           let memberData: any = {};
+          if (config.isTeamBased) {
+            memberData.name = members[i]?.name || '';
+            memberData.email = members[i]?.email || '';
+          }
           for (const field of config.custom_form_fields || []) {
             const fKey = `${i}-${field.id}`;
             let val = customResponses[fKey] || '';
             if (otherToggled[fKey] && otherText[fKey]) {
-              if (field.allow_multiple) val = [...(val || []), otherText[fKey]];
-              else val = otherText[fKey];
+              val = field.allow_multiple ? [...(val || []), otherText[fKey]] : otherText[fKey];
             }
             const fName = field.label.toLowerCase();
-            if (fName.includes('name') && !fName.includes('father')) memberData.name = val;
-            else if (fName.includes('email')) memberData.email = val;
+            if (fName.includes('name') && !fName.includes('father') && !memberData.name) memberData.name = val;
+            else if (fName.includes('email') && !memberData.email) memberData.email = val;
             else if (fName.includes('phone') || fName.includes('mobile')) memberData.phone = val;
             else if (fName.includes('student id')) memberData.student_id = val;
             else if (fName.includes('university') || fName.includes('uni')) memberData.university = val;
-            else memberData[field.label] = val;
+            else memberData[field.label] = val; // Store using readable LABEL, not ID
           }
           finalMembers.push(memberData);
         }
@@ -593,12 +597,11 @@ export function DynamicEventForm({
       } else {
         finalMembers = config.isTeamBased ? members : [members[0]];
         for (const field of config.custom_form_fields || []) {
+          let val = customResponses[field.id] || '';
           if (otherToggled[field.id] && otherText[field.id]) {
-            if (field.allow_multiple) finalCustomResponses[field.id] = [...(customResponses[field.id] || []), otherText[field.id]];
-            else finalCustomResponses[field.id] = otherText[field.id];
-          } else {
-            finalCustomResponses[field.id] = customResponses[field.id];
+            val = field.allow_multiple ? [...(val || []), otherText[field.id]] : otherText[field.id];
           }
+          finalCustomResponses[field.label] = val; // Store using readable LABEL
         }
       }
       setFinalPayload({ members: finalMembers, custom_responses: finalCustomResponses });
@@ -784,16 +787,12 @@ export function DynamicEventForm({
         doc.setFontSize(12);
         doc.setTextColor(11, 17, 32);
         doc.setFont("helvetica", "bold");
-        const title = isTeam ? `Member ${index + 1} ${index === 0 ? '(Team Leader)' : ''}` : 'Applicant Details';
-        doc.text(title, 26, yPos);
+        doc.text(isTeam ? `Member ${index + 1} ${index === 0 ? '(Team Leader)' : ''}` : 'Applicant Details', 26, yPos);
         yPos += 8;
-
         const keyMap: Record<string, string> = { name: 'Name', email: 'Email Address', phone: 'Contact Number', student_id: 'Student ID', university: 'University', father_name: "Father's Name", address: 'Address' };
-        
         Object.entries(member).forEach(([k, v]) => {
-          if (!v || v === '') return;
-          const label = keyMap[k] || k;
-          addRow(label, v);
+          if (!v || v === '' || /^(\d+-)?[a-z0-9]{8,12}$/.test(k)) return; // Filter any lingering artifacts
+          addRow(keyMap[k] || k, Array.isArray(v) ? v.join(', ') : String(v));
         });
       };
 
@@ -801,6 +800,11 @@ export function DynamicEventForm({
         finalPayload.members.forEach((m: any, i: number) => printMemberData(m, i, true));
       } else if (finalPayload?.members?.length > 0) {
         printMemberData(finalPayload.members[0], 0, false);
+      } else {
+        // Safe fallback if finalPayload isn't set properly
+        const fallbackEmail = members[0]?.email || '';
+        const fallbackName = members[0]?.name || '';
+        printMemberData({ name: fallbackName, email: fallbackEmail }, 0, false);
       }
 
       if (finalPayload?.custom_responses && Object.keys(finalPayload.custom_responses).length > 0) {
@@ -813,13 +817,12 @@ export function DynamicEventForm({
         doc.setFont("helvetica", "bold");
         doc.text("Additional Information", 25, yPos);
         yPos += 10;
-        
-        Object.entries(finalPayload.custom_responses).forEach(([key, value]) => {
-          const displayVal = Array.isArray(value) ? value.join(', ') : String(value);
-          if (displayVal) addRow(key, displayVal);
+        Object.entries(finalPayload.custom_responses).forEach(([k, v]) => {
+          if (/^(\d+-)?[a-z0-9]{8,12}$/.test(k)) return; // Filter artifacts
+          const displayVal = Array.isArray(v) ? v.join(', ') : String(v);
+          if (displayVal) addRow(k, displayVal);
         });
       }
-
       doc.save(`UIUJEF_Application_${applicationId}.pdf`);
       toast.success("Official PDF downloaded successfully!");
     } catch (error) {
