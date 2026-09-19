@@ -53,6 +53,7 @@ export type Event = {
   status?: string
   isRegistrationOpen?: boolean
   requiresRegistration?: boolean
+  registrationStartDate?: string
   registrationDeadline?: string // e.g. '2026-09-01T23:59:59'
   isPinned?: boolean
   pinnedAt?: string
@@ -72,6 +73,7 @@ export type Event = {
   require_team_icon?: boolean
   require_university_id?: boolean
   event_level?: string
+  registration_start_date?: string
   registration_deadline?: string
   is_members_only?: boolean
   is_custom_form?: boolean

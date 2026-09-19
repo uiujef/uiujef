@@ -35,7 +35,33 @@ function EventCard({
 }: {
   event: Event
 }) {
-  const isExpired = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() < Date.now() : false;
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const startTime = event.registrationStartDate ? new Date(event.registrationStartDate).getTime() : 0;
+  const deadlineTime = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() : 0;
+  const hasStarted = !startTime || startTime <= now;
+  const isExpired = deadlineTime > 0 && deadlineTime <= now;
+
+  let targetTime = 0;
+  let countdownLabel = "";
+  let showCountdown = false;
+
+  if (event.requiresRegistration && event.isRegistrationOpen) {
+    if (!hasStarted) {
+      targetTime = startTime;
+      countdownLabel = "Starts in:";
+      showCountdown = true;
+    } else if (hasStarted && !isExpired && deadlineTime > 0) {
+      targetTime = deadlineTime;
+      countdownLabel = "Ends in:";
+      showCountdown = true;
+    }
+  }
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#F26522]/10 hover:border-[#F26522]/30">
@@ -51,10 +77,15 @@ function EventCard({
         <span className="absolute left-3 top-3 rounded-full bg-navy-deep/80 px-3 py-1 text-xs font-medium text-gold backdrop-blur-sm">
           {event.category}
         </span>
-        {event.requiresRegistration && event.isRegistrationOpen && (
+        {event.requiresRegistration && event.isRegistrationOpen && hasStarted && !isExpired && (
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-[#F26522] px-3 py-1 text-xs font-bold text-white shadow">
             <span className="size-1.5 animate-ping rounded-full bg-white opacity-75" />
             Registration Open
+          </span>
+        )}
+        {event.requiresRegistration && event.isRegistrationOpen && !hasStarted && (
+          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-navy-deep/80 px-3 py-1 text-xs font-bold text-white shadow">
+            Registration Opening Soon
           </span>
         )}
         {event.isPinned && (
@@ -78,20 +109,24 @@ function EventCard({
           {event.description?.replace(/[#*_`>\n\[\]]/g, ' ')}
         </p>
 
-        {/* Registration deadline */}
-        {event.requiresRegistration && event.isRegistrationOpen && event.registrationDeadline && (
+        {/* Registration deadline / start */}
+        {showCountdown && (
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#F26522]/5 px-3 py-2 border border-[#F26522]/10">
             <p className="text-xs font-semibold text-[#F26522]">
-              Ends in:
+              {countdownLabel}
             </p>
-            <CountdownTimer targetDate={event.registrationDeadline} compact />
+            <CountdownTimer targetDate={new Date(targetTime).toISOString()} compact />
           </div>
         )}
 
         {/* CTA */}
         <div className="mt-5 flex flex-wrap items-center gap-3">
           {event.requiresRegistration && (
-            event.isRegistrationOpen && !isExpired ? (
+            !hasStarted ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/50 px-5 py-2.5 text-sm font-bold text-muted-foreground cursor-not-allowed">
+                Opening Soon
+              </span>
+            ) : event.isRegistrationOpen && !isExpired ? (
               <Link
                 href={`/events/${(event.appIdPrefix || event.id).toLowerCase()}/register`}
                 className="group/btn inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-[#F26522]/20 transition-all duration-200 hover:bg-[#FF7A3D] hover:shadow-[#F26522]/40"
@@ -100,8 +135,8 @@ function EventCard({
                 <ChevronRight className="size-4 transition-transform duration-150 group-hover/btn:translate-x-0.5" />
               </Link>
             ) : (
-              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/50 px-5 py-2.5 text-sm font-bold text-muted-foreground">
-                Registration Closed
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/50 px-5 py-2.5 text-sm font-bold text-muted-foreground cursor-not-allowed">
+                Closed
               </span>
             )
           )}
@@ -152,6 +187,7 @@ export default function EventsArchive() {
             excerpt: d.excerpt,
             isRegistrationOpen: d.is_registration_open ?? d.isRegistrationOpen,
             requiresRegistration: d.requires_registration ?? d.requiresRegistration,
+            registrationStartDate: d.registration_start_date ?? d.registrationStartDate,
             registrationDeadline: d.registration_deadline ?? d.registrationDeadline,
             registration: d.requires_registration ?? d.requiresRegistration ? {
               isTeamBased: d.participation_type?.startsWith('Team') || d.is_team_based || d.isTeamBased,

@@ -129,7 +129,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
   if (event.requiresRegistration && event.isRegistrationOpen) {
     if (!hasStarted) {
       targetTime = startTime;
-      countdownLabel = "🚀 Registration Starts In:";
+      countdownLabel = "Registration Starts In:";
       showCountdown = true;
     } else if (hasStarted && !isExpired && deadlineTime > 0) {
       targetTime = deadlineTime;
