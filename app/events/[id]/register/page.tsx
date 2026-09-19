@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { DynamicEventForm } from '@/components/dynamic-event-form'
 import { SiteNav } from '@/components/site-nav'
@@ -42,6 +43,27 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
 
   if (error || !event) {
     notFound()
+  }
+
+  const startTime = event.registration_start_date ? new Date(event.registration_start_date).getTime() : 0;
+  const now = Date.now();
+
+  if (startTime > 0 && startTime > now) {
+    return (
+      <div className="relative bg-[#0B1120] min-h-screen flex flex-col">
+        <SiteNav/>
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 mt-16 sm:mt-20">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-white mb-4">Registration Not Open Yet</h1>
+            <p className="text-white/60 mb-8">This event's registration will open on {new Date(event.registration_start_date).toLocaleString()}.</p>
+            <Link href={`/events/${resolvedParams.id}`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-8 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/20 border border-white/5">
+              Back to Event Details
+            </Link>
+          </div>
+        </main>
+        <SiteFooter/>
+      </div>
+    )
   }
 
   // Explicitly map raw DB row to the EventRegistrationConfig

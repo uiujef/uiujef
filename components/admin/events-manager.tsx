@@ -28,6 +28,7 @@ type Event = {
   participation_type: string
   event_level: string
   registration_deadline: string | null
+  registration_start_date?: string | null
   status: string
   is_members_only?: boolean
   custom_form_fields?: any[]
@@ -67,6 +68,7 @@ export function EventsManager() {
   const [participationType, setParticipationType] = useState('Individual')
   const [eventLevel, setEventLevel] = useState('On Campus')
   const [registrationDeadline, setRegistrationDeadline] = useState('')
+  const [registrationStartDate, setRegistrationStartDate] = useState('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [isMembersOnly, setIsMembersOnly] = useState(false)
   const [customFormFields, setCustomFormFields] = useState<any[]>([])
@@ -139,6 +141,18 @@ export function EventsManager() {
         formattedDeadline = event.registration_deadline || ''
       }
       setRegistrationDeadline(formattedDeadline)
+      
+      let formattedStartDate = ''
+      if (event.registration_start_date) {
+        const dateObj = new Date(event.registration_start_date)
+        const tzOffset = dateObj.getTimezoneOffset() * 60000
+        const localISOTime = (new Date(dateObj.getTime() - tzOffset)).toISOString().slice(0, 16)
+        formattedStartDate = localISOTime
+      } else {
+        formattedStartDate = event.registration_start_date || ''
+      }
+      setRegistrationStartDate(formattedStartDate)
+
       setStatus((event.status as 'draft' | 'published') || 'draft')
       setIsMembersOnly(event.is_members_only || false)
       setCustomFormFields(event.custom_form_fields || [])
@@ -164,6 +178,7 @@ export function EventsManager() {
       setParticipationType('Individual')
       setEventLevel('On Campus')
       setRegistrationDeadline('')
+      setRegistrationStartDate('')
       setStatus('draft')
       setIsMembersOnly(false)
       setIsCustomForm(isCustom || false)
@@ -235,6 +250,7 @@ export function EventsManager() {
         participation_type: participationType,
         event_level: eventLevel,
         registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
+        registration_start_date: registrationStartDate ? new Date(registrationStartDate).toISOString() : null,
         status,
         is_members_only: isMembersOnly,
         custom_form_fields: processedCustomFields,
@@ -706,6 +722,11 @@ export function EventsManager() {
                   
                   {requiresRegistration && (
                     <div className="pl-14 space-y-4 animate-in fade-in slide-in-from-top-2">
+                      <div className="space-y-2 max-w-[300px]">
+                        <label className="text-xs font-bold uppercase text-slate-500">Registration Start Date (Optional)</label>
+                        <input type="datetime-local" value={registrationStartDate} onChange={e => setRegistrationStartDate(e.target.value)} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />
+                      </div>
+
                       <div className="space-y-2 max-w-[300px]">
                         <label className="text-xs font-bold uppercase text-slate-500">Registration Deadline *</label>
                         <input required type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} className="w-full px-4 py-2 rounded-2xl border border-slate-200 focus:border-[#F26522] focus:ring-2 focus:ring-[#F26522]/20 outline-none transition-all" />

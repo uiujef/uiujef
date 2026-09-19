@@ -14,6 +14,14 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     async function fetchEvent() {
@@ -43,6 +51,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
           category: data.category,
           isRegistrationOpen: data.is_registration_open ?? data.isRegistrationOpen,
           requiresRegistration: data.requires_registration ?? data.requiresRegistration,
+          registrationStartDate: data.registration_start_date ?? data.registrationStartDate,
           registrationDeadline: data.registration_deadline ?? data.registrationDeadline,
           extendedDetails: data.extendedDetails || data.extended_details,
           registrationFee: data.registration_fee,
@@ -100,7 +109,37 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
     )
   }
 
-  const isExpired = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() < Date.now() : false;
+  const startTime = event.registrationStartDate ? new Date(event.registrationStartDate).getTime() : 0;
+  const deadlineTime = event.registrationDeadline ? new Date(event.registrationDeadline).getTime() : 0;
+  const hasStarted = !startTime || startTime <= now;
+  const isExpired = deadlineTime > 0 && deadlineTime <= now;
+
+  const formatTime = (timeDiff: number) => {
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    return { days, hours, minutes, seconds };
+  };
+
+  let targetTime = 0;
+  let countdownLabel = "";
+  let showCountdown = false;
+
+  if (event.requiresRegistration && event.isRegistrationOpen) {
+    if (!hasStarted) {
+      targetTime = startTime;
+      countdownLabel = "🚀 Registration Starts In:";
+      showCountdown = true;
+    } else if (hasStarted && !isExpired && deadlineTime > 0) {
+      targetTime = deadlineTime;
+      countdownLabel = "⏳ Registration Ends In:";
+      showCountdown = true;
+    }
+  }
+
+  const timeDiff = targetTime > now ? targetTime - now : 0;
+  const { days, hours, minutes, seconds } = formatTime(timeDiff);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -116,6 +155,26 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
         )}
         <div className="flex flex-col p-6 sm:p-10 pt-0 sm:pt-0">
           <h2 className="font-serif text-4xl font-bold text-white">{event.title}</h2>
+          
+          {showCountdown && (
+            <div className="mt-6 mb-2 rounded-2xl border border-[#F26522]/30 bg-[#F26522]/10 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span className="text-white/90 font-bold text-lg">{countdownLabel}</span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                {[
+                  { label: 'Days', value: days },
+                  { label: 'Hours', value: hours },
+                  { label: 'Mins', value: minutes },
+                  { label: 'Secs', value: seconds },
+                ].map((unit, idx) => (
+                  <div key={idx} className="flex flex-col items-center justify-center bg-black/40 border border-white/10 rounded-xl w-14 h-16 sm:w-16 sm:h-18">
+                    <span className="text-xl sm:text-2xl font-bold text-[#F26522] font-mono leading-none">{unit.value.toString().padStart(2, '0')}</span>
+                    <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider mt-1">{unit.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 mb-8 flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold text-white/70">
               <CalendarDays className="size-4" />
@@ -124,7 +183,7 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 border border-gold/30 px-4 py-1.5 text-sm font-semibold text-gold-soft">
               {event.category}
             </span>
-            {event.requiresRegistration && event.isRegistrationOpen && !isExpired && (
+            {event.requiresRegistration && event.isRegistrationOpen && !isExpired && hasStarted && (
               <Link
                 href={`/events/${eventId}/register`}
                 className="ml-auto inline-flex items-center gap-2 rounded-full bg-[#F26522] px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#FF7A3D]"
@@ -132,6 +191,14 @@ export default function EventDetailsClient({ eventId }: { eventId: string }) {
                 Register Now
                 <ChevronRight className="size-4" />
               </Link>
+            )}
+            {event.requiresRegistration && event.isRegistrationOpen && !hasStarted && (
+              <button
+                disabled
+                className="ml-auto inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2 text-sm font-bold text-white/40 shadow-sm cursor-not-allowed"
+              >
+                Registration Opening Soon
+              </button>
             )}
           </div>
 
