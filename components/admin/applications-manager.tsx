@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X } from 'lucide-react'
 import { toast } from 'sonner'
+import jsPDF from 'jspdf'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
@@ -254,6 +255,87 @@ export function ApplicationsManager() {
       toast.error('Export Failed: ' + err.message, { id: toastId })
     }
   }
+
+  const handleAdminPDFDownload = () => {
+    if (!selectedApp) return;
+
+    const doc = new jsPDF(); 
+    let yPos = 20; 
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    const checkPageBreak = (spaceNeeded: number) => { 
+      if (yPos + spaceNeeded > 280) { 
+        doc.addPage(); 
+        yPos = 20; 
+      } 
+    };
+
+    const addRow = (label: string, value: string) => { 
+      checkPageBreak(10); 
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 116, 139); 
+      doc.text(label + ":", 25, yPos); 
+      
+      doc.setFont("helvetica", "normal"); 
+      doc.setTextColor(11, 17, 32); 
+      const safeValue = typeof value === 'string' ? value : String(value || '');
+      const textLines = doc.splitTextToSize(safeValue, pageWidth - 90); 
+      doc.text(textLines, 80, yPos); 
+      yPos += (textLines.length * 6) + 4; 
+    };
+
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("UIUJEF Official Application", pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
+    doc.setFontSize(12);
+    addRow("Application ID", selectedApp.application_id);
+    addRow("Event Name", selectedApp.event_title || selectedApp.type || 'N/A');
+    addRow("Applicant/Team Name", selectedApp.name || selectedApp.team_name || 'N/A');
+    yPos += 10;
+
+    // Members
+    if (selectedApp.team_members && selectedApp.team_members.length > 0) {
+      selectedApp.team_members.forEach((member, index) => {
+        checkPageBreak(20);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(242, 101, 34);
+        doc.text(`Member ${index + 1}${index === 0 ? ' (Leader)' : ''}`, 20, yPos);
+        yPos += 10;
+        doc.setFontSize(12);
+        
+        Object.entries(member).forEach(([key, val]) => {
+          if (!val || val === '') return;
+          // Clean up the key for display
+          const label = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          addRow(label, Array.isArray(val) ? val.join(', ') : String(val));
+        });
+        yPos += 5;
+      });
+    }
+
+    // Custom Responses
+    if (selectedApp.custom_responses && Object.keys(selectedApp.custom_responses).length > 0) {
+      checkPageBreak(20);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(242, 101, 34);
+      doc.text("Additional Information", 20, yPos);
+      yPos += 10;
+      doc.setFontSize(12);
+
+      Object.entries(selectedApp.custom_responses).forEach(([key, val]) => {
+        if (/^(\d+-)?[a-z0-9]{8,12}$/.test(key)) return;
+        if (!val) return;
+        addRow(key, Array.isArray(val) ? val.join(', ') : String(val));
+      });
+    }
+
+    doc.save(`UIUJEF_Admin_App_${selectedApp.application_id}.pdf`);
+  };
 
   const eventTypes = Array.from(new Set(applications.filter(a => !isMemberApp(a.type) && a.event_title).map(a => a.event_title as string)))
 
@@ -580,7 +662,7 @@ export function ApplicationsManager() {
                 )}
               </div>
               <div className="flex items-center gap-3 no-print">
-                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-white/40 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
+                <button onClick={handleAdminPDFDownload} className="flex items-center gap-2 px-4 py-2 bg-white/40 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
                   <Printer className="size-4" />
                   Download PDF
                 </button>
