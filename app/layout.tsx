@@ -37,6 +37,11 @@ export const metadata: Metadata = {
     'Economics',
     'Leadership',
     'Bangladesh',
+    'EconThon',
+    'UIU EconThon',
+    'Inter-University Economics Competition',
+    'Economics Summit',
+    'Youth Leadership'
   ],
   authors: [{ name: 'UIUJEF', url: 'https://www.uiujef.org' }],
   openGraph: {
@@ -89,13 +94,21 @@ const jsonLd = {
     "name": "United International University",
     "url": "https://www.uiu.ac.bd/"
   },
-  "address": {
+  address: {
     "@type": "PostalAddress",
     "streetAddress": "United City, Madani Avenue, Badda",
     "addressLocality": "Dhaka",
     "postalCode": "1212",
     "addressCountry": "BD"
-  }
+  },
+  "events": [
+    {
+      "@type": "Event",
+      "name": "EconThon 2026",
+      "description": "The flagship inter-university economics competition organized by UIUJEF.",
+      "url": "https://www.uiujef.org/events"
+    }
+  ]
 };
 
 import { Toaster } from 'sonner'
