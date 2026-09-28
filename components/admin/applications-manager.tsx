@@ -205,51 +205,116 @@ export function ApplicationsManager() {
         return toast.error("No applications to export.");
       }
 
-      if (approvedOnly && activeTab === 'Event') {
-        processedData.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
-        processedData = processedData.map((app, index) => ({ ...app, serial_no: `SL-${index + 1}` }));
+      if (activeTab === 'Event') {
+        if (approvedOnly) {
+          processedData.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+        }
+
+        const allKeys = new Set<string>();
+        const baseKeys = ['Application ID', 'Applied Date', 'Event Name', 'Team Name', 'Transaction ID', 'Status'];
+        
+        if (approvedOnly) {
+          allKeys.add('Serial No');
+        }
+        baseKeys.forEach(k => allKeys.add(k));
+
+        const flattenedData = processedData.map((app, index) => {
+          const flatApp: Record<string, any> = {};
+          if (approvedOnly) flatApp['Serial No'] = `SL-${index + 1}`;
+          
+          flatApp['Application ID'] = app.application_id || '';
+          flatApp['Applied Date'] = app.created_at ? new Date(app.created_at).toLocaleString() : '';
+          flatApp['Event Name'] = app.event_title || app.type || '';
+          flatApp['Team Name'] = app.team_name || '';
+          flatApp['Transaction ID'] = app.transaction_id || '';
+          flatApp['Status'] = app.status || '';
+
+          // Handle Custom Responses
+          if (app.custom_responses) {
+            Object.entries(app.custom_responses).forEach(([k, v]) => {
+              if (/^(\d+-)?[a-z0-9]{8,12}$/.test(k)) return; // filter artifacts
+              if (v == null || v === '') return;
+              const valString = Array.isArray(v) ? v.join(', ') : String(v);
+              flatApp[k] = valString;
+              allKeys.add(k);
+            });
+          }
+
+          // Handle Team Members
+          if (app.team_members && Array.isArray(app.team_members)) {
+            app.team_members.forEach((member, mIndex) => {
+              const prefix = mIndex === 0 ? 'Leader ' : `Member ${mIndex + 1} `;
+              Object.entries(member).forEach(([mk, mv]) => {
+                if (mv == null || mv === '') return;
+                const mkClean = mk.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const finalKey = prefix + mkClean;
+                flatApp[finalKey] = Array.isArray(mv) ? mv.join(', ') : String(mv);
+                allKeys.add(finalKey);
+              });
+            });
+          }
+          
+          return flatApp;
+        });
+
+        const sortedKeys = Array.from(allKeys).sort((a, b) => {
+          if (a === 'Serial No') return -1;
+          if (b === 'Serial No') return 1;
+          const aIndex = baseKeys.indexOf(a);
+          const bIndex = baseKeys.indexOf(b);
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          return 0;
+        });
+
+        const columns = sortedKeys.map(key => ({
+          header: key,
+          key: (r: any) => r[key] || ''
+        }));
+
+        exportToCsv(`UIUJEF_Event_Applications_${approvedOnly ? 'Approved' : 'All'}`, flattenedData, columns);
+      } else {
+        const columns = [
+          { header: 'App ID', key: (r: Application) => r.application_id },
+          { header: 'Type', key: (r: Application) => r.type },
+          { header: 'Status', key: (r: Application) => r.status },
+          { header: 'Name', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
+              return r.team_members[0].name || r.name || ''
+            }
+          },
+          { header: 'Email', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.email || ''
+              return r.team_members[0].email || r.email || ''
+            }
+          },
+          { header: 'Phone', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).phone || ''
+              return r.team_members[0].phone || ''
+            }
+          },
+          { header: 'University', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).university || ''
+              return r.team_members[0].university || ''
+            }
+          },
+          { header: 'Student ID', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
+              return r.team_members[0].student_id || ''
+            }
+          },
+          { header: 'Address', key: (r: Application) => {
+              if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).address || ''
+              return r.team_members[0].address || ''
+            }
+          },
+          { header: 'Team Photo', key: (r: any) => r.custom_responses?.['Team Photo Link'] || '' },
+          { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
+        ]
+
+        exportToCsv(`UIUJEF_Member_Applications_${approvedOnly ? 'Approved' : 'All'}`, processedData, columns)
       }
-
-      const columns = [
-        ...(approvedOnly && activeTab === 'Event' ? [{ header: 'Serial No', key: (r: any) => r.serial_no || '' }] : []),
-        { header: 'App ID', key: (r: Application) => r.application_id },
-        { header: 'Type', key: (r: Application) => r.type },
-        { header: 'Status', key: (r: Application) => r.status },
-        { header: 'Name', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
-            return r.team_members[0].name || r.name || ''
-          }
-        },
-        { header: 'Email', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.email || ''
-            return r.team_members[0].email || r.email || ''
-          }
-        },
-        { header: 'Phone', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).phone || ''
-            return r.team_members[0].phone || ''
-          }
-        },
-        { header: 'University', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).university || ''
-            return r.team_members[0].university || ''
-          }
-        },
-        { header: 'Student ID', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).student_id || ''
-            return r.team_members[0].student_id || ''
-          }
-        },
-        { header: 'Address', key: (r: Application) => {
-            if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return (r as any).address || ''
-            return r.team_members[0].address || ''
-          }
-        },
-        { header: 'Team Photo', key: (r: any) => r.custom_responses?.['Team Photo Link'] || '' },
-        { header: 'TrxID', key: (r: Application) => r.transaction_id || '' },
-      ]
-
-      exportToCsv(`UIUJEF_${activeTab}_Applications_${approvedOnly ? 'Approved' : 'All'}`, processedData, columns)
       toast.success('Export complete', { id: toastId })
     } catch (err: any) {
       toast.error('Export Failed: ' + err.message, { id: toastId })
