@@ -364,6 +364,13 @@ export function DynamicEventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const currentDeadline = config.registrationDeadline ? new Date(config.registrationDeadline).getTime() : 0;
+    if (currentDeadline > 0 && Date.now() >= currentDeadline) {
+      toast.error("Registration has officially closed. Your application cannot be submitted.");
+      setIsSubmitting(false);
+      return;
+    }
+
     if (config.isTeamBased) {
       if (config.participationType === 'Team (Strict)' && members.length !== (config.maxTeamMembers || 0)) {
         toast.error(`Exactly ${config.maxTeamMembers} members are required for a Strict team.`);

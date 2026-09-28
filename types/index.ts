@@ -154,4 +154,5 @@ export type EventRegistrationConfig = {
     raw_options?: string
   }>
   allowMultipleRegistrations?: boolean
+  registrationDeadline?: string
 }
