@@ -225,7 +225,7 @@ export function ApplicationsManager() {
           flatApp['Application ID'] = app.application_id || '';
           flatApp['Applied Date'] = app.created_at ? new Date(app.created_at).toLocaleString() : '';
           flatApp['Event Name'] = app.event_title || app.type || '';
-          flatApp['Team Name'] = app.team_name || '';
+          flatApp['Team Name'] = app.team_name || 'N/A';
           flatApp['Transaction ID'] = app.transaction_id || '';
           flatApp['Status'] = app.status || '';
 
@@ -279,6 +279,7 @@ export function ApplicationsManager() {
           { header: 'App ID', key: (r: Application) => r.application_id },
           { header: 'Type', key: (r: Application) => r.type },
           { header: 'Status', key: (r: Application) => r.status },
+          { header: 'Team Name', key: (r: Application) => r.team_name || 'N/A' },
           { header: 'Name', key: (r: Application) => {
               if (isMemberApp(r.type) || !r.team_members || !r.team_members.length) return r.name || ''
               return r.team_members[0].name || r.name || ''
