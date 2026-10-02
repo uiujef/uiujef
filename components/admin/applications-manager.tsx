@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X, FileDown } from 'lucide-react'
+import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
 import { supabase } from '@/lib/supabase'
@@ -792,10 +792,9 @@ export function ApplicationsManager() {
                             return (
                               <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm sm:col-span-2">
                                 <dt className="text-slate-500 text-xs uppercase font-bold mb-3 break-words">{key}</dt>
-                                <dd className="text-slate-800 font-medium">
-                                  <a href={displayVal} target="_blank" download rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 hover:text-[#F26522] border border-slate-200 hover:border-[#F26522]/30 rounded-xl transition-all shadow-sm group">
-                                    <FileDown className="size-5 text-slate-400 group-hover:text-[#F26522] transition-colors" />
-                                    <span className="text-sm font-semibold">Download File</span>
+                                <dd className="mt-1">
+                                  <a href={displayVal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#F26522] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#F26522]/90 transition-colors shadow-sm">
+                                    <Download className="size-3.5" /> Download File
                                   </a>
                                 </dd>
                               </div>
@@ -829,10 +828,17 @@ export function ApplicationsManager() {
                               {Object.entries(member).map(([k, v]) => {
                                 if (!v || v === '' || k === 'name' || k === 'full_name') return null;
                                 const label = k === 'student_id' ? 'Student ID' : k === 'father_name' ? "Father's Name" : k;
+                                
+                                const isFileLink = typeof v === 'string' && v.startsWith('http') && v.includes('cloudinary');
+                                
                                 return (
                                   <div key={k} className="flex flex-col">
                                     <dt className="text-slate-500 text-[10px] uppercase font-bold">{label}</dt>
-                                    <dd className="font-medium text-slate-800 whitespace-pre-wrap">{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
+                                    {isFileLink ? (
+                                      <dd className="mt-1"><a href={v as string} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#F26522] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#F26522]/90 transition-colors shadow-sm"><Download className="size-3.5" /> Download File</a></dd>
+                                    ) : (
+                                      <dd className="font-medium text-slate-800 whitespace-pre-wrap">{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
+                                    )}
                                   </div>
                                 );
                               })}
