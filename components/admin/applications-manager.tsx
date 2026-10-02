@@ -792,7 +792,8 @@ export function ApplicationsManager() {
                             return (
                               <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm sm:col-span-2">
                                 <dt className="text-slate-500 text-xs uppercase font-bold mb-3 break-words">{key}</dt>
-                                <dd className="mt-1">
+                                <dd className="mt-1 flex flex-col items-start gap-2">
+                                  <span className="text-slate-800 font-medium break-all">{displayVal}</span>
                                   <a href={displayVal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#F26522] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#F26522]/90 transition-colors shadow-sm">
                                     <Download className="size-3.5" /> Download File
                                   </a>
@@ -835,7 +836,12 @@ export function ApplicationsManager() {
                                   <div key={k} className="flex flex-col">
                                     <dt className="text-slate-500 text-[10px] uppercase font-bold">{label}</dt>
                                     {isFileLink ? (
-                                      <dd className="mt-1"><a href={v as string} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#F26522] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#F26522]/90 transition-colors shadow-sm"><Download className="size-3.5" /> Download File</a></dd>
+                                      <dd className="mt-1 flex flex-col items-start gap-2">
+                                        <span className="text-slate-800 font-medium break-all">{v as string}</span>
+                                        <a href={v as string} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#F26522] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#F26522]/90 transition-colors shadow-sm">
+                                          <Download className="size-3.5" /> Download File
+                                        </a>
+                                      </dd>
                                     ) : (
                                       <dd className="font-medium text-slate-800 whitespace-pre-wrap">{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
                                     )}
