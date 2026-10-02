@@ -59,14 +59,14 @@ export function CloudinaryUploader({
           }
         } as any}
         onSuccess={(result: any) => {
-          toast.success("Image uploaded successfully!");
+          toast.success("File uploaded successfully!");
           if (result?.info?.secure_url) {
             onUploadSuccess(result.info.secure_url);
           }
         }}
         onError={(error: any) => {
           console.error("Cloudinary Upload Error:", error);
-          toast.error("Image upload failed. Check console for details.");
+          toast.error("File upload failed. Check console for details.");
           if (onUploadError) onUploadError(error);
         }}
         onUploadAdded={() => {

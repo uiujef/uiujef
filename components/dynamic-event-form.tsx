@@ -300,6 +300,7 @@ export function DynamicEventForm({
   const [customResponses, setCustomResponses] = useState<Record<string, any>>({})
   const [otherToggled, setOtherToggled] = useState<Record<string, boolean>>({})
   const [otherText, setOtherText] = useState<Record<string, string>>({})
+  const [documentUploads, setDocumentUploads] = useState<Record<string, string>>({})
   const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [verificationErrorMsg, setVerificationErrorMsg] = useState('')
   const [showEmailConfirm, setShowEmailConfirm] = useState(false)
@@ -611,6 +612,24 @@ export function DynamicEventForm({
           finalCustomResponses[field.label] = val; // Store using readable LABEL
         }
       }
+      if (Object.keys(documentUploads).length > 0) {
+        for (const [key, publicUrl] of Object.entries(documentUploads)) {
+          const field = config.custom_form_fields?.find(f => key === f.id || key.endsWith(`-${f.id}`));
+          if (field) {
+            if (config.is_custom_form) {
+              const match = key.match(/^(\d+)-/);
+              if (match && finalMembers && finalMembers[parseInt(match[1], 10)]) {
+                finalMembers[parseInt(match[1], 10)][field.label] = publicUrl;
+              } else {
+                finalCustomResponses[field.label] = publicUrl;
+              }
+            } else {
+              finalCustomResponses[field.label] = publicUrl;
+            }
+          }
+        }
+      }
+
       setFinalPayload({ members: finalMembers, custom_responses: finalCustomResponses });
       
       const { error: dbError } = await supabase
@@ -1087,7 +1106,22 @@ export function DynamicEventForm({
                     return (
                       <div key={field.id} className="sm:col-span-2 lg:col-span-1 space-y-2">
                         <FieldLabel htmlFor={`custom-${fieldKey}`} icon={Hash} label={field.label} />
-                        {field.type === 'dropdown' || field.type === 'select' || field.type === 'radio' ? (
+                        {/file|upload|submission|pptx|pdf/i.test(field.label) ? (
+                          <div className="flex flex-col gap-2">
+                            <CloudinaryUploader
+                              onUploadSuccess={(url) => setDocumentUploads(prev => ({...prev, [fieldKey]: url}))}
+                              buttonText={documentUploads[fieldKey] ? "Change File" : "Upload File"}
+                              folder="/uiujef/event-submissions"
+                              resourceType="auto"
+                            />
+                            {documentUploads[fieldKey] && (
+                              <div className="flex items-center gap-2 text-sm text-green-400 font-semibold bg-green-400/10 px-3 py-2 rounded-lg border border-green-400/20 w-fit">
+                                <CheckCircle2 className="size-4" />
+                                File Uploaded Successfully
+                              </div>
+                            )}
+                          </div>
+                        ) : field.type === 'dropdown' || field.type === 'select' || field.type === 'radio' ? (
                           <div className="space-y-3">
                             {field.allow_multiple ? (
                               <div className="flex flex-col gap-2">

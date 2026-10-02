@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X } from 'lucide-react'
+import { Plus, Loader2, Users, Search, Trash2, CheckCircle, XCircle, Undo2, Eye, Printer, X, FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
 import { supabase } from '@/lib/supabase'
@@ -786,6 +786,22 @@ export function ApplicationsManager() {
                             );
                           }
                           
+                          const isFileLink = typeof displayVal === 'string' && displayVal.startsWith('http') && displayVal.includes('cloudinary');
+
+                          if (isFileLink) {
+                            return (
+                              <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm sm:col-span-2">
+                                <dt className="text-slate-500 text-xs uppercase font-bold mb-3 break-words">{key}</dt>
+                                <dd className="text-slate-800 font-medium">
+                                  <a href={displayVal} target="_blank" download rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 hover:text-[#F26522] border border-slate-200 hover:border-[#F26522]/30 rounded-xl transition-all shadow-sm group">
+                                    <FileDown className="size-5 text-slate-400 group-hover:text-[#F26522] transition-colors" />
+                                    <span className="text-sm font-semibold">Download File</span>
+                                  </a>
+                                </dd>
+                              </div>
+                            );
+                          }
+
                           return (
                             <div key={key} className="flex flex-col bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
                               <dt className="text-slate-500 text-xs uppercase font-bold mb-2 break-words">{key}</dt>
